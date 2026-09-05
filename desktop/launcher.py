@@ -195,6 +195,8 @@ def _show_startup_error(message: str) -> None:
 def main() -> int:
     smoke_test = "--smoke-test" in sys.argv[1:]
     resource_root = resolve_resource_root(Path(__file__), getattr(sys, "_MEIPASS", None))
+    if str(resource_root) not in sys.path:
+        sys.path.insert(0, str(resource_root))
     paths = configure_runtime(resolve_app_data_dir(), resource_root)
     logging.basicConfig(
         filename=paths.logs_dir / "lexpilot.log",

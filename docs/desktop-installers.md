@@ -6,6 +6,8 @@
 - Apple 芯片 Mac（M1/M2/M3/M4 等）：`LexPilot-macOS-Apple-Silicon-arm64-unsigned.dmg`
 - Intel 芯片 Mac：`LexPilot-macOS-Intel-x64-unsigned.dmg`
 
+GitHub Actions 暂不可用时，也可以运行 `python scripts/build_manual_release_archives.py --version 0.1.0`，生成可手动上传的 Windows ZIP 和 Intel/Apple 芯片通用 Mac ZIP。Mac ZIP 使用双击安装脚本，在朋友的 Mac 上联网下载隔离的 Python 3.12 与运行依赖，再创建 `~/Applications/LexPilot.app`。
+
 Windows 安装程序会安装到当前用户目录并创建开始菜单和桌面快捷方式，不要求管理员权限。Mac 用户打开对应 DMG 后，将 `LexPilot.app` 拖入“应用程序”。两种系统双击 LexPilot 都会启动本机服务并自动打开默认浏览器。
 
 ## 未签名版首次启动

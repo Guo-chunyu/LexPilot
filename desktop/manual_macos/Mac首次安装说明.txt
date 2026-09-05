@@ -1,0 +1,20 @@
+LexPilot 律策 · macOS 未签名试用版
+
+适用系统：
+- Apple 芯片 Mac（M1/M2/M3/M4 等）
+- Intel 芯片 Mac
+
+安装方法：
+1. 完整解压 ZIP，不要只把安装脚本单独拖出来。
+2. 按住 Control 点击“安装 LexPilot.command”，选择“打开”。
+3. 如果系统仍阻止，到“系统设置 → 隐私与安全性”，点击“仍要打开”。
+4. 保持联网，等待终端显示四步安装完成。首次安装需要下载 Python 和依赖，时间取决于网速。
+5. 安装后应用位于当前用户的“应用程序”文件夹：~/Applications/LexPilot.app。
+
+安装程序不会要求管理员密码，也不会把文件写入系统级 /Applications。
+安装包不含 API 密钥；没有密钥时继续使用本地规则咨询流程。
+
+案件材料、设置和运行环境保存在：
+~/Library/Application Support/LexPilot
+
+如需彻底删除，双击“卸载 LexPilot.command”，按提示输入 DELETE。卸载会同时删除本机案件材料。
