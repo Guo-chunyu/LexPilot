@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.venv/
+.local_data/
+law_chroma_db/
+models_cache/
+law_agent_memory.db
+evaluation_results.json
+evaluation_results.csv
+*.xlsx
+/build/
+/dist/
+/release/
+.DS_Store

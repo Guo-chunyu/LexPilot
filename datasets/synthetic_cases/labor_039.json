@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "case_id": "labor_039",
+  "dispute_type": "wage_arrears",
+  "difficulty": "complex",
+  "initial_narrative": "公司拖欠我3个月工资，多次催要仍未支付。",
+  "initial_facts": {
+    "arrears_months": 3
+  },
+  "initial_evidence": [],
+  "facts": {
+    "arrears_months": 3,
+    "arrears_amount": 30000,
+    "monthly_salary": 10000,
+    "employment_active": true,
+    "payment_due_date": "每月10日",
+    "scenario_variant": 9
+  },
+  "available_evidence": [
+    "劳动合同",
+    "工资流水",
+    "银行流水",
+    "催款记录"
+  ],
+  "key_facts": [
+    "arrears_months",
+    "arrears_amount",
+    "monthly_salary",
+    "employment_active",
+    "payment_due_date"
+  ],
+  "key_evidence": [
+    "劳动合同",
+    "工资流水",
+    "银行流水"
+  ],
+  "legal_issues": [
+    "工资标准",
+    "欠付金额",
+    "仲裁时效"
+  ],
+  "recommended_actions": [
+    "制作欠薪月份清单",
+    "保存催款记录",
+    "投诉或申请劳动仲裁"
+  ],
+  "termination_condition": {
+    "minimum_fact_completeness": 0.7,
+    "minimum_evidence_completeness": 0.45,
+    "requires_law": true,
+    "requires_opponent_simulation": true,
+    "requires_judge_approval": true
+  },
+  "human_reviewed": false,
+  "review_status": "pending_law_student_review",
+  "usage_notice": "仅用于软件测试和 RL baseline，未经法学成员复核不得作为法律真值。"
+}

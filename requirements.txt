@@ -1,0 +1,46 @@
+# LLM & Agent
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+langchain-huggingface>=0.1.0
+langchain-text-splitters>=0.3.0
+langgraph>=0.2.0
+
+# Embedding & Reranker
+torch
+transformers
+sentence-transformers>=3.0.0
+huggingface-hub
+
+# Vector DB & Search
+chromadb>=0.5.0
+rank-bm25
+numpy
+
+# Web & API
+streamlit>=1.57.0
+fastapi>=0.110.0
+uvicorn>=0.30.0
+httpx
+python-multipart>=0.0.9
+python-dotenv
+pydantic>=2.0.0
+PyYAML>=6.0
+gymnasium>=1.0.0
+
+# Document
+python-docx
+
+# Knowledge Graph
+networkx>=3.0
+
+# Eval
+pandas
+openpyxl
+ragas>=0.2.0
+pytest>=8.0.0
+
+# Multimodal (optional)
+pymupdf
+Pillow

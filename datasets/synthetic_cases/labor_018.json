@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "case_id": "labor_018",
+  "dispute_type": "unlawful_termination",
+  "difficulty": "medium",
+  "initial_narrative": "我在公司工作30个月后被口头辞退，公司没有给出完整证据。",
+  "initial_facts": {
+    "employment_duration_months": 30,
+    "has_written_contract": true
+  },
+  "initial_evidence": [],
+  "facts": {
+    "employment_duration_months": 30,
+    "has_written_contract": true,
+    "termination_reason": "严重违反规章制度",
+    "written_termination_notice": false,
+    "employer_rules_disclosed": false,
+    "disciplinary_evidence_exists": false,
+    "monthly_salary": 12000,
+    "termination_type": "可能违法解除",
+    "scenario_variant": 8
+  },
+  "available_evidence": [
+    "劳动合同",
+    "微信聊天记录",
+    "工资流水",
+    "社保记录"
+  ],
+  "key_facts": [
+    "employment_duration_months",
+    "has_written_contract",
+    "termination_reason",
+    "written_termination_notice",
+    "employer_rules_disclosed",
+    "disciplinary_evidence_exists",
+    "monthly_salary",
+    "termination_type"
+  ],
+  "key_evidence": [
+    "劳动合同",
+    "微信聊天记录",
+    "工资流水"
+  ],
+  "legal_issues": [
+    "解除事实",
+    "规章制度效力",
+    "解除理由证据",
+    "赔偿金"
+  ],
+  "recommended_actions": [
+    "要求书面解除理由",
+    "固定规章制度公示情况",
+    "申请劳动仲裁"
+  ],
+  "termination_condition": {
+    "minimum_fact_completeness": 0.7,
+    "minimum_evidence_completeness": 0.45,
+    "requires_law": true,
+    "requires_opponent_simulation": true,
+    "requires_judge_approval": true
+  },
+  "human_reviewed": false,
+  "review_status": "pending_law_student_review",
+  "usage_notice": "仅用于软件测试和 RL baseline，未经法学成员复核不得作为法律真值。"
+}

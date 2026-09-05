@@ -1,0 +1,19 @@
+LexPilot 律策（未签名试用版）
+
+本安装包没有购买 Microsoft 或 Apple 的代码签名证书，也没有经过 Apple 公证。
+
+Windows 首次打开：
+1. 如果 SmartScreen 显示“Windows 已保护你的电脑”，点击“更多信息”。
+2. 核对应用名称为 LexPilot，再点击“仍要运行”。
+
+macOS 首次打开：
+1. 把 LexPilot.app 拖入“应用程序”。
+2. 在“应用程序”中按住 Control 点击 LexPilot，选择“打开”，再确认“打开”。
+3. 如果系统仍阻止，请到“系统设置 → 隐私与安全性”，在安全提示旁点击“仍要打开”。
+
+应用会在本机启动并打开默认浏览器。上传材料和个人设置保存在当前用户目录：
+- Windows：%LOCALAPPDATA%\LexPilot
+- macOS：~/Library/Application Support/LexPilot
+
+需要启用可选的语义模型时，请先退出 LexPilot，再编辑上述目录内的 settings.env，
+填入你自己的 DASHSCOPE_API_KEY 后重新打开。不要把该文件发给别人或提交到 GitHub。

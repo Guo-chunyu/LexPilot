@@ -1,0 +1,120 @@
+version: 1
+domain: labor_dispute
+disputes:
+  probation_termination:
+    name: 试用期被辞退
+    aliases: [试用期, 表现不合格, 录用条件]
+    legal_queries: [试用期解除, 录用条件, 经济补偿, 违法解除]
+    key_facts:
+      - {id: has_written_contract, question: 是否签订了书面劳动合同？, priority: 100}
+      - {id: contract_term_months, question: 劳动合同约定的合同期限是多久？, priority: 95}
+      - {id: probation_period_months, question: 劳动合同约定的试用期是多久？, priority: 94}
+      - {id: recruitment_conditions_disclosed, question: 公司是否在入职时明确告知了具体录用条件？, priority: 90}
+      - {id: assessment_evidence_exists, question: 公司是否向你出示过不符合录用条件的考核标准或考核记录？, priority: 88}
+      - {id: termination_reason, question: 公司明确告知的解除理由是什么？, priority: 85}
+      - {id: written_termination_notice, question: 是否收到书面解除通知，通知中写了什么理由？, priority: 82}
+      - {id: monthly_salary, question: 解除前十二个月的平均月工资大约是多少？, priority: 60}
+    elements:
+      - id: employment_relationship
+        name: 劳动关系存在
+        required_facts: [employment_duration_months]
+        evidence_any: [劳动合同, 工资流水, 社保记录, 工作聊天记录]
+      - id: valid_probation_term
+        name: 试用期约定是否合法
+        required_facts: [has_written_contract, contract_term_months, probation_period_months]
+        evidence_any: [劳动合同, 试用期条款]
+      - id: disclosed_recruitment_conditions
+        name: 录用条件是否明确告知
+        required_facts: [recruitment_conditions_disclosed]
+        evidence_any: [录用条件文件, 员工手册签收记录, 入职确认记录]
+      - id: failed_recruitment_conditions
+        name: 不符合录用条件是否有证据
+        required_facts: [assessment_evidence_exists]
+        evidence_any: [考核标准, 考核记录, 绩效记录]
+      - id: termination_occurred
+        name: 是否发生解除
+        required_facts: [termination_reason]
+        evidence_any: [解除通知, 微信聊天记录, OA记录, 门禁或账号停用记录]
+      - id: compensation_eligibility
+        name: 是否满足补偿或赔偿条件
+        required_facts: [employment_duration_months, monthly_salary]
+        evidence_any: [工资流水, 工资单, 银行流水]
+
+  unlawful_termination:
+    name: 公司违法解除劳动合同
+    aliases: [违法解除, 辞退, 开除, 不用上班]
+    legal_queries: [劳动合同解除, 违法解除, 赔偿金]
+    key_facts:
+      - {id: has_written_contract, question: 是否签订了书面劳动合同？, priority: 100}
+      - {id: employment_duration_months, question: 你在该公司连续工作了多久？, priority: 95}
+      - {id: termination_reason, question: 公司给出的解除理由是什么？, priority: 94}
+      - {id: written_termination_notice, question: 是否收到载明理由的书面解除通知？, priority: 92}
+      - {id: employer_rules_disclosed, question: 公司主张的规章制度是否曾向你公示或由你签收？, priority: 85}
+      - {id: disciplinary_evidence_exists, question: 公司是否出示了支持解除理由的证据？, priority: 83}
+      - {id: monthly_salary, question: 解除前十二个月平均月工资是多少？, priority: 65}
+    elements:
+      - {id: employment_relationship, name: 劳动关系存在, required_facts: [employment_duration_months], evidence_any: [劳动合同, 工资流水, 社保记录, 工作聊天记录]}
+      - {id: termination_occurred, name: 解除行为存在, required_facts: [termination_reason], evidence_any: [解除通知, 微信聊天记录, OA记录, 门禁或账号停用记录]}
+      - {id: termination_basis, name: 解除理由具有事实依据, required_facts: [disciplinary_evidence_exists], evidence_any: [违纪证据, 考核记录, 调查记录]}
+      - {id: rules_validity, name: 规章制度经过合法制定并公示, required_facts: [employer_rules_disclosed], evidence_any: [员工手册签收记录, 民主程序记录, 公示记录]}
+      - {id: compensation_eligibility, name: 赔偿金计算基础, required_facts: [employment_duration_months, monthly_salary], evidence_any: [工资流水, 工资单, 银行流水]}
+
+  unsigned_contract:
+    name: 未签劳动合同
+    aliases: [未签合同, 没签合同, 没有劳动合同]
+    legal_queries: [书面劳动合同, 双倍工资, 劳动关系]
+    key_facts:
+      - {id: employment_start_date, question: 实际入职日期是哪一天？, priority: 100}
+      - {id: employment_end_date, question: 劳动关系是否已经结束，结束日期是什么？, priority: 90}
+      - {id: has_written_contract, question: 入职后是否曾签署任何书面劳动合同？, priority: 95}
+      - {id: monthly_salary, question: 未签合同期间的月工资是多少？, priority: 85}
+      - {id: unsigned_months, question: 从入职满一个月至补签或离职之间一共多少个月？, priority: 82}
+    elements:
+      - {id: employment_relationship, name: 实际劳动关系存在, required_facts: [employment_start_date], evidence_any: [工资流水, 社保记录, 工作聊天记录, 工牌或门禁记录]}
+      - {id: no_written_contract, name: 超过一个月未订立书面合同, required_facts: [has_written_contract, unsigned_months], evidence_any: [入职登记表, 合同签署记录, 人事沟通记录]}
+      - {id: double_wage_base, name: 双倍工资计算基础, required_facts: [monthly_salary, unsigned_months], evidence_any: [工资流水, 工资单]}
+
+  wage_arrears:
+    name: 拖欠工资
+    aliases: [拖欠工资, 欠薪, 未发工资]
+    legal_queries: [工资支付, 拖欠劳动报酬, 仲裁时效]
+    key_facts:
+      - {id: arrears_months, question: 被拖欠的是哪几个月工资？, priority: 100}
+      - {id: arrears_amount, question: 被拖欠工资总额是多少？, priority: 95}
+      - {id: monthly_salary, question: 劳动合同或实际约定的月工资是多少？, priority: 90}
+      - {id: employment_active, question: 劳动关系目前是否仍然存续？, priority: 80}
+      - {id: payment_due_date, question: 公司通常约定每月哪一天发工资？, priority: 75}
+    elements:
+      - {id: employment_relationship, name: 劳动关系存在, required_facts: [employment_active], evidence_any: [劳动合同, 社保记录, 工作聊天记录]}
+      - {id: wage_agreement, name: 工资标准可以确定, required_facts: [monthly_salary], evidence_any: [劳动合同, 工资单, 招聘信息]}
+      - {id: non_payment, name: 到期工资未支付, required_facts: [arrears_months, arrears_amount], evidence_any: [银行流水, 工资流水, 催款记录]}
+
+  overtime:
+    name: 加班费争议
+    aliases: [加班费, 加班, 调休]
+    legal_queries: [延长工作时间, 加班工资, 举证责任]
+    key_facts:
+      - {id: work_schedule, question: 正常工作时间和休息日安排是什么？, priority: 100}
+      - {id: overtime_hours, question: 主张的工作日、休息日和法定节假日加班分别有多少小时？, priority: 95}
+      - {id: overtime_period, question: 加班发生在哪个时间段？, priority: 90}
+      - {id: overtime_approved, question: 加班是否经过公司安排、审批或事后确认？, priority: 85}
+      - {id: monthly_salary, question: 用于计算加班费的月工资基数是多少？, priority: 80}
+    elements:
+      - {id: overtime_occurred, name: 加班事实存在, required_facts: [overtime_hours, overtime_period], evidence_any: [考勤记录, 加班审批, 工作聊天记录, 邮件记录]}
+      - {id: employer_arranged, name: 加班由用人单位安排或认可, required_facts: [overtime_approved], evidence_any: [加班审批, 工作指令, 排班表]}
+      - {id: overtime_base, name: 加班费计算基数可以确定, required_facts: [monthly_salary], evidence_any: [劳动合同, 工资单, 工资流水]}
+
+  compensation:
+    name: 经济补偿或赔偿金
+    aliases: [经济补偿, 赔偿金, N+1, 2N]
+    legal_queries: [经济补偿, 代通知金, 赔偿金]
+    key_facts:
+      - {id: employment_duration_months, question: 在本单位的连续工作年限是多少？, priority: 100}
+      - {id: monthly_salary, question: 解除或终止前十二个月平均工资是多少？, priority: 95}
+      - {id: termination_type, question: 劳动关系以何种方式解除或终止？, priority: 92}
+      - {id: notice_months, question: 公司是否提前三十日书面通知或支付一个月工资？, priority: 85}
+      - {id: local_average_salary, question: 当地上年度职工月平均工资是多少？, priority: 60}
+    elements:
+      - {id: termination_type, name: 解除或终止类型明确, required_facts: [termination_type], evidence_any: [解除通知, 协商解除协议, 离职证明]}
+      - {id: service_years, name: 工作年限可以确定, required_facts: [employment_duration_months], evidence_any: [劳动合同, 社保记录, 工资流水]}
+      - {id: wage_base, name: 月工资基数可以确定, required_facts: [monthly_salary], evidence_any: [工资流水, 工资单, 纳税记录]}

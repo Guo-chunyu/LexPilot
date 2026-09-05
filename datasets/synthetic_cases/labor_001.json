@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "case_id": "labor_001",
+  "dispute_type": "probation_termination",
+  "difficulty": "simple",
+  "initial_narrative": "我在公司工作8个月，公司以试用期表现不合格为由通知我不用上班。",
+  "initial_facts": {
+    "employment_duration_months": 8,
+    "has_written_contract": true,
+    "contract_term_months": 36
+  },
+  "initial_evidence": [
+    "劳动合同"
+  ],
+  "facts": {
+    "employment_duration_months": 8,
+    "has_written_contract": true,
+    "contract_term_months": 36,
+    "probation_period_months": 6,
+    "recruitment_conditions_disclosed": false,
+    "assessment_evidence_exists": false,
+    "termination_reason": "试用期表现不合格",
+    "written_termination_notice": false,
+    "monthly_salary": 10000,
+    "termination_type": "可能违法解除",
+    "scenario_variant": 1
+  },
+  "available_evidence": [
+    "劳动合同",
+    "微信聊天记录",
+    "工资流水",
+    "社保记录"
+  ],
+  "key_facts": [
+    "employment_duration_months",
+    "has_written_contract",
+    "contract_term_months",
+    "probation_period_months",
+    "recruitment_conditions_disclosed",
+    "assessment_evidence_exists",
+    "termination_reason",
+    "written_termination_notice",
+    "monthly_salary",
+    "termination_type"
+  ],
+  "key_evidence": [
+    "劳动合同",
+    "微信聊天记录",
+    "工资流水"
+  ],
+  "legal_issues": [
+    "试用期约定是否合法",
+    "录用条件是否明确",
+    "解除证据是否充分",
+    "是否构成违法解除"
+  ],
+  "recommended_actions": [
+    "固定微信解除通知",
+    "核对合同期限和试用期",
+    "申请劳动仲裁"
+  ],
+  "termination_condition": {
+    "minimum_fact_completeness": 0.7,
+    "minimum_evidence_completeness": 0.45,
+    "requires_law": true,
+    "requires_opponent_simulation": true,
+    "requires_judge_approval": true
+  },
+  "human_reviewed": false,
+  "review_status": "pending_law_student_review",
+  "usage_notice": "仅用于软件测试和 RL baseline，未经法学成员复核不得作为法律真值。"
+}

@@ -1,0 +1,93 @@
+name: Build desktop installers
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows x64 installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: desktop/requirements-desktop.txt
+      - name: Install Python dependencies
+        run: python -m pip install -r desktop/requirements-desktop.txt
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -like "refs/tags/v*") { $env:GITHUB_REF_NAME -replace '^v', '' } else { "0.1.0-dev" }
+          .\scripts\build_windows_installer.ps1 -Version $version -SkipDependencies
+      - name: Smoke-test installer
+        shell: pwsh
+        run: .\scripts\smoke_test_windows_installer.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LexPilot-Windows-x64
+          path: release/LexPilot-Windows-x64-Setup-unsigned.exe
+          if-no-files-found: error
+
+  macos:
+    name: macOS ${{ matrix.label }} installer
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            label: Apple-Silicon-arm64
+          - runner: macos-15-intel
+            label: Intel-x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: desktop/requirements-desktop.txt
+      - name: Install Python dependencies
+        run: python -m pip install -r desktop/requirements-desktop.txt
+      - name: Build DMG
+        shell: bash
+        run: |
+          version="0.1.0-dev"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then version="${GITHUB_REF_NAME#v}"; fi
+          SKIP_DEPENDENCIES=1 PYTHON_BIN=python bash desktop/macos/build_dmg.sh "$version"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LexPilot-macOS-${{ matrix.label }}
+          path: release/LexPilot-macOS-${{ matrix.label }}-unsigned.dmg
+          if-no-files-found: error
+
+  release:
+    name: Attach installers to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release/* --generate-notes --title "LexPilot $GITHUB_REF_NAME"
+          fi

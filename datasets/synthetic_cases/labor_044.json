@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "case_id": "labor_044",
+  "dispute_type": "overtime",
+  "difficulty": "simple",
+  "initial_narrative": "公司长期安排我加班，累计约40小时但没有支付加班费。",
+  "initial_facts": {
+    "work_schedule": "标准工时制",
+    "overtime_hours": 80,
+    "overtime_period": "2025-01至2025-06"
+  },
+  "initial_evidence": [
+    "考勤记录"
+  ],
+  "facts": {
+    "work_schedule": "标准工时制",
+    "overtime_hours": 80,
+    "overtime_period": "2025-01至2025-06",
+    "overtime_approved": true,
+    "monthly_salary": 11000,
+    "scenario_variant": 4
+  },
+  "available_evidence": [
+    "考勤记录",
+    "加班审批",
+    "工作聊天记录",
+    "工资流水"
+  ],
+  "key_facts": [
+    "work_schedule",
+    "overtime_hours",
+    "overtime_period",
+    "overtime_approved",
+    "monthly_salary"
+  ],
+  "key_evidence": [
+    "考勤记录",
+    "加班审批",
+    "工作聊天记录"
+  ],
+  "legal_issues": [
+    "加班事实",
+    "用人单位安排",
+    "计算基数"
+  ],
+  "recommended_actions": [
+    "区分工作日和休息日加班",
+    "导出考勤和审批",
+    "核对工资支付记录"
+  ],
+  "termination_condition": {
+    "minimum_fact_completeness": 0.7,
+    "minimum_evidence_completeness": 0.45,
+    "requires_law": true,
+    "requires_opponent_simulation": true,
+    "requires_judge_approval": true
+  },
+  "human_reviewed": false,
+  "review_status": "pending_law_student_review",
+  "usage_notice": "仅用于软件测试和 RL baseline，未经法学成员复核不得作为法律真值。"
+}

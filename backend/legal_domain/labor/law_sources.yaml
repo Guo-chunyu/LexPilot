@@ -1,0 +1,139 @@
+version: 1
+sources:
+  - id: lcl_7
+    law_name: 中华人民共和国劳动合同法
+    article: 第七条
+    summary: 用人单位自用工之日起即与劳动者建立劳动关系，并应建立职工名册备查。
+    tags: [劳动关系, 入职, 用工]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_10
+    law_name: 中华人民共和国劳动合同法
+    article: 第十条
+    summary: 建立劳动关系应订立书面劳动合同；已用工未同时订立的，应自用工之日起一个月内订立。
+    tags: [书面劳动合同, 未签合同, 双倍工资]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_19
+    law_name: 中华人民共和国劳动合同法
+    article: 第十九条
+    summary: 试用期上限随劳动合同期限确定，同一用人单位与同一劳动者只能约定一次试用期。
+    tags: [试用期, 试用期解除, 合同期限]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_21
+    law_name: 中华人民共和国劳动合同法
+    article: 第二十一条
+    summary: 试用期内除法定情形外不得解除劳动合同；解除时应向劳动者说明理由。
+    tags: [试用期解除, 解除理由, 录用条件]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_39
+    law_name: 中华人民共和国劳动合同法
+    article: 第三十九条
+    summary: 劳动者在试用期间被证明不符合录用条件等法定情形下，用人单位可以解除劳动合同。
+    tags: [试用期解除, 录用条件, 解除理由]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_40
+    law_name: 中华人民共和国劳动合同法
+    article: 第四十条
+    summary: 特定无过失性解除情形下，用人单位应提前三十日书面通知或额外支付一个月工资。
+    tags: [N+1, 代通知金, 解除]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_46
+    law_name: 中华人民共和国劳动合同法
+    article: 第四十六条
+    summary: 本条列明用人单位应向劳动者支付经济补偿的法定情形。
+    tags: [经济补偿, 解除, 终止]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_47
+    law_name: 中华人民共和国劳动合同法
+    article: 第四十七条
+    summary: 经济补偿按本单位工作年限和月工资计算；满六个月不满一年按一年，不满六个月按半个月。
+    tags: [经济补偿, N, N+1, 2N, 月工资, 工作年限]
+    source_url: https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_0abfdd261c03417b949df19d869add8d.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_48
+    law_name: 中华人民共和国劳动合同法
+    article: 第四十八条
+    summary: 违法解除或终止劳动合同的，劳动者可要求继续履行；不能或不要求继续履行的，按第八十七条支付赔偿金。
+    tags: [违法解除, 继续履行, 赔偿金]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_82
+    law_name: 中华人民共和国劳动合同法
+    article: 第八十二条
+    summary: 超过一个月不满一年未与劳动者订立书面劳动合同的，应依法支付相应期间的二倍工资。
+    tags: [未签合同, 双倍工资, 书面劳动合同]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: lcl_87
+    law_name: 中华人民共和国劳动合同法
+    article: 第八十七条
+    summary: 违法解除或终止劳动合同的，应依第四十七条经济补偿标准的二倍支付赔偿金。
+    tags: [违法解除, 赔偿金, 2N]
+    source_url: https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/zcfg/fl/202011/t20201102_394622_wap.html
+    effective_from: 2008-01-01
+    effective_to:
+  - id: labor_44
+    law_name: 中华人民共和国劳动法
+    article: 第四十四条
+    summary: 延长工作时间、休息日工作且不能补休、法定休假日工作的工资报酬标准分别不得低于法定比例。
+    tags: [加班, 加班费, 延长工作时间, 休息日]
+    source_url: https://www.gov.cn/banshi/2005-05/25/content_905.htm
+    effective_from: 1995-01-01
+    effective_to:
+  - id: labor_50
+    law_name: 中华人民共和国劳动法
+    article: 第五十条
+    summary: 工资应按月以货币形式支付给劳动者本人，不得克扣或者无故拖欠。
+    tags: [拖欠工资, 欠薪, 工资支付]
+    source_url: https://www.gov.cn/banshi/2005-05/25/content_905.htm
+    effective_from: 1995-01-01
+    effective_to:
+  - id: arbitration_6
+    law_name: 中华人民共和国劳动争议调解仲裁法
+    article: 第六条
+    summary: 当事人对主张负举证责任；证据由用人单位掌握管理的，用人单位不提供应承担不利后果。
+    tags: [举证责任, 证据, 用人单位掌握]
+    source_url: https://www.npc.gov.cn/npc/c2/c183/c198/201905/t20190522_28233.html
+    effective_from: 2008-05-01
+    effective_to:
+  - id: arbitration_27
+    law_name: 中华人民共和国劳动争议调解仲裁法
+    article: 第二十七条
+    summary: 劳动争议仲裁时效通常为一年；劳动关系存续期间拖欠劳动报酬争议适用特别规则。
+    tags: [仲裁时效, 拖欠工资, 劳动报酬]
+    source_url: https://www.npc.gov.cn/npc/c2/c183/c198/201905/t20190522_28233.html
+    effective_from: 2008-05-01
+    effective_to:
+  - id: interpretation_1
+    law_name: 最高人民法院关于审理劳动争议案件适用法律问题的解释（一）
+    article: 法释〔2020〕26号
+    summary: 对劳动争议受理、举证、劳动合同解除及相关裁判规则作出统一解释；个别条款已被后续解释调整。
+    tags: [劳动争议, 举证, 解除, 司法解释]
+    source_url: https://www.court.gov.cn/fabu/xiangqing/282121.html
+    effective_from: 2021-01-01
+    effective_to:
+  - id: interpretation_2
+    law_name: 最高人民法院关于审理劳动争议案件适用法律问题的解释（二）
+    article: 法释〔2025〕12号
+    summary: 自2025年9月1日起施行，涉及混同用工、竞业限制、社会保险及仲裁时效抗辩等规则。
+    tags: [劳动争议, 司法解释, 仲裁时效, 社会保险]
+    source_url: https://gongbao.court.gov.cn/Details/bb72019c45453f84d920bd6375573e.html
+    effective_from: 2025-09-01
+    effective_to:
+

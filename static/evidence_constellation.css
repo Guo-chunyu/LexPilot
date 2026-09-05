@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 300px;
+  min-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.evidence-constellation {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  opacity: 0.92;
+  mix-blend-mode: multiply;
+}
+
+.evidence-constellation__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 640px) {
+  :host {
+    height: 260px;
+  }
+
+  .evidence-constellation {
+    height: 260px;
+    opacity: 0.78;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evidence-constellation {
+    opacity: 0.58;
+  }
+}
