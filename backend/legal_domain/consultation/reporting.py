@@ -13,28 +13,44 @@ from .grounding import audit_report
 from .perspective import case_profile
 
 
+def _evidence_instruction(task) -> str:
+    if task.status == '暂无法提供':
+        return f'{task.name}暂时没有：{task.alternative} 这一步要说明的是：{task.proves}。'
+    if task.status.startswith('已上传'):
+        return f'{task.name}已上传：先核对文件是否完整、形成时间和上下文，再用于说明{task.proves}。'
+    return f'{task.name}：{task.how} 这一步要说明的是：{task.proves}。'
+
+
+def _fallbacks(tasks) -> str:
+    alternatives = list(dict.fromkeys(t.alternative.rstrip('。；') for t in tasks if t.alternative))
+    if not alternatives:
+        return '列出材料保管人及无法取得原因，再核对合法的调取或保存方式。'
+    return '材料暂时拿不到时：' + '；'.join(alternatives[:2]) + '。'
+
+
 def action_plan(state) -> list[dict]:
     dossier = state.consultation
     profile = case_profile(state)
     location = str(state.facts.get('location', '案件所在地（待确认）'))
     goal = str(state.facts.get('goal', '先明确希望解决的问题'))
     material_names = [t.name for t in dossier.evidence_tasks] or ['关键合同或决定', '完整沟通记录', '时间线与证据目录']
+    first_materials = list(dict.fromkeys([*material_names[:2], '关键事件时间线', '当前具体诉求']))
     outside = dossier.jurisdiction_status == 'OUTSIDE_MAINLAND'
     channel = '适用地区的执业律师、法律援助机构或官方受理窗口（需先确认）' if outside else profile.channel
     first_steps = [ActionStep(
         title='先保护人身安全和程序权利' if dossier.urgent_actions else '列出事实与诉求，先核对时间节点',
         when='现在；如文书期限更早，以核实后的法定期限为先',
-        channel=f'{location}的相关正式受理窗口；事实整理可先自行完成',
-        materials=['本人收到的通知或决定及送达凭证', '关键事件时间线', '当前诉求与已采取行动'],
+        channel='本人手机或电脑；原件仍由本人安全保管',
+        materials=first_materials,
         instructions=dossier.urgent_actions or [f'把“{goal}”拆成具体请求，金额项目分别列出。', '每件事记下何时、谁、做了什么和证据编号；本人亲历、对方说法和推测分开。', '把约定履行日、收文日及文书写明的截止日单列，先向正式受理窗口核实时限和提交方式。'],
         completion='形成一页事实时间线、一份请求清单和待核对的期限表。',
         fallback='日期记不清时先找通知、订单、银行流水或送达记录；不要自行补造日期，也不要因等材料而错过办理期限。',
     ), ActionStep(
         title='按要证明的事实整理材料', when='现在开始，正式提交前再次核对原件', channel='本人设备、银行或平台导出渠道及合法保管材料的机构',
         materials=material_names,
-        instructions=[f'{t.name}：{t.alternative if t.status == "暂无法提供" else t.how} 要说明：{t.proves}。' for t in dossier.evidence_tasks] or ['将材料按日期编号，记录出处、原件位置和每份材料要证明的事实。'],
+        instructions=[_evidence_instruction(t) for t in dossier.evidence_tasks] or ['将材料按日期编号，记录出处、原件位置和每份材料要证明的事实。'],
         completion='每项请求均有对应证据编号；缺口明确标记，不把上传文件等同于已证明事实。',
-        fallback='；'.join(t.alternative for t in dossier.evidence_tasks) or '列出材料保管人及无法取得原因，咨询依法调取、证据保存的办法。',
+        fallback=_fallbacks(dossier.evidence_tasks),
     )]
     if outside:
         route = '先确认国家或地区、对方住所、合同适用法和争议解决约定；携带事实摘要请当地专业人员核实实体规则、管辖及期限，再选择程序。'

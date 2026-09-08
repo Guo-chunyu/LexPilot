@@ -26,9 +26,26 @@ PLAN_PATTERN = r'方案|步骤|怎么做|怎么办理|起草|写.{0,4}(?:函|申
 UNKNOWN_PATTERN = r'^(?:我也?|这个|现在|目前)?(?:不清楚|不知道|不确定|记不清|忘了|不方便说|不想说|无法提供)[。！!\s]*$'
 EXHAUSTED_PATTERN = r'没有(?:更多|其他|其它|别的)|(?:剩下|其余|其他|其它).{0,4}(?:没有|没了)|就这些|没有了|没证据|没有证据|暂时没有'
 
+EVIDENCE_ALIASES = {
+    '借条': ('借条', '借据'),
+    '转账记录': ('转账记录', '转账', '流水'),
+    '催款记录': ('催款记录', '催款', '催还', '聊天', '微信'),
+    '房屋交接记录': ('房屋交接记录', '交房', '交接', '视频'),
+    '付款及押金凭证': ('付款及押金凭证', '押金凭证', '转账', '付款'),
+    '租赁或购房合同': ('租赁或购房合同', '租赁合同', '租房合同', '购房合同', '合同', '租约'),
+}
+
 
 def wants_plan(text: str) -> bool:
     return bool(re.search(PLAN_PATTERN, text))
+
+
+def _evidence_mention(text: str, name: str) -> tuple[bool, bool]:
+    """Return (mentioned, unavailable) without treating “没有借条” as possession."""
+    terms = EVIDENCE_ALIASES.get(name, (name,))
+    mentioned = any(term in text for term in terms)
+    unavailable = any(re.search(rf'(?:没有|没|找不到|无).{{0,6}}{re.escape(term)}', text) for term in terms)
+    return mentioned, unavailable
 
 
 def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='') -> None:
@@ -111,20 +128,19 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if only and re.search(r'转账|聊天|截图|合同|通知|材料|证据|视频|借条', only.group(1)):
             # Explicitly exclusive inventory, not an assertion that missing
             # documents never existed or that supplied evidence proves the case.
-            aliases = {'转账记录': ('转账', '流水'), '催款记录': ('聊天', '微信', '催款'),
-                       '房屋交接记录': ('交房', '交接', '视频'), '付款及押金凭证': ('转账', '付款'),
-                       '租赁或购房合同': ('合同', '租约')}
             unavailable = []
             for name, *_ in PROFILES.get(state.case_type, PROFILES['general']).evidence:
-                if any(term in only.group(1) for term in (name, *aliases.get(name, ()))):
+                mentioned, denied = _evidence_mention(only.group(1), name)
+                if mentioned and not denied:
                     state.add_evidence(name, source='user_message', notes=f'{source_ref}：用户陈述现有材料，尚未核实。')
                 else:
                     unavailable.append(name)
             state.mark_evidence_unavailable(unavailable, exhausted=True)
         for name, *_ in PROFILES.get(state.case_type, PROFILES['general']).evidence:
-            if re.search(rf'(?:没有|没|找不到|无).{{0,6}}{re.escape(name)}', message):
+            mentioned, denied = _evidence_mention(message, name)
+            if denied:
                 state.mark_evidence_unavailable([name])
-            elif name in message:
+            elif mentioned:
                 state.add_evidence(name, source='user_message', notes=f'{source_ref}：用户称持有，尚未读取或核实。')
     location_text = str(state.facts.get('location', ''))
     # A direct geographic statement in this turn also covers a short answer.

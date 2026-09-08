@@ -14,6 +14,31 @@ from .knowledge import retrieve_for_case
 from .perspective import case_profile
 
 
+def _case_opening(state, profile) -> str:
+    """Give a direct case-aware answer when semantic AI is unavailable."""
+    text = state.user_narrative + '\n' + '\n'.join(str(value) for value in state.facts.values())
+    if state.case_type == 'debt' and re.search(r'没有借条|没(?:有)?借条|只有.{0,20}(?:转账|聊天)', text):
+        return '没有借条不等于可以直接下结论。先把每笔转账的时间、金额、收款人，与能说明款项用途、还款约定和催还情况的完整聊天逐笔对应；真正需要补的是“这笔钱为什么是借款、是否已经到期、还剩多少”，不是补造一张借条。'
+    if state.case_type == 'housing' and re.search(r'押金|扣款', text):
+        return '房东只说“有损坏”，还不足以算清应扣多少。先让对方列出具体损坏位置、合同依据、交接前后记录和实际费用；你这边保留退房、钥匙交还、房屋状态及押金支付记录，把正常使用痕迹与确有损坏的项目分开核对。'
+    if state.case_type == 'consumer' and re.search(r'关门|停业|跑路|会员卡|预付', text):
+        return '先确认是门店停业、迁址，还是经营主体已经异常，并立即固定余额、剩余服务次数和停业信息。退款请求要写清“谁收了款、还有多少未履行、要求怎样处理”；平台投诉或监管处理可以帮助留痕，但不能自动等同于钱已经退回。'
+    if state.case_type == 'family' and re.search(r'离婚|孩子|房子|房产', text):
+        return '这件事要拆成三部分：是否能协商离婚、孩子目前由谁持续照护、房屋何时取得及资金和贷款来源。房屋只登记在对方名下这一点还不足以单独判断处理结果；先保存婚姻、照护、购房付款和贷款材料，再分别确定你的目标。'
+    if state.case_type == 'criminal' and re.search(r'拘留|逮捕|被抓|看守所', text):
+        return '现在最重要的不是先猜结果，而是根据通知书核对办案机关、涉嫌事项、采取措施和时间，并尽快联系当地刑事律师或法律援助机构了解依法会见等程序。家属只整理真实材料，不找关系、不串供、不删除记录。'
+    if state.case_type == 'contract' and re.search(r'没交货|不交货|违约|解除|退款', text):
+        return '先把合同约定、你方已履行、对方未履行和催告经过按时间对齐，再判断是要求继续履行、补救、解除退款还是赔偿损失；这些请求的条件和证据不同，不宜一开始全部堆在一起。'
+    return profile.focus
+
+
+def _next_evidence_task(tasks):
+    """Prefer material the user says exists over repeating an unavailable request."""
+    return next((task for task in tasks if task.source_refs),
+        next((task for task in tasks if task.status == '用户称有，尚未上传'),
+        next((task for task in tasks if task.status == '尚未提供'), tasks[0])))
+
+
 def process_consultation(message: str, state: CaseState) -> dict:
     route_case(message, state)
     dossier = state.consultation
@@ -74,7 +99,9 @@ def process_consultation(message: str, state: CaseState) -> dict:
         pieces.append('明白，这项先记为待核实，不会反复追问同一个问题。')
     if state.evidence_collection_exhausted:
         pieces.append('现有材料就按这些整理，不会再重复让你补同样的材料；缺的部分会列出合法替代办法。')
-    pieces.append(dossier.analysis or profile.focus)
+    current_analysis = dossier.analysis or _case_opening(state, profile)
+    dossier.analysis = current_analysis
+    pieces.append(current_analysis)
     pieces.append('')
     if rules:
         rule = rules[0]
@@ -87,7 +114,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
         action = LegalAction.GENERATE_DOCUMENT
         reason = '先提供现有信息下可执行的阶段方案，保留事实和法源核验缺口。'
     else:
-        task = next((t for t in dossier.evidence_tasks if not t.source_refs and t.status != '暂无法提供'), dossier.evidence_tasks[0])
+        task = _next_evidence_task(dossier.evidence_tasks)
         pieces += [f'**现在可以先做**：{task.alternative if task.status == "暂无法提供" else task.how} 这些材料主要用于说明{task.proves}。']
         action = LegalAction.ASK_FACT
         reason = '按地区、时间、诉求和本领域关键争点逐轮接谈。'
