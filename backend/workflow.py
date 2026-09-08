@@ -163,7 +163,9 @@ class LexPilotEngine:
         case = CaseState.from_value(state)
         from backend.legal_domain.consultation.profiles import route_case
         from backend.legal_domain.consultation.service import process_consultation
-        if route_case(message, case) != "labor_dispute":
+        from backend.legal_domain.consultation.perspective import uses_general_consultation
+        route_case(message, case)
+        if uses_general_consultation(case, message):
             return process_consultation(message, case)
         case = extract_labor_facts(message, case)
         detect_evidence_gaps(case)

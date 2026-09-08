@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel, Field
 
 from backend.config import LEXPILOT_UPLOAD_DIR
@@ -26,6 +26,24 @@ from backend.legal_rl.state import CaseState
 
 api_app = FastAPI(title="LexPilot API", version="4.0.0")
 _sessions: dict[str, CaseState] = {}
+
+
+@api_app.get('/cases/{thread_id}/report.{format}')
+def download_report(thread_id: str, format: str):
+    from backend.legal_domain.consultation.exports import export_report, MIME_TYPES
+    state = _sessions.get(thread_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail='case not found')
+    if format not in MIME_TYPES:
+        raise HTTPException(status_code=400, detail='Supported formats: docx, pdf, md')
+    if not state.final_report:
+        raise HTTPException(status_code=409, detail='请先生成当前方案')
+    # No filesystem path or client-supplied identifier enters Content-Disposition.
+    from hashlib import sha256
+    safe_id = sha256(state.case_id.encode()).hexdigest()[:12]
+    return Response(content=export_report(state, format), media_type=MIME_TYPES[format],
+        headers={'Content-Disposition': f'attachment; filename="LexPilot_{safe_id}.{format}"',
+                 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})
 
 
 def _upload_root() -> Path:

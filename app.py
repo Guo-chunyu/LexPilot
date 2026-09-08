@@ -12,7 +12,7 @@ from backend.config import LEXPILOT_UPLOAD_DIR
 from backend.graph import invoke_lexpilot
 from backend.legal_domain.consultation.profiles import route_case, PROFILES, domain_label
 from backend.legal_domain.consultation.reporting import report_markdown
-from consultation_workspace import render_dossier, render_plan_sections
+from consultation_workspace import render_dossier, render_plan_sections, render_report_downloads
 from backend.legal_domain.labor.evidence_upload import (
     CURRENT_EVIDENCE_PARSER_VERSION,
     MAX_FILE_BYTES,
@@ -456,15 +456,16 @@ def _render_report(state: CaseState) -> None:
                 if law.get("applicability"):
                     st.caption(law["applicability"])
 
+    render_report_downloads(state)
     render_plan_sections(state)
     st.download_button(
-        "下载阶段报告",
+        "下载 Markdown 报告",
         data=_report_markdown(state),
         file_name=f"LexPilot_{state.case_id}_阶段报告.md",
         mime="text/markdown",
         key="download_case_report",
         icon=":material/download:",
-        type="primary",
+        type="secondary",
         width="stretch",
         on_click="ignore",
     )

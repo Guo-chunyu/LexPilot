@@ -1,9 +1,31 @@
 """Native Streamlit views for the evolving dossier and concrete action plan."""
 
 import streamlit as st
+from hashlib import sha256
 
 from backend.legal_domain.consultation.intake import LABELS
 from backend.legal_domain.consultation.profiles import domain_label
+
+
+def render_report_downloads(state) -> None:
+    from backend.legal_domain.consultation.exports import export_report, MIME_TYPES
+    from backend.legal_domain.consultation.reporting import report_markdown
+    markdown = report_markdown(state)
+    fingerprint = sha256((state.case_id + markdown).encode()).hexdigest()
+    cache = st.session_state.get('_report_export_cache', {})
+    if cache.get('fingerprint') != fingerprint:
+        try:
+            cache = {'fingerprint': fingerprint, 'docx': export_report(state, 'docx'), 'pdf': export_report(state, 'pdf')}
+            st.session_state['_report_export_cache'] = cache
+        except (ImportError, ValueError, RuntimeError, OSError):
+            st.warning('Word/PDF 暂时无法生成，可以先下载文本报告；请检查文档组件安装。')
+            return
+    st.caption('下载当前完整方案，补充事实后会生成新版本。')
+    with st.container(horizontal=True, gap='small'):
+        for extension, label in [('docx', '下载 Word 方案'), ('pdf', '下载 PDF 方案')]:
+            st.download_button(label, data=cache[extension], file_name=f'LexPilot_行动方案.{extension}',
+                mime=MIME_TYPES[extension], key=f'download_report_{extension}',
+                icon=':material/download:', type='primary' if extension == 'docx' else 'secondary', on_click='ignore')
 
 
 def render_dossier(state) -> None:
@@ -40,6 +62,38 @@ def render_plan_sections(state) -> None:
     if report.get('analysis'):
         st.markdown('#### 初步分析')
         st.write(report['analysis'])
+    strategy = report.get('strategy_comparison', {})
+    if strategy:
+        st.markdown('#### 先走哪条路')
+        st.write(strategy['decision_reason'])
+        role = strategy.get('client_role', {})
+        if role:
+            st.caption('咨询立场：' + role['label'] + ' · ' + role['basis'])
+        with st.expander('比较成本、收益与转下一步的条件', icon=':material/alt_route:'):
+            for route in strategy['routes']:
+                if route['eligible']:
+                    st.markdown(f'**{route["name"]}**' + (' · 建议优先' if route['recommended'] else ''))
+                    st.write(route['reason'])
+                    st.caption('投入：' + route['cost'])
+                    st.write('何时停止等待：' + route['stop_condition'])
+            for line in strategy['benefit_worksheet']:
+                st.markdown('- ' + line)
+    guide = report.get('service_guide', {})
+    if guide and guide.get('online_channels'):
+        st.markdown('#### 办理入口与机构位置')
+        for channel in guide['online_channels']:
+            st.link_button(channel['name'], channel['url'], icon=':material/open_in_new:')
+            st.caption(channel['use'])
+        with st.expander('出发前确认地址、材料与受理窗口', icon=':material/location_on:'):
+            st.write(guide['jurisdiction_note'])
+            st.write(guide['call_script'])
+            st.caption(guide['status'])
+            for place in guide['places']:
+                st.markdown('**' + place['name'] + '**')
+                st.write(place['address'])
+                st.write('电话：' + (place['telephone'] or '接口未提供'))
+                st.caption(place['office_hours'] + '；' + place['status'])
+                st.link_button('查看地图位置', place['map_url'], icon=':material/map:')
     for title, key in [('具体行动步骤', 'action_plan'), ('结合本案的补充步骤', 'tailored_action_plan')]:
         if report.get(key):
             st.markdown(f'#### {title}')
@@ -47,7 +101,8 @@ def render_plan_sections(state) -> None:
                 st.caption('AI 个案草案，需核对事实、法律和当地办理要求。')
             for index, step in enumerate(report[key], 1):
                 with st.expander(f'{index}. {step["title"]}', expanded=index == 1 and key == 'action_plan'):
-                    st.write('何时做：' + step['when'])
+                    st.write('何时做：' + step.get('suggested_date', '') + ' ' + step['when'])
+                    st.caption(step.get('date_note', '建议日程不替代法定期限。'))
                     st.write('找谁办：' + step['channel'])
                     st.write('准备材料：' + '、'.join(step['materials']))
                     for instruction in step['instructions']:
@@ -86,3 +141,24 @@ def render_plan_sections(state) -> None:
             for source in report['research_sources']:
                 st.markdown(f'[{source["title"]}]({source["url"]})')
                 st.caption(source['status'])
+    if report.get('grounded_claims'):
+        st.markdown('#### 哪些事实支持当前分析')
+        for claim in report['grounded_claims']:
+            with st.expander(claim['conclusion'], icon=':material/account_tree:'):
+                st.write('需满足：' + '；'.join(claim['conditions']))
+                st.write('对应事实：' + '、'.join(LABELS.get(k, k) for k in claim['fact_ids']))
+                for quote in claim['quotes']:
+                    st.write(quote['quote'])
+                    st.caption('引用编号：' + quote['source_id'])
+    if report.get('knowledge_passages'):
+        with st.expander('查看法条原文与版本', icon=':material/library_books:'):
+            for passage in report['knowledge_passages']:
+                st.markdown(f'**[{passage["law_name"]}{passage["article"]}]({passage["source_url"]})**')
+                st.write(passage['text'])
+                st.caption(f'快照核对日 {passage["checked_on"]} · 版本施行日 {passage["effective_from"]} · {passage["temporal_status"]}')
+    audit = report.get('quality_audit', {})
+    if audit:
+        with st.expander('查看方案检查记录', icon=':material/fact_check:'):
+            st.write(f'完整步骤 {audit["complete_step_count"]}/{audit["step_count"]}；检索正文 {audit["retrieved_passages"]} 条；引文完整性通过 {audit["accepted_citations"]} 项。')
+            st.caption(audit['explanation'])
+            st.caption(report.get('retrieval_audit', {}).get('status', ''))

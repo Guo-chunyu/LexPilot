@@ -5,6 +5,7 @@ import re
 from backend.legal_rl.state import CaseState, EvidenceGap, EvidenceStatus
 from .models import EvidenceTask, TimelineEntry
 from .profiles import OUTSIDE_MAINLAND, PROFILES
+from .perspective import client_perspective
 
 
 QUESTIONS = {
@@ -64,6 +65,12 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         save_fact(state, key, value, quote, source_type=source_type, source_ref=source_ref)
         extracted.add(key)
 
+    if source_type == 'user_message':
+        role = client_perspective(state, message)
+        if role['id'] != 'unconfirmed' and role['basis'].removeprefix('对话陈述：') in message:
+            quote = role['basis'].removeprefix('对话陈述：')
+            put('parties', quote, quote)
+
     # Keep a location phrase small. Never infer a particular court from a city.
     location = re.search(r'(?:我在|发生在|位于|地点[是：:]?)([^，。；\n]{2,35})', message)
     known_city = re.search(r'(?:北京|上海|天津|重庆|深圳|广州|杭州|南京|成都|武汉|西安|苏州|长沙|郑州|东莞|佛山|宁波|合肥|青岛|济南|厦门|福州|沈阳|大连|昆明|南宁|海口|贵阳|南昌|长春|哈尔滨)', message)
@@ -100,6 +107,20 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if 'evidence_inventory' not in dossier.declined_slots:
             dossier.declined_slots.append('evidence_inventory')
     if source_type == 'user_message':
+        only = re.search(r'(?:只有|仅有)([^，。；\n]{1,80})', message)
+        if only and re.search(r'转账|聊天|截图|合同|通知|材料|证据|视频|借条', only.group(1)):
+            # Explicitly exclusive inventory, not an assertion that missing
+            # documents never existed or that supplied evidence proves the case.
+            aliases = {'转账记录': ('转账', '流水'), '催款记录': ('聊天', '微信', '催款'),
+                       '房屋交接记录': ('交房', '交接', '视频'), '付款及押金凭证': ('转账', '付款'),
+                       '租赁或购房合同': ('合同', '租约')}
+            unavailable = []
+            for name, *_ in PROFILES.get(state.case_type, PROFILES['general']).evidence:
+                if any(term in only.group(1) for term in (name, *aliases.get(name, ()))):
+                    state.add_evidence(name, source='user_message', notes=f'{source_ref}：用户陈述现有材料，尚未核实。')
+                else:
+                    unavailable.append(name)
+            state.mark_evidence_unavailable(unavailable, exhausted=True)
         for name, *_ in PROFILES.get(state.case_type, PROFILES['general']).evidence:
             if re.search(rf'(?:没有|没|找不到|无).{{0,6}}{re.escape(name)}', message):
                 state.mark_evidence_unavailable([name])

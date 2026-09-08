@@ -1,0 +1,20 @@
+[
+  {"id":"debt_due","domain":"debt","query":"朋友借款到期不还，如何追回本金和逾期利息","expected":["civil_675","civil_676"]},
+  {"id":"debt_delivery","domain":"debt","query":"只有借条没有实际转账交付，借款合同成立了吗","expected":["civil_679"]},
+  {"id":"rent_return","domain":"housing","query":"租赁期限届满，返还租赁物，正常使用损耗房屋押金","expected":["civil_733"]},
+  {"id":"prepaid","domain":"consumer","query":"健身房以预收款方式提供服务，关门后退还预付款","expected":["consumer_53"]},
+  {"id":"unfair_terms","domain":"consumer","query":"格式条款不退费，排除消费者权利免除经营者责任","expected":["consumer_26","civil_497"]},
+  {"id":"contract_breach","domain":"contract","query":"不履行合同义务，承担违约责任继续履行补救赔偿","expected":["civil_577"]},
+  {"id":"divorce","domain":"family","query":"夫妻感情破裂，一方要求离婚，调解无效怎么办","expected":["civil_1079"]},
+  {"id":"inheritance","domain":"inheritance","query":"遗嘱与遗赠扶养协议同时存在，继承如何办理","expected":["civil_1123"]},
+  {"id":"traffic_insurance","domain":"traffic","query":"机动车交通事故，交强险商业保险赔偿顺序","expected":["civil_1213"]},
+  {"id":"medical_copy","domain":"medical","query":"医院拒绝提供患者病历，查阅复制病历资料","expected":["civil_1225","civil_1222"]},
+  {"id":"privacy","domain":"tort","query":"隐私权，泄露公开私密信息和家庭住址","expected":["civil_1032"]},
+  {"id":"ip_punitive","domain":"intellectual_property","query":"故意侵害知识产权，情节严重的惩罚性赔偿","expected":["civil_1185"]},
+  {"id":"shareholder","domain":"corporate","query":"股东要求查阅公司会计账簿会计凭证，说明目的","expected":["company_57"]},
+  {"id":"criminal_defense","domain":"criminal","query":"被侦查机关采取强制措施后可以委托辩护人吗","expected":["criminal_procedure_34"]},
+  {"id":"administrative_review","domain":"administrative","query":"对当场作出的行政处罚不服，应当先申请行政复议吗","expected":["administrative_23"]},
+  {"id":"enforce_time","domain":"enforcement","query":"生效判决没有履行，申请执行的期间和起算","expected":["civil_procedure_250"]},
+  {"id":"labor_venue","domain":"labor_dispute","query":"劳动合同履行地与用人单位所在地劳动争议仲裁委员会管辖","expected":["labor_procedure_21"]},
+  {"id":"labor_time","domain":"labor_dispute","query":"劳动争议申请仲裁时效期间，拖欠劳动报酬终止劳动关系","expected":["labor_procedure_27"]}
+]

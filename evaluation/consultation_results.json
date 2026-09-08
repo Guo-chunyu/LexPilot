@@ -1,0 +1,694 @@
+{
+  "case_count": 18,
+  "corpus_size": 79,
+  "limitations": "人工编写的公开小型回归集；领域标签已知。仅测检索命中，不测法律判断正确率，不是盲测，也不证明优于其他系统。",
+  "metrics": {
+    "single_query_bm25": {
+      "hit_at_5": 1.0,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.8633
+    },
+    "multi_query_rrf": {
+      "hit_at_5": 1.0,
+      "recall_at_5": 0.9722,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.9894
+    }
+  },
+  "cases": [
+    {
+      "id": "debt_due",
+      "mode": "single_query_bm25",
+      "domain": "debt",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 2.6,
+      "retrieved": [
+        "civil_676",
+        "civil_667",
+        "civil_680",
+        "civil_679",
+        "civil_675"
+      ],
+      "expected": [
+        "civil_675",
+        "civil_676"
+      ]
+    },
+    {
+      "id": "debt_due",
+      "mode": "multi_query_rrf",
+      "domain": "debt",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.38,
+      "retrieved": [
+        "civil_676",
+        "civil_667",
+        "civil_680",
+        "civil_679",
+        "civil_675"
+      ],
+      "expected": [
+        "civil_675",
+        "civil_676"
+      ]
+    },
+    {
+      "id": "debt_delivery",
+      "mode": "single_query_bm25",
+      "domain": "debt",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.72,
+      "retrieved": [
+        "civil_679",
+        "civil_667",
+        "civil_680",
+        "fees_13",
+        "civil_675"
+      ],
+      "expected": [
+        "civil_679"
+      ]
+    },
+    {
+      "id": "debt_delivery",
+      "mode": "multi_query_rrf",
+      "domain": "debt",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.7,
+      "retrieved": [
+        "civil_679",
+        "civil_667",
+        "civil_680",
+        "civil_675",
+        "civil_676"
+      ],
+      "expected": [
+        "civil_679"
+      ]
+    },
+    {
+      "id": "rent_return",
+      "mode": "single_query_bm25",
+      "domain": "housing",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 2.05,
+      "retrieved": [
+        "civil_733",
+        "civil_710",
+        "civil_709",
+        "civil_196"
+      ],
+      "expected": [
+        "civil_733"
+      ]
+    },
+    {
+      "id": "rent_return",
+      "mode": "multi_query_rrf",
+      "domain": "housing",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.42,
+      "retrieved": [
+        "civil_733",
+        "civil_710",
+        "civil_709",
+        "civil_196",
+        "civil_procedure_122"
+      ],
+      "expected": [
+        "civil_733"
+      ]
+    },
+    {
+      "id": "prepaid",
+      "mode": "single_query_bm25",
+      "domain": "consumer",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.72,
+      "retrieved": [
+        "consumer_53",
+        "consumer_26",
+        "consumer_44",
+        "civil_496",
+        "consumer_24"
+      ],
+      "expected": [
+        "consumer_53"
+      ]
+    },
+    {
+      "id": "prepaid",
+      "mode": "multi_query_rrf",
+      "domain": "consumer",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.14,
+      "retrieved": [
+        "consumer_53",
+        "consumer_44",
+        "consumer_26",
+        "consumer_24",
+        "consumer_55"
+      ],
+      "expected": [
+        "consumer_53"
+      ]
+    },
+    {
+      "id": "unfair_terms",
+      "mode": "single_query_bm25",
+      "domain": "consumer",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.89,
+      "retrieved": [
+        "consumer_26",
+        "civil_497",
+        "civil_496",
+        "consumer_53",
+        "consumer_39"
+      ],
+      "expected": [
+        "consumer_26",
+        "civil_497"
+      ]
+    },
+    {
+      "id": "unfair_terms",
+      "mode": "multi_query_rrf",
+      "domain": "consumer",
+      "hit_at_5": true,
+      "recall_at_5": 0.5,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.4,
+      "retrieved": [
+        "consumer_26",
+        "consumer_53",
+        "consumer_39",
+        "consumer_24",
+        "consumer_55"
+      ],
+      "expected": [
+        "consumer_26",
+        "civil_497"
+      ]
+    },
+    {
+      "id": "contract_breach",
+      "mode": "single_query_bm25",
+      "domain": "contract",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.88,
+      "retrieved": [
+        "civil_577",
+        "civil_584",
+        "civil_509",
+        "civil_585",
+        "civil_496"
+      ],
+      "expected": [
+        "civil_577"
+      ]
+    },
+    {
+      "id": "contract_breach",
+      "mode": "multi_query_rrf",
+      "domain": "contract",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.35,
+      "retrieved": [
+        "civil_577",
+        "civil_584",
+        "civil_509",
+        "civil_585",
+        "civil_496"
+      ],
+      "expected": [
+        "civil_577"
+      ]
+    },
+    {
+      "id": "divorce",
+      "mode": "single_query_bm25",
+      "domain": "family",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.92,
+      "retrieved": [
+        "civil_1079",
+        "civil_1077",
+        "civil_1091",
+        "civil_1084",
+        "fees_13"
+      ],
+      "expected": [
+        "civil_1079"
+      ]
+    },
+    {
+      "id": "divorce",
+      "mode": "multi_query_rrf",
+      "domain": "family",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.89,
+      "retrieved": [
+        "civil_1079",
+        "civil_1077",
+        "civil_1084",
+        "fees_13",
+        "civil_1091"
+      ],
+      "expected": [
+        "civil_1079"
+      ]
+    },
+    {
+      "id": "inheritance",
+      "mode": "single_query_bm25",
+      "domain": "inheritance",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.54,
+      "retrieved": [
+        "civil_1123",
+        "civil_1133",
+        "civil_196"
+      ],
+      "expected": [
+        "civil_1123"
+      ]
+    },
+    {
+      "id": "inheritance",
+      "mode": "multi_query_rrf",
+      "domain": "inheritance",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.37,
+      "retrieved": [
+        "civil_1123",
+        "civil_1133",
+        "civil_196",
+        "fees_13",
+        "civil_procedure_67"
+      ],
+      "expected": [
+        "civil_1123"
+      ]
+    },
+    {
+      "id": "traffic_insurance",
+      "mode": "single_query_bm25",
+      "domain": "traffic",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.68,
+      "retrieved": [
+        "civil_1213",
+        "civil_1208",
+        "civil_1179",
+        "fees_13"
+      ],
+      "expected": [
+        "civil_1213"
+      ]
+    },
+    {
+      "id": "traffic_insurance",
+      "mode": "multi_query_rrf",
+      "domain": "traffic",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.92,
+      "retrieved": [
+        "civil_1213",
+        "civil_1208",
+        "civil_1179",
+        "fees_13",
+        "civil_procedure_122"
+      ],
+      "expected": [
+        "civil_1213"
+      ]
+    },
+    {
+      "id": "medical_copy",
+      "mode": "single_query_bm25",
+      "domain": "medical",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.58,
+      "retrieved": [
+        "civil_1225",
+        "civil_1222",
+        "civil_1218",
+        "civil_procedure_67",
+        "civil_procedure_104"
+      ],
+      "expected": [
+        "civil_1225",
+        "civil_1222"
+      ]
+    },
+    {
+      "id": "medical_copy",
+      "mode": "multi_query_rrf",
+      "domain": "medical",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.48,
+      "retrieved": [
+        "civil_1225",
+        "civil_1222",
+        "civil_1218",
+        "civil_procedure_67",
+        "civil_procedure_104"
+      ],
+      "expected": [
+        "civil_1225",
+        "civil_1222"
+      ]
+    },
+    {
+      "id": "privacy",
+      "mode": "single_query_bm25",
+      "domain": "tort",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.53,
+      "retrieved": [
+        "civil_1032"
+      ],
+      "expected": [
+        "civil_1032"
+      ]
+    },
+    {
+      "id": "privacy",
+      "mode": "multi_query_rrf",
+      "domain": "tort",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.94,
+      "retrieved": [
+        "civil_1032",
+        "fees_13",
+        "civil_1179",
+        "civil_1024",
+        "civil_procedure_104"
+      ],
+      "expected": [
+        "civil_1032"
+      ]
+    },
+    {
+      "id": "ip_punitive",
+      "mode": "single_query_bm25",
+      "domain": "intellectual_property",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.52,
+      "retrieved": [
+        "civil_1185",
+        "fees_13",
+        "civil_196"
+      ],
+      "expected": [
+        "civil_1185"
+      ]
+    },
+    {
+      "id": "ip_punitive",
+      "mode": "multi_query_rrf",
+      "domain": "intellectual_property",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.49,
+      "retrieved": [
+        "civil_1185",
+        "fees_13",
+        "civil_196",
+        "civil_procedure_122",
+        "civil_188"
+      ],
+      "expected": [
+        "civil_1185"
+      ]
+    },
+    {
+      "id": "shareholder",
+      "mode": "single_query_bm25",
+      "domain": "corporate",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.53,
+      "retrieved": [
+        "company_57",
+        "company_54",
+        "company_23",
+        "company_88"
+      ],
+      "expected": [
+        "company_57"
+      ]
+    },
+    {
+      "id": "shareholder",
+      "mode": "multi_query_rrf",
+      "domain": "corporate",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.2,
+      "retrieved": [
+        "company_57",
+        "company_54",
+        "company_23",
+        "company_88",
+        "civil_procedure_67"
+      ],
+      "expected": [
+        "company_57"
+      ]
+    },
+    {
+      "id": "criminal_defense",
+      "mode": "single_query_bm25",
+      "domain": "criminal",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.87,
+      "retrieved": [
+        "criminal_procedure_34",
+        "criminal_procedure_39",
+        "criminal_procedure_35",
+        "criminal_procedure_37",
+        "criminal_procedure_85"
+      ],
+      "expected": [
+        "criminal_procedure_34"
+      ]
+    },
+    {
+      "id": "criminal_defense",
+      "mode": "multi_query_rrf",
+      "domain": "criminal",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.6,
+      "retrieved": [
+        "criminal_procedure_34",
+        "criminal_procedure_39",
+        "criminal_procedure_35",
+        "criminal_procedure_85",
+        "criminal_procedure_37"
+      ],
+      "expected": [
+        "criminal_procedure_34"
+      ]
+    },
+    {
+      "id": "administrative_review",
+      "mode": "single_query_bm25",
+      "domain": "administrative",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 2.09,
+      "retrieved": [
+        "administrative_23",
+        "administrative_27",
+        "administrative_22",
+        "administrative_24",
+        "administrative_20"
+      ],
+      "expected": [
+        "administrative_23"
+      ]
+    },
+    {
+      "id": "administrative_review",
+      "mode": "multi_query_rrf",
+      "domain": "administrative",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 6.48,
+      "retrieved": [
+        "administrative_23",
+        "administrative_27",
+        "administrative_22",
+        "administrative_24",
+        "administrative_20"
+      ],
+      "expected": [
+        "administrative_23"
+      ]
+    },
+    {
+      "id": "enforce_time",
+      "mode": "single_query_bm25",
+      "domain": "enforcement",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 2.52,
+      "retrieved": [
+        "civil_procedure_250",
+        "civil_procedure_235"
+      ],
+      "expected": [
+        "civil_procedure_250"
+      ]
+    },
+    {
+      "id": "enforce_time",
+      "mode": "multi_query_rrf",
+      "domain": "enforcement",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.37,
+      "retrieved": [
+        "civil_procedure_250",
+        "civil_procedure_235"
+      ],
+      "expected": [
+        "civil_procedure_250"
+      ]
+    },
+    {
+      "id": "labor_venue",
+      "mode": "single_query_bm25",
+      "domain": "labor_dispute",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 2.15,
+      "retrieved": [
+        "labor_procedure_21",
+        "labor_procedure_53",
+        "labor_procedure_28",
+        "labor_procedure_2",
+        "labor_procedure_5"
+      ],
+      "expected": [
+        "labor_procedure_21"
+      ]
+    },
+    {
+      "id": "labor_venue",
+      "mode": "multi_query_rrf",
+      "domain": "labor_dispute",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 5.4,
+      "retrieved": [
+        "labor_procedure_21",
+        "labor_procedure_53",
+        "labor_procedure_28",
+        "labor_procedure_2",
+        "labor_procedure_5"
+      ],
+      "expected": [
+        "labor_procedure_21"
+      ]
+    },
+    {
+      "id": "labor_time",
+      "mode": "single_query_bm25",
+      "domain": "labor_dispute",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 1.75,
+      "retrieved": [
+        "labor_procedure_27",
+        "labor_procedure_2",
+        "labor_procedure_47",
+        "labor_procedure_21",
+        "labor_procedure_5"
+      ],
+      "expected": [
+        "labor_procedure_27"
+      ]
+    },
+    {
+      "id": "labor_time",
+      "mode": "multi_query_rrf",
+      "domain": "labor_dispute",
+      "hit_at_5": true,
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "latency_ms": 4.28,
+      "retrieved": [
+        "labor_procedure_27",
+        "labor_procedure_2",
+        "labor_procedure_47",
+        "labor_procedure_21",
+        "labor_procedure_5"
+      ],
+      "expected": [
+        "labor_procedure_27"
+      ]
+    }
+  ]
+}

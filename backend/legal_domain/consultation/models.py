@@ -29,6 +29,8 @@ class ActionStep(BaseModel):
     completion: str
     fallback: str
     prerequisite: str = '以事实核实和当地受理要求为准'
+    suggested_date: str = ''
+    date_note: str = '这是建议办事日程，不是法定期限；文书期限更早时优先处理。'
 
 
 class ResearchSource(BaseModel):
@@ -60,3 +62,9 @@ class ConsultationDossier(BaseModel):
     # Generated recommendations are advice drafts, never verified legal findings.
     tailored_steps: list[ActionStep] = Field(default_factory=list)
     tailored_for: str = ''
+    knowledge_passages: list[dict] = Field(default_factory=list)
+    retrieval_audit: dict = Field(default_factory=dict)
+    grounded_claims: list[dict] = Field(default_factory=list)
+    generation_audit: dict = Field(default_factory=dict)
+    service_guide: dict = Field(default_factory=dict)
+    service_key: str = ''

@@ -1,0 +1,1547 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-09-08",
+  "notice": "有限的官方正文快照；不保证全量、最新或个案适用。历史版本与地方规则需另行核对。",
+  "passages": [
+    {
+      "source_id": "administrative_20",
+      "law_name": "中华人民共和国行政复议法",
+      "article": "第二十条",
+      "text": "第二十条 公民、法人或者其他组织认为行政行为侵犯其合法权益的，可以自知道或者应当知道该行政行为之日起六十日内提出行政复议申请；但是法律规定的申请期限超过六十日的除外。\n因不可抗力或者其他正当理由耽误法定申请期限的，申请期限自障碍消除之日起继续计算。\n行政机关作出行政行为时，未告知公民、法人或者其他组织申请行政复议的权利、行政复议机关和申请期限的，申请期限自公民、法人或者其他组织知道或者应当知道申请行政复议的权利、行政复议机关和申请期限之日起计算，但是自知道或者应当知道行政行为内容之日起最长不得超过一年。",
+      "domains": [
+        "administrative"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_70518816df484be18f6b38fa295750bb.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "bae471018736542f973b0e7d3598f47e106abeea91dff3ddfc6b6a070ebd99c2",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "administrative_22",
+      "law_name": "中华人民共和国行政复议法",
+      "article": "第二十二条",
+      "text": "第二十二条 申请人申请行政复议，可以书面申请；书面申请有困难的，也可以口头申请。\n书面申请的，可以通过邮寄或者行政复议机关指定的互联网渠道等方式提交行政复议申请书，也可以当面提交行政复议申请书。行政机关通过互联网渠道送达行政行为决定书的，应当同时提供提交行政复议申请书的互联网渠道。\n口头申请的，行政复议机关应当当场记录申请人的基本情况、行政复议请求、申请行政复议的主要事实、理由和时间。\n申请人对两个以上行政行为不服的，应当分别申请行政复议。",
+      "domains": [
+        "administrative"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_70518816df484be18f6b38fa295750bb.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "bae471018736542f973b0e7d3598f47e106abeea91dff3ddfc6b6a070ebd99c2",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "administrative_23",
+      "law_name": "中华人民共和国行政复议法",
+      "article": "第二十三条",
+      "text": "第二十三条 有下列情形之一的，申请人应当先向行政复议机关申请行政复议，对行政复议决定不服的，可以再依法向人民法院提起行政诉讼：\n（一）对当场作出的行政处罚决定不服；\n（二）对行政机关作出的侵犯其已经依法取得的自然资源的所有权或者使用权的决定不服；\n（三）认为行政机关存在本法第十一条规定的未履行法定职责情形；\n（四）申请政府信息公开，行政机关不予公开；\n（五）法律、行政法规规定应当先向行政复议机关申请行政复议的其他情形。\n对前款规定的情形，行政机关在作出行政行为时应当告知公民、法人或者其他组织先向行政复议机关申请行政复议。",
+      "domains": [
+        "administrative"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_70518816df484be18f6b38fa295750bb.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "bae471018736542f973b0e7d3598f47e106abeea91dff3ddfc6b6a070ebd99c2",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "administrative_24",
+      "law_name": "中华人民共和国行政复议法",
+      "article": "第二十四条",
+      "text": "第二十四条 县级以上地方各级人民政府管辖下列行政复议案件：\n（一）对本级人民政府工作部门作出的行政行为不服的；\n（二）对下一级人民政府作出的行政行为不服的；\n（三）对本级人民政府依法设立的派出机关作出的行政行为不服的；\n（四）对本级人民政府或者其工作部门管理的法律、法规、规章授权的组织作出的行政行为不服的。\n除前款规定外，省、自治区、直辖市人民政府同时管辖对本机关作出的行政行为不服的行政复议案件。\n省、自治区人民政府依法设立的派出机关参照设区的市级人民政府的职责权限，管辖相关行政复议案件。\n对县级以上地方各级人民政府工作部门依法设立的派出机构依照法律、法规、规章规定，以派出机构的名义作出的行政行为不服的行政复议案件，由本级人民政府管辖；其中，对直辖市、设区的市人民政府工作部门按照行政区划设立的派出机构作出的行政行为不服的，也可以由其所在地的人民政府管辖。",
+      "domains": [
+        "administrative"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_70518816df484be18f6b38fa295750bb.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "bae471018736542f973b0e7d3598f47e106abeea91dff3ddfc6b6a070ebd99c2",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "administrative_27",
+      "law_name": "中华人民共和国行政复议法",
+      "article": "第二十七条",
+      "text": "第二十七条 对海关、金融、外汇管理等实行垂直领导的行政机关、税务和国家安全机关的行政行为不服的，向上一级主管部门申请行政复议。",
+      "domains": [
+        "administrative"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_70518816df484be18f6b38fa295750bb.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "bae471018736542f973b0e7d3598f47e106abeea91dff3ddfc6b6a070ebd99c2",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1024",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千零二十四条",
+      "text": "第一千零二十四条 民事主体享有名誉权。任何组织或者个人不得以侮辱、诽谤等方式侵害他人的名誉权。\n名誉是对民事主体的品德、声望、才能、信用等的社会评价。",
+      "domains": [
+        "tort"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1032",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千零三十二条",
+      "text": "第一千零三十二条 自然人享有隐私权。任何组织或者个人不得以刺探、侵扰、泄露、公开等方式侵害他人的隐私权。\n隐私是自然人的私人生活安宁和不愿为他人知晓的私密空间、私密活动、私密信息。",
+      "domains": [
+        "tort"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1077",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千零七十七条",
+      "text": "第一千零七十七条 自婚姻登记机关收到离婚登记申请之日起三十日内，任何一方不愿意离婚的，可以向婚姻登记机关撤回离婚登记申请。\n前款规定期限届满后三十日内，双方应当亲自到婚姻登记机关申请发给离婚证；未申请的，视为撤回离婚登记申请。",
+      "domains": [
+        "family"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1079",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千零七十九条",
+      "text": "第一千零七十九条 夫妻一方要求离婚的，可以由有关组织进行调解或者直接向人民法院提起离婚诉讼。\n人民法院审理离婚案件，应当进行调解；如果感情确已破裂，调解无效的，应当准予离婚。\n有下列情形之一，调解无效的，应当准予离婚：\n（一）重婚或者与他人同居；\n（二）实施家庭暴力或者虐待、遗弃家庭成员；\n（三）有赌博、吸毒等恶习屡教不改；\n（四）因感情不和分居满二年；\n（五）其他导致夫妻感情破裂的情形。\n一方被宣告失踪，另一方提起离婚诉讼的，应当准予离婚。\n经人民法院判决不准离婚后，双方又分居满一年，一方再次提起离婚诉讼的，应当准予离婚。",
+      "domains": [
+        "family"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1084",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千零八十四条",
+      "text": "第一千零八十四条 父母与子女间的关系，不因父母离婚而消除。离婚后，子女无论由父或者母直接抚养，仍是父母双方的子女。\n离婚后，父母对于子女仍有抚养、教育、保护的权利和义务。\n离婚后，不满两周岁的子女，以由母亲直接抚养为原则。已满两周岁的子女，父母双方对抚养问题协议不成的，由人民法院根据双方的具体情况，按照最有利于未成年子女的原则判决。子女已满八周岁的，应当尊重其真实意愿。",
+      "domains": [
+        "family"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1091",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千零九十一条",
+      "text": "第一千零九十一条 有下列情形之一，导致离婚的，无过错方有权请求损害赔偿：\n（一）重婚；\n（二）与他人同居；\n（三）实施家庭暴力；\n（四）虐待、遗弃家庭成员；\n（五）有其他重大过错。",
+      "domains": [
+        "family"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1123",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千一百二十三条",
+      "text": "第一千一百二十三条 继承开始后，按照法定继承办理；有遗嘱的，按照遗嘱继承或者遗赠办理；有遗赠扶养协议的，按照协议办理。",
+      "domains": [
+        "inheritance"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1133",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千一百三十三条",
+      "text": "第一千一百三十三条 自然人可以依照本法规定立遗嘱处分个人财产，并可以指定遗嘱执行人。\n自然人可以立遗嘱将个人财产指定由法定继承人中的一人或者数人继承。\n自然人可以立遗嘱将个人财产赠与国家、集体或者法定继承人以外的组织、个人。\n自然人可以依法设立遗嘱信托。",
+      "domains": [
+        "inheritance"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1179",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千一百七十九条",
+      "text": "第一千一百七十九条 侵害他人造成人身损害的，应当赔偿医疗费、护理费、交通费、营养费、住院伙食补助费等为治疗和康复支出的合理费用，以及因误工减少的收入。造成残疾的，还应当赔偿辅助器具费和残疾赔偿金；造成死亡的，还应当赔偿丧葬费和死亡赔偿金。",
+      "domains": [
+        "traffic",
+        "tort",
+        "medical"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1182",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千一百八十二条",
+      "text": "第一千一百八十二条 侵害他人人身权益造成财产损失的，按照被侵权人因此受到的损失或者侵权人因此获得的利益赔偿；被侵权人因此受到的损失以及侵权人因此获得的利益难以确定，被侵权人和侵权人就赔偿数额协商不一致，向人民法院提起诉讼的，由人民法院根据实际情况确定赔偿数额。",
+      "domains": [
+        "tort"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1185",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千一百八十五条",
+      "text": "第一千一百八十五条 故意侵害他人知识产权，情节严重的，被侵权人有权请求相应的惩罚性赔偿。",
+      "domains": [
+        "intellectual_property"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1208",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千二百零八条",
+      "text": "第一千二百零八条 机动车发生交通事故造成损害的，依照道路交通安全法律和本法的有关规定承担赔偿责任。",
+      "domains": [
+        "traffic"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1213",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千二百一十三条",
+      "text": "第一千二百一十三条 机动车发生交通事故造成损害，属于该机动车一方责任的，先由承保机动车强制保险的保险人在强制保险责任限额范围内予以赔偿；不足部分，由承保机动车商业保险的保险人按照保险合同的约定予以赔偿；仍然不足或者没有投保机动车商业保险的，由侵权人赔偿。",
+      "domains": [
+        "traffic"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1218",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千二百一十八条",
+      "text": "第一千二百一十八条 患者在诊疗活动中受到损害，医疗机构或者其医务人员有过错的，由医疗机构承担赔偿责任。",
+      "domains": [
+        "medical"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1222",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千二百二十二条",
+      "text": "第一千二百二十二条 患者在诊疗活动中受到损害，有下列情形之一的，推定医疗机构有过错：\n（一）违反法律、行政法规、规章以及其他有关诊疗规范的规定；\n（二）隐匿或者拒绝提供与纠纷有关的病历资料；\n（三）遗失、伪造、篡改或者违法销毁病历资料。",
+      "domains": [
+        "medical"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_1225",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一千二百二十五条",
+      "text": "第一千二百二十五条 医疗机构及其医务人员应当按照规定填写并妥善保管住院志、医嘱单、检验报告、手术及麻醉记录、病理资料、护理记录等病历资料。\n患者要求查阅、复制前款规定的病历资料的，医疗机构应当及时提供。",
+      "domains": [
+        "medical"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_188",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一百八十八条",
+      "text": "第一百八十八条 向人民法院请求保护民事权利的诉讼时效期间为三年。法律另有规定的，依照其规定。\n诉讼时效期间自权利人知道或者应当知道权利受到损害以及义务人之日起计算。法律另有规定的，依照其规定。但是，自权利受到损害之日起超过二十年的，人民法院不予保护，有特殊情况的，人民法院可以根据权利人的申请决定延长。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_196",
+      "law_name": "中华人民共和国民法典",
+      "article": "第一百九十六条",
+      "text": "第一百九十六条 下列请求权不适用诉讼时效的规定：\n（一）请求停止侵害、排除妨碍、消除危险；\n（二）不动产物权和登记的动产物权的权利人请求返还财产；\n（三）请求支付抚养费、赡养费或者扶养费；\n（四）依法不适用诉讼时效的其他请求权。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_496",
+      "law_name": "中华人民共和国民法典",
+      "article": "第四百九十六条",
+      "text": "第四百九十六条 格式条款是当事人为了重复使用而预先拟定，并在订立合同时未与对方协商的条款。\n采用格式条款订立合同的，提供格式条款的一方应当遵循公平原则确定当事人之间的权利和义务，并采取合理的方式提示对方注意免除或者减轻其责任等与对方有重大利害关系的条款，按照对方的要求，对该条款予以说明。提供格式条款的一方未履行提示或者说明义务，致使对方没有注意或者理解与其有重大利害关系的条款的，对方可以主张该条款不成为合同的内容。",
+      "domains": [
+        "contract",
+        "consumer"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_497",
+      "law_name": "中华人民共和国民法典",
+      "article": "第四百九十七条",
+      "text": "第四百九十七条 有下列情形之一的，该格式条款无效：\n（一）具有本法第一编第六章第三节和本法第五百零六条规定的无效情形；\n（二）提供格式条款一方不合理地免除或者减轻其责任、加重对方责任、限制对方主要权利；\n（三）提供格式条款一方排除对方主要权利。",
+      "domains": [
+        "contract",
+        "consumer"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_509",
+      "law_name": "中华人民共和国民法典",
+      "article": "第五百零九条",
+      "text": "第五百零九条 当事人应当按照约定全面履行自己的义务。\n当事人应当遵循诚信原则，根据合同的性质、目的和交易习惯履行通知、协助、保密等义务。\n当事人在履行合同过程中，应当避免浪费资源、污染环境和破坏生态。",
+      "domains": [
+        "contract",
+        "housing"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_577",
+      "law_name": "中华人民共和国民法典",
+      "article": "第五百七十七条",
+      "text": "第五百七十七条 当事人一方不履行合同义务或者履行合同义务不符合约定的，应当承担继续履行、采取补救措施或者赔偿损失等违约责任。",
+      "domains": [
+        "contract",
+        "housing",
+        "consumer"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_584",
+      "law_name": "中华人民共和国民法典",
+      "article": "第五百八十四条",
+      "text": "第五百八十四条 当事人一方不履行合同义务或者履行合同义务不符合约定，造成对方损失的，损失赔偿额应当相当于因违约所造成的损失，包括合同履行后可以获得的利益；但是，不得超过违约一方订立合同时预见到或者应当预见到的因违约可能造成的损失。",
+      "domains": [
+        "contract"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_585",
+      "law_name": "中华人民共和国民法典",
+      "article": "第五百八十五条",
+      "text": "第五百八十五条 当事人可以约定一方违约时应当根据违约情况向对方支付一定数额的违约金，也可以约定因违约产生的损失赔偿额的计算方法。\n约定的违约金低于造成的损失的，人民法院或者仲裁机构可以根据当事人的请求予以增加；约定的违约金过分高于造成的损失的，人民法院或者仲裁机构可以根据当事人的请求予以适当减少。\n当事人就迟延履行约定违约金的，违约方支付违约金后，还应当履行债务。",
+      "domains": [
+        "contract"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_667",
+      "law_name": "中华人民共和国民法典",
+      "article": "第六百六十七条",
+      "text": "第六百六十七条 借款合同是借款人向贷款人借款，到期返还借款并支付利息的合同。",
+      "domains": [
+        "debt"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_675",
+      "law_name": "中华人民共和国民法典",
+      "article": "第六百七十五条",
+      "text": "第六百七十五条 借款人应当按照约定的期限返还借款。对借款期限没有约定或者约定不明确，依据本法第五百一十条的规定仍不能确定的，借款人可以随时返还；贷款人可以催告借款人在合理期限内返还。",
+      "domains": [
+        "debt"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_676",
+      "law_name": "中华人民共和国民法典",
+      "article": "第六百七十六条",
+      "text": "第六百七十六条 借款人未按照约定的期限返还借款的，应当按照约定或者国家有关规定支付逾期利息。",
+      "domains": [
+        "debt"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_679",
+      "law_name": "中华人民共和国民法典",
+      "article": "第六百七十九条",
+      "text": "第六百七十九条 自然人之间的借款合同，自贷款人提供借款时成立。",
+      "domains": [
+        "debt"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_680",
+      "law_name": "中华人民共和国民法典",
+      "article": "第六百八十条",
+      "text": "第六百八十条 禁止高利放贷，借款的利率不得违反国家有关规定。\n借款合同对支付利息没有约定的，视为没有利息。\n借款合同对支付利息约定不明确，当事人不能达成补充协议的，按照当地或者当事人的交易方式、交易习惯、市场利率等因素确定利息；自然人之间借款的，视为没有利息。",
+      "domains": [
+        "debt"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_709",
+      "law_name": "中华人民共和国民法典",
+      "article": "第七百零九条",
+      "text": "第七百零九条 承租人应当按照约定的方法使用租赁物。对租赁物的使用方法没有约定或者约定不明确，依据本法第五百一十条的规定仍不能确定的，应当根据租赁物的性质使用。",
+      "domains": [
+        "housing"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_710",
+      "law_name": "中华人民共和国民法典",
+      "article": "第七百一十条",
+      "text": "第七百一十条 承租人按照约定的方法或者根据租赁物的性质使用租赁物，致使租赁物受到损耗的，不承担赔偿责任。",
+      "domains": [
+        "housing"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_733",
+      "law_name": "中华人民共和国民法典",
+      "article": "第七百三十三条",
+      "text": "第七百三十三条 租赁期限届满，承租人应当返还租赁物。返还的租赁物应当符合按照约定或者根据租赁物的性质使用后的状态。",
+      "domains": [
+        "housing"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5212250/content.html",
+      "effective_from": "2021-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "c59ea6e25946eb0365174ca88bc763cc0e06dd6d0616ae6b57e4cb73cb157fff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "civil_procedure_104",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第一百零四条",
+      "text": "第一百零四条 利害关系人因情况紧急，不立即申请保全将会使其合法权益受到难以弥补的损害的，可以在提起诉讼或者申请仲裁前向被保全财产所在地、被申请人住所地或者对案件有管辖权的人民法院申请采取保全措施。申请人应当提供担保，不提供担保的，裁定驳回申请。\n人民法院接受申请后，必须在四十八小时内作出裁定；裁定采取保全措施的，应当立即开始执行。\n申请人在人民法院采取保全措施后三十日内不依法提起诉讼或者申请仲裁的，人民法院应当解除保全。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_122",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第一百二十二条",
+      "text": "第一百二十二条 起诉必须符合下列条件：\n（一）原告是与本案有直接利害关系的公民、法人和其他组织；\n（二）有明确的被告；\n（三）有具体的诉讼请求和事实、理由；\n（四）属于人民法院受理民事诉讼的范围和受诉人民法院管辖。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_126",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第一百二十六条",
+      "text": "第一百二十六条 人民法院应当保障当事人依照法律规定享有的起诉权利。对符合本法第一百二十二条的起诉，必须受理。符合起诉条件的，应当在七日内立案，并通知当事人；不符合起诉条件的，应当在七日内作出裁定书，不予受理；原告对裁定不服的，可以提起上诉。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_22",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第二十二条",
+      "text": "第二十二条 对公民提起的民事诉讼，由被告住所地人民法院管辖；被告住所地与经常居住地不一致的，由经常居住地人民法院管辖。\n对法人或者其他组织提起的民事诉讼，由被告住所地人民法院管辖。\n同一诉讼的几个被告住所地、经常居住地在两个以上人民法院辖区的，各该人民法院都有管辖权。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_235",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第二百三十五条",
+      "text": "第二百三十五条 发生法律效力的民事判决、裁定，以及刑事判决、裁定中的财产部分，由第一审人民法院或者与第一审人民法院同级的被执行的财产所在地人民法院执行。\n法律规定由人民法院执行的其他法律文书，由被执行人住所地或者被执行的财产所在地人民法院执行。",
+      "domains": [
+        "enforcement"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_24",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第二十四条",
+      "text": "第二十四条 因合同纠纷提起的诉讼，由被告住所地或者合同履行地人民法院管辖。",
+      "domains": [
+        "debt",
+        "contract"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_250",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第二百五十条",
+      "text": "第二百五十条 申请执行的期间为二年。申请执行时效的中止、中断，适用法律有关诉讼时效中止、中断的规定。\n前款规定的期间，从法律文书规定履行期间的最后一日起计算；法律文书规定分期履行的，从最后一期履行期限届满之日起计算；法律文书未规定履行期间的，从法律文书生效之日起计算。",
+      "domains": [
+        "enforcement"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_34",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第三十四条",
+      "text": "第三十四条 下列案件，由本条规定的人民法院专属管辖：\n（一）因不动产纠纷提起的诉讼，由不动产所在地人民法院管辖；\n（二）因港口作业中发生纠纷提起的诉讼，由港口所在地人民法院管辖；\n（三）因继承遗产纠纷提起的诉讼，由被继承人死亡时住所地或者主要遗产所在地人民法院管辖。",
+      "domains": [
+        "housing"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "civil_procedure_67",
+      "law_name": "中华人民共和国民事诉讼法",
+      "article": "第六十七条",
+      "text": "第六十七条 当事人对自己提出的主张，有责任提供证据。\n当事人及其诉讼代理人因客观原因不能自行收集的证据，或者人民法院认为审理案件需要的证据，人民法院应当调查收集。\n人民法院应当按照法定程序，全面地、客观地审查核实证据。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5220330/content.html",
+      "effective_from": "2024-01-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "fced0e24955ddc886a6144e0ac2dfa004bc92320607b703bc95a433668b2b8f6",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "company_23",
+      "law_name": "中华人民共和国公司法",
+      "article": "第二十三条",
+      "text": "第二十三条 公司股东滥用公司法人独立地位和股东有限责任，逃避债务，严重损害公司债权人利益的，应当对公司债务承担连带责任。\n股东利用其控制的两个以上公司实施前款规定行为的，各公司应当对任一公司的债务承担连带责任。\n只有一个股东的公司，股东不能证明公司财产独立于股东自己的财产的，应当对公司债务承担连带责任。",
+      "domains": [
+        "corporate"
+      ],
+      "source_url": "https://tianjin.chinatax.gov.cn/11200000000/0300/030004/03000418/20240920114422835.shtml",
+      "effective_from": "2024-07-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "be3aed55253cb20972ff9a77264d6bb70b8489aa91a50d650c7de8cbabdd1fc3",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "company_54",
+      "law_name": "中华人民共和国公司法",
+      "article": "第五十四条",
+      "text": "第五十四条 公司不能清偿到期债务的，公司或者已到期债权的债权人有权要求已认缴出资但未届出资期限的股东提前缴纳出资。",
+      "domains": [
+        "corporate"
+      ],
+      "source_url": "https://tianjin.chinatax.gov.cn/11200000000/0300/030004/03000418/20240920114422835.shtml",
+      "effective_from": "2024-07-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "be3aed55253cb20972ff9a77264d6bb70b8489aa91a50d650c7de8cbabdd1fc3",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "company_57",
+      "law_name": "中华人民共和国公司法",
+      "article": "第五十七条",
+      "text": "第五十七条 股东有权查阅、复制公司章程、股东名册、股东会会议记录、董事会会议决议、监事会会议决议和财务会计报告。\n股东可以要求查阅公司会计账簿、会计凭证。股东要求查阅公司会计账簿、会计凭证的，应当向公司提出书面请求，说明目的。公司有合理根据认为股东查阅会计账簿、会计凭证有不正当目的，可能损害公司合法利益的，可以拒绝提供查阅，并应当自股东提出书面请求之日起十五日内书面答复股东并说明理由。公司拒绝提供查阅的，股东可以向人民法院提起诉讼。\n股东查阅前款规定的材料，可以委托会计师事务所、律师事务所等中介机构进行。\n股东及其委托的会计师事务所、律师事务所等中介机构查阅、复制有关材料，应当遵守有关保护国家秘密、商业秘密、个人隐私、个人信息等法律、行政法规的规定。\n股东要求查阅、复制公司全资子公司相关材料的，适用前四款的规定。",
+      "domains": [
+        "corporate"
+      ],
+      "source_url": "https://tianjin.chinatax.gov.cn/11200000000/0300/030004/03000418/20240920114422835.shtml",
+      "effective_from": "2024-07-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "be3aed55253cb20972ff9a77264d6bb70b8489aa91a50d650c7de8cbabdd1fc3",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "company_88",
+      "law_name": "中华人民共和国公司法",
+      "article": "第八十八条",
+      "text": "第八十八条 股东转让已认缴出资但未届出资期限的股权的，由受让人承担缴纳该出资的义务；受让人未按期足额缴纳出资的，转让人对受让人未按期缴纳的出资承担补充责任。\n未按照公司章程规定的出资日期缴纳出资或者作为出资的非货币财产的实际价额显著低于所认缴的出资额的股东转让股权的，转让人与受让人在出资不足的范围内承担连带责任；受让人不知道且不应当知道存在上述情形的，由转让人承担责任。",
+      "domains": [
+        "corporate"
+      ],
+      "source_url": "https://tianjin.chinatax.gov.cn/11200000000/0300/030004/03000418/20240920114422835.shtml",
+      "effective_from": "2024-07-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "be3aed55253cb20972ff9a77264d6bb70b8489aa91a50d650c7de8cbabdd1fc3",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_24",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第二十四条",
+      "text": "第二十四条 经营者提供的商品或者服务不符合质量要求的，消费者可以依照国家规定、当事人约定退货，或者要求经营者履行更换、修理等义务。没有国家规定和当事人约定的，消费者可以自收到商品之日起七日内退货；七日后符合法定解除合同条件的，消费者可以及时退货，不符合法定解除合同条件的，可以要求经营者履行更换、修理等义务。\n依照前款规定进行退货、更换、修理的，经营者应当承担运输等必要费用。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_25",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第二十五条",
+      "text": "第二十五条 经营者采用网络、电视、电话、邮购等方式销售商品，消费者有权自收到商品之日起七日内退货，且无需说明理由，但下列商品除外:\n（一）消费者定作的；\n（二）鲜活易腐的；\n（三）在线下载或者消费者拆封的音像制品、计算机软件等数字化商品；\n（四）交付的报纸、期刊。\n除前款所列商品外，其他根据商品性质并经消费者在购买时确认不宜退货的商品，不适用无理由退货。\n消费者退货的商品应当完好。经营者应当自收到退回商品之日起七日内返还消费者支付的商品价款。退回商品的运费由消费者承担；经营者和消费者另有约定的，按照约定。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_26",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第二十六条",
+      "text": "第二十六条 经营者在经营活动中使用格式条款的，应当以显著方式提请消费者注意商品或者服务的数量和质量、价款或者费用、履行期限和方式、安全注意事项和风险警示、售后服务、民事责任等与消费者有重大利害关系的内容，并按照消费者的要求予以说明。\n经营者不得以格式条款、通知、声明、店堂告示等方式，作出排除或者限制消费者权利、减轻或者免除经营者责任、加重消费者责任等对消费者不公平、不合理的规定，不得利用格式条款并借助技术手段强制交易。\n格式条款、通知、声明、店堂告示等含有前款所列内容的，其内容无效。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_39",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第三十九条",
+      "text": "第三十九条 消费者和经营者发生消费者权益争议的，可以通过下列途径解决:\n（一）与经营者协商和解；\n（二）请求消费者协会或者依法成立的其他调解组织调解；\n（三）向有关行政部门投诉；\n（四）根据与经营者达成的仲裁协议提请仲裁机构仲裁；\n（五）向人民法院提起诉讼。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_44",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第四十四条",
+      "text": "第四十四条 消费者通过网络交易平台购买商品或者接受服务，其合法权益受到损害的，可以向销售者或者服务者要求赔偿。网络交易平台提供者不能提供销售者或者服务者的真实名称、地址和有效联系方式的，消费者也可以向网络交易平台提供者要求赔偿；网络交易平台提供者作出更有利于消费者的承诺的，应当履行承诺。网络交易平台提供者赔偿后，有权向销售者或者服务者追偿。\n网络交易平台提供者明知或者应知销售者或者服务者利用其平台侵害消费者合法权益，未采取必要措施的，依法与该销售者或者服务者承担连带责任。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_53",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第五十三条",
+      "text": "第五十三条 经营者以预收款方式提供商品或者服务的，应当按照约定提供。未按照约定提供的，应当按照消费者的要求履行约定或者退回预付款；并应当承担预付款的利息、消费者必须支付的合理费用。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "consumer_55",
+      "law_name": "中华人民共和国消费者权益保护法",
+      "article": "第五十五条",
+      "text": "第五十五条 经营者提供商品或者服务有欺诈行为的，应当按照消费者的要求增加赔偿其受到的损失，增加赔偿的金额为消费者购买商品的价款或者接受服务的费用的三倍；增加赔偿的金额不足五百元的，为五百元。法律另有规定的，依照其规定。\n经营者明知商品或者服务存在缺陷，仍然向消费者提供，造成消费者或者其他受害人死亡或者健康严重损害的，受害人有权要求经营者依照本法第四十九条、第五十一条等法律规定赔偿损失，并有权要求所受损失二倍以下的惩罚性赔偿。",
+      "domains": [
+        "consumer"
+      ],
+      "source_url": "https://www.samr.gov.cn/zfjcj/tzgg/art/2023/art_615af9ed6bcd4974bf853dd2e02bc663.html",
+      "effective_from": "2014-03-15",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "88c3608fa6e95135e7198595b964249e551025fce132e519a857559c5eb197c7",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "substantive"
+    },
+    {
+      "source_id": "criminal_procedure_34",
+      "law_name": "中华人民共和国刑事诉讼法",
+      "article": "第三十四条",
+      "text": "第三十四条 犯罪嫌疑人自被侦查机关第一次讯问或者采取强制措施之日起，有权委托辩护人；在侦查期间，只能委托律师作为辩护人。被告人有权随时委托辩护人。\n侦查机关在第一次讯问犯罪嫌疑人或者对犯罪嫌疑人采取强制措施的时候，应当告知犯罪嫌疑人有权委托辩护人。人民检察院自收到移送审查起诉的案件材料之日起三日以内，应当告知犯罪嫌疑人有权委托辩护人。人民法院自受理案件之日起三日以内，应当告知被告人有权委托辩护人。犯罪嫌疑人、被告人在押期间要求委托辩护人的，人民法院、人民检察院和公安机关应当及时转达其要求。\n犯罪嫌疑人、被告人在押的，也可以由其监护人、近亲属代为委托辩护人。\n辩护人接受犯罪嫌疑人、被告人委托后，应当及时告知办理案件的机关。",
+      "domains": [
+        "criminal"
+      ],
+      "source_url": "https://www.samr.gov.cn/jjz/djfg/gjflfg/art/2023/art_929f3de7d593441bbe63fe0eecd05e10.html",
+      "effective_from": "2018-10-26",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "47e9133c42f4e547c98cd5e76de70214e74be8949377940742d23d7b44aa54ff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "criminal_procedure_35",
+      "law_name": "中华人民共和国刑事诉讼法",
+      "article": "第三十五条",
+      "text": "第三十五条 犯罪嫌疑人、被告人因经济困难或者其他原因没有委托辩护人的，本人及其近亲属可以向法律援助机构提出申请。对符合法律援助条件的，法律援助机构应当指派律师为其提供辩护。\n犯罪嫌疑人、被告人是盲、聋、哑人，或者是尚未完全丧失辨认或者控制自己行为能力的精神病人，没有委托辩护人的，人民法院、人民检察院和公安机关应当通知法律援助机构指派律师为其提供辩护。\n犯罪嫌疑人、被告人可能被判处无期徒刑、死刑，没有委托辩护人的，人民法院、人民检察院和公安机关应当通知法律援助机构指派律师为其提供辩护。",
+      "domains": [
+        "criminal"
+      ],
+      "source_url": "https://www.samr.gov.cn/jjz/djfg/gjflfg/art/2023/art_929f3de7d593441bbe63fe0eecd05e10.html",
+      "effective_from": "2018-10-26",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "47e9133c42f4e547c98cd5e76de70214e74be8949377940742d23d7b44aa54ff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "criminal_procedure_37",
+      "law_name": "中华人民共和国刑事诉讼法",
+      "article": "第三十七条",
+      "text": "第三十七条 辩护人的责任是根据事实和法律，提出犯罪嫌疑人、被告人无罪、罪轻或者减轻、免除其刑事责任的材料和意见，维护犯罪嫌疑人、被告人的诉讼权利和其他合法权益。",
+      "domains": [
+        "criminal"
+      ],
+      "source_url": "https://www.samr.gov.cn/jjz/djfg/gjflfg/art/2023/art_929f3de7d593441bbe63fe0eecd05e10.html",
+      "effective_from": "2018-10-26",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "47e9133c42f4e547c98cd5e76de70214e74be8949377940742d23d7b44aa54ff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "criminal_procedure_39",
+      "law_name": "中华人民共和国刑事诉讼法",
+      "article": "第三十九条",
+      "text": "第三十九条 辩护律师可以同在押的犯罪嫌疑人、被告人会见和通信。其他辩护人经人民法院、人民检察院许可，也可以同在押的犯罪嫌疑人、被告人会见和通信。\n辩护律师持律师执业证书、律师事务所证明和委托书或者法律援助公函要求会见在押的犯罪嫌疑人、被告人的，看守所应当及时安排会见，至迟不得超过四十八小时。\n危害国家安全犯罪、恐怖活动犯罪案件，在侦查期间辩护律师会见在押的犯罪嫌疑人，应当经侦查机关许可。上述案件，侦查机关应当事先通知看守所。\n辩护律师会见在押的犯罪嫌疑人、被告人，可以了解案件有关情况，提供法律咨询等；自案件移送审查起诉之日起，可以向犯罪嫌疑人、被告人核实有关证据。辩护律师会见犯罪嫌疑人、被告人时不被监听。\n辩护律师同被监视居住的犯罪嫌疑人、被告人会见、通信，适用第一款、第三款、第四款的规定。",
+      "domains": [
+        "criminal"
+      ],
+      "source_url": "https://www.samr.gov.cn/jjz/djfg/gjflfg/art/2023/art_929f3de7d593441bbe63fe0eecd05e10.html",
+      "effective_from": "2018-10-26",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "47e9133c42f4e547c98cd5e76de70214e74be8949377940742d23d7b44aa54ff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "criminal_procedure_67",
+      "law_name": "中华人民共和国刑事诉讼法",
+      "article": "第六十七条",
+      "text": "第六十七条 人民法院、人民检察院和公安机关对有下列情形之一的犯罪嫌疑人、被告人，可以取保候审：\n（一）可能判处管制、拘役或者独立适用附加刑的；\n（二）可能判处有期徒刑以上刑罚，采取取保候审不致发生社会危险性的；\n（三）患有严重疾病、生活不能自理，怀孕或者正在哺乳自己婴儿的妇女，采取取保候审不致发生社会危险性的；\n（四）羁押期限届满，案件尚未办结，需要采取取保候审的。\n取保候审由公安机关执行。",
+      "domains": [
+        "criminal"
+      ],
+      "source_url": "https://www.samr.gov.cn/jjz/djfg/gjflfg/art/2023/art_929f3de7d593441bbe63fe0eecd05e10.html",
+      "effective_from": "2018-10-26",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "47e9133c42f4e547c98cd5e76de70214e74be8949377940742d23d7b44aa54ff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "criminal_procedure_85",
+      "law_name": "中华人民共和国刑事诉讼法",
+      "article": "第八十五条",
+      "text": "第八十五条 公安机关拘留人的时候，必须出示拘留证。\n拘留后，应当立即将被拘留人送看守所羁押，至迟不得超过二十四小时。除无法通知或者涉嫌危害国家安全犯罪、恐怖活动犯罪通知可能有碍侦查的情形以外，应当在拘留后二十四小时以内，通知被拘留人的家属。有碍侦查的情形消失以后，应当立即通知被拘留人的家属。",
+      "domains": [
+        "criminal"
+      ],
+      "source_url": "https://www.samr.gov.cn/jjz/djfg/gjflfg/art/2023/art_929f3de7d593441bbe63fe0eecd05e10.html",
+      "effective_from": "2018-10-26",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "47e9133c42f4e547c98cd5e76de70214e74be8949377940742d23d7b44aa54ff",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "fees_13",
+      "law_name": "诉讼费用交纳办法",
+      "article": "第十三条",
+      "text": "第十三条 案件受理费分别按照下列标准交纳：\n(一)财产案件根据诉讼请求的金额或者价额，按照下列比例分段累计交纳：\n1．不超过1万元的，每件交纳50元；\n2．超过1万元至10万元的部分，按照2.5%交纳；\n3．超过10万元至20万元的部分，按照2%交纳；\n4．超过20万元至50万元的部分，按照1.5%交纳；\n5．超过50万元至100万元的部分，按照1%交纳；\n6．超过100万元至200万元的部分，按照0.9%交纳；\n7．超过200万元至500万元的部分，按照0.8%交纳；\n8．超过500万元至1000万元的部分，按照0.7%交纳；\n9．超过1000万元至2000万元的部分，按照0.6%交纳；\n10．超过2000万元的部分，按照0.5%交纳。\n(二)非财产案件按照下列标准交纳：\n1．离婚案件每件交纳50元至300元。涉及财产分割，财产总额不超过20万元的，不另行交纳；超过20万元的部分，按照0.5%交纳。\n2．侵害姓名权、名称权、肖像权、名誉权、荣誉权以及其他人格权的案件，每件交纳100元至500元。涉及损害赔偿，赔偿金额不超过5万元的，不另行交纳；超过5万元至10万元的部分，按照1%交纳；超过10万元的部分，按照0.5%交纳。\n3．其他非财产案件每件交纳50元至100元。\n(三)知识产权民事案件，没有争议金额或者价额的，每件交纳500元至1000元；有争议金额或者价额的，按照财产案件的标准交纳。\n(四)劳动争议案件每件交纳10元。\n(五)行政案件按照下列标准交纳：\n1．商标、专利、海事行政案件每件交纳100元；\n2．其他行政案件每件交纳50元。\n(六)当事人提出案件管辖权异议，异议不成立的，每件交纳50元至100元。\n省、自治区、直辖市人民政府可以结合本地实际情况在本条第(二)项、第(三)项、第(六)项规定的幅度内制定具体交纳标准。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_b7b56c4657c64656894e66c7e1a993dc.html",
+      "effective_from": "2007-04-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8a38893845217f36fba40dfa4dfedcecad25e11a66b1cff2a6dcf40b4bf39237",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "fees_16",
+      "law_name": "诉讼费用交纳办法",
+      "article": "第十六条",
+      "text": "第十六条 适用简易程序审理的案件减半交纳案件受理费。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_b7b56c4657c64656894e66c7e1a993dc.html",
+      "effective_from": "2007-04-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8a38893845217f36fba40dfa4dfedcecad25e11a66b1cff2a6dcf40b4bf39237",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "fees_29",
+      "law_name": "诉讼费用交纳办法",
+      "article": "第二十九条",
+      "text": "第二十九条 诉讼费用由败诉方负担，胜诉方自愿承担的除外。\n部分胜诉、部分败诉的，人民法院根据案件的具体情况决定当事人各自负担的诉讼费用数额。\n共同诉讼当事人败诉的，人民法院根据其对诉讼标的的利害关系，决定当事人各自负担的诉讼费用数额。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_b7b56c4657c64656894e66c7e1a993dc.html",
+      "effective_from": "2007-04-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8a38893845217f36fba40dfa4dfedcecad25e11a66b1cff2a6dcf40b4bf39237",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "fees_44",
+      "law_name": "诉讼费用交纳办法",
+      "article": "第四十四条",
+      "text": "第四十四条 当事人交纳诉讼费用确有困难的，可以依照本办法向人民法院申请缓交、减交或者免交诉讼费用的司法救助。\n诉讼费用的免交只适用于自然人。",
+      "domains": [
+        "debt",
+        "housing",
+        "consumer",
+        "contract",
+        "family",
+        "inheritance",
+        "traffic",
+        "medical",
+        "tort",
+        "intellectual_property",
+        "corporate"
+      ],
+      "source_url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_b7b56c4657c64656894e66c7e1a993dc.html",
+      "effective_from": "2007-04-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8a38893845217f36fba40dfa4dfedcecad25e11a66b1cff2a6dcf40b4bf39237",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_2",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第二条",
+      "text": "第二条 中华人民共和国境内的用人单位与劳动者发生的下列劳动争议，适用本法：\n（一）因确认劳动关系发生的争议；\n（二）因订立、履行、变更、解除和终止劳动合同发生的争议；\n（三）因除名、辞退和辞职、离职发生的争议；\n（四）因工作时间、休息休假、社会保险、福利、培训以及劳动保护发生的争议；\n（五）因劳动报酬、工伤医疗费、经济补偿或者赔偿金等发生的争议；\n（六）法律、法规规定的其他劳动争议。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_21",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第二十一条",
+      "text": "第二十一条 劳动争议仲裁委员会负责管辖本区域内发生的劳动争议。\n劳动争议由劳动合同履行地或者用人单位所在地的劳动争议仲裁委员会管辖。双方当事人分别向劳动合同履行地和用人单位所在地的劳动争议仲裁委员会申请仲裁的，由劳动合同履行地的劳动争议仲裁委员会管辖。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_27",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第二十七条",
+      "text": "第二十七条 劳动争议申请仲裁的时效期间为一年。仲裁时效期间从当事人知道或者应当知道其权利被侵害之日起计算。\n前款规定的仲裁时效，因当事人一方向对方当事人主张权利，或者向有关部门请求权利救济，或者对方当事人同意履行义务而中断。从中断时起，仲裁时效期间重新计算。\n因不可抗力或者有其他正当理由，当事人不能在本条第一款规定的仲裁时效期间申请仲裁的，仲裁时效中止。从中止时效的原因消除之日起，仲裁时效期间继续计算。\n劳动关系存续期间因拖欠劳动报酬发生争议的，劳动者申请仲裁不受本条第一款规定的仲裁时效期间的限制；但是，劳动关系终止的，应当自劳动关系终止之日起一年内提出。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_28",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第二十八条",
+      "text": "第二十八条 申请人申请仲裁应当提交书面仲裁申请，并按照被申请人人数提交副本。\n仲裁申请书应当载明下列事项：\n（一）劳动者的姓名、性别、年龄、职业、工作单位和住所，用人单位的名称、住所和法定代表人或者主要负责人的姓名、职务；\n（二）仲裁请求和所根据的事实、理由；\n（三）证据和证据来源、证人姓名和住所。\n书写仲裁申请确有困难的，可以口头申请，由劳动争议仲裁委员会记入笔录，并告知对方当事人。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_29",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第二十九条",
+      "text": "第二十九条 劳动争议仲裁委员会收到仲裁申请之日起五日内，认为符合受理条件的，应当受理，并通知申请人；认为不符合受理条件的，应当书面通知申请人不予受理，并说明理由。对劳动争议仲裁委员会不予受理或者逾期未作出决定的，申请人可以就该劳动争议事项向人民法院提起诉讼。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_43",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第四十三条",
+      "text": "第四十三条 仲裁庭裁决劳动争议案件，应当自劳动争议仲裁委员会受理仲裁申请之日起四十五日内结束。案情复杂需要延期的，经劳动争议仲裁委员会主任批准，可以延期并书面通知当事人，但是延长期限不得超过十五日。逾期未作出仲裁裁决的，当事人可以就该劳动争议事项向人民法院提起诉讼。\n仲裁庭裁决劳动争议案件时，其中一部分事实已经清楚，可以就该部分先行裁决。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_47",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第四十七条",
+      "text": "第四十七条 下列劳动争议，除本法另有规定的外，仲裁裁决为终局裁决，裁决书自作出之日起发生法律效力：\n（一）追索劳动报酬、工伤医疗费、经济补偿或者赔偿金，不超过当地月最低工资标准十二个月金额的争议；\n（二）因执行国家的劳动标准在工作时间、休息休假、社会保险等方面发生的争议。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_48",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第四十八条",
+      "text": "第四十八条 劳动者对本法第四十七条规定的仲裁裁决不服的，可以自收到仲裁裁决书之日起十五日内向人民法院提起诉讼。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_5",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第五条",
+      "text": "第五条 发生劳动争议，当事人不愿协商、协商不成或者达成和解协议后不履行的，可以向调解组织申请调解；不愿调解、调解不成或者达成调解协议后不履行的，可以向劳动争议仲裁委员会申请仲裁；对仲裁裁决不服的，除本法另有规定的外，可以向人民法院提起诉讼。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_50",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第五十条",
+      "text": "第五十条 当事人对本法第四十七条规定以外的其他劳动争议案件的仲裁裁决不服的，可以自收到仲裁裁决书之日起十五日内向人民法院提起诉讼；期满不起诉的，裁决书发生法律效力。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_53",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第五十三条",
+      "text": "第五十三条 劳动争议仲裁不收费。劳动争议仲裁委员会的经费由财政予以保障。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    },
+    {
+      "source_id": "labor_procedure_6",
+      "law_name": "中华人民共和国劳动争议调解仲裁法",
+      "article": "第六条",
+      "text": "第六条 发生劳动争议，当事人对自己提出的主张，有责任提供证据。与争议事项有关的证据属于用人单位掌握管理的，用人单位应当提供；用人单位不提供的，应当承担不利后果。",
+      "domains": [
+        "labor_dispute"
+      ],
+      "source_url": "https://chinajob.mohrss.gov.cn/h5/c/2022-07-15/356212.shtml",
+      "effective_from": "2008-05-01",
+      "effective_to": "",
+      "checked_on": "2026-09-08",
+      "snapshot_hash": "8f06914e8e4eef23d99f060acc7a668e49939ce554b3777bd957196be1ef489b",
+      "keywords": [],
+      "provenance": "official_html_article_extraction",
+      "version_status": "已核对来源文本；未保证无后续修订",
+      "temporal_scope": "procedure"
+    }
+  ]
+}

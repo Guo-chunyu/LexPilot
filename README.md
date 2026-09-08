@@ -2,6 +2,12 @@
 
 面向多领域法律咨询的主动式行动辅助工具。系统从用户的实际诉求出发，逐轮整理事实、证据、适用地区和处理进展，结合个案语义分析、分领域清单与法源线索形成具体实施步骤。原有劳动争议专门流程继续保留。
 
+## AI+ 应用大赛版本
+
+新增 **官方条文检索 → 有条件生成 → 引用检查 → 至多一次纠错 → 行动方案 → Word/PDF 下载** 闭环。已导入 8 部法律法规的 79 个官方条文快照，使用 SQLite FTS5 中文 BM25 与加权 RRF 检索；保留事实 ID、原文片段、来源链接、版本条件与内容哈希。咨询者身份影响请求和抗辩方向，方案写明建议日期、办理入口、材料、操作、完成标志和失败替代路线。
+
+参考方法、代码入口、外部 API 配置、复现实验和能力边界见 [参赛技术说明](docs/competition-upgrade.md)。研究方法属于工程借鉴；没有训练或声称复现 Self-RAG 模型，也没有把检索命中率称为法律回答准确率。
+
 ## 多领域咨询升级
 
 - 15 个专门领域及综合接谈：劳动、婚姻、借贷、房产、消费、合同、公司、知识产权、继承、交通、医疗、侵权、刑事、行政、执行。
@@ -105,7 +111,7 @@ python scripts\demo_acceptance.py
 2. 按系统追问继续回答；不知道的内容可以直接说明“不清楚”。
 3. 需要合同时，可在聊天输入框直接附加材料，不必把文件内容手动改写成文字。
 4. 右侧“案件档案”可查看完整度、证据缺口、处理记录和已上传材料。
-5. 随时生成阶段方案，在“报告”页下载 Markdown 完整报告与文本草稿。
+5. 随时生成阶段方案，在“报告”页下载 Word、PDF 或 Markdown 完整报告与文本草稿。
 
 聊天输入框支持一次附加多个文件，单文件上限 15 MB：
 
@@ -121,6 +127,7 @@ python scripts\demo_acceptance.py
 - `POST /chat/stream`：以 SSE 输出处理时间线和最终状态。
 - `POST /cases/{thread_id}/evidence`：上传一份或多份证据并继续同一案件。
 - `GET /cases/{thread_id}`：读取当前案件状态。
+- `GET /cases/{thread_id}/report.docx`、`report.pdf`、`report.md`：下载已生成的当前报告。
 - `GET /health`：健康检查。
 
 `POST /chat` 请求示例：
@@ -164,9 +171,13 @@ LEXPILOT_ENABLE_SEMANTIC_AI=true
 LLM_REQUEST_TIMEOUT_SECONDS=8
 LEXPILOT_CONSULT_TIMEOUT_SECONDS=30
 SERPER_API_KEY=
+AMAP_API_KEY=
+LEXPILOT_KNOWLEDGE_DB=./.local_data/legal_knowledge.sqlite3
 ```
 
 本地开发时直接在仓库根目录的 `.env` 中填写 `DASHSCOPE_API_KEY`。也兼容变量名 `QWEN_API_KEY`。`.env` 已加入 `.gitignore`，密钥不会进入 Streamlit 状态、API 响应或页面。修改密钥后需重启 Web/API 进程。日常语义提取会强制关闭思考模式以降低延迟；只有最终受约束报告允许启用思考模式，可将 `QWEN_ENABLE_THINKING=false` 关闭全部思考。
+
+`AMAP_API_KEY` 可选，配置后按城市查询真实机构地址；地图结果仍需确认管辖。未配置时提供官方网上入口和核对地址、工作时间、材料份数的电话用语。法律正文快照不需要外部密钥；更新和评测命令分别为 `python scripts/sync_legal_knowledge.py` 与 `python scripts/evaluate_consultation.py`。
 
 没有配置语义密钥或远程请求失败时，系统继续执行确定性事实抽取、分领域接谈、证据清单和阶段方案，不中断案件流程。`SERPER_API_KEY` 是可选联网法源搜索配置；未配置时会明确显示未联网核验。上传的原始附件默认仅保存在本机，通用咨询中从附件正文提取的字段也不自动发送给外部语义服务。
 

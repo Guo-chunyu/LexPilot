@@ -82,7 +82,8 @@ def build_graph():
 
     def domain_route(graph_state):
         from backend.legal_domain.consultation.intake import wants_plan
-        if CaseState.from_value(graph_state["case_state"]).case_type != "labor_dispute":
+        from backend.legal_domain.consultation.perspective import uses_general_consultation
+        if uses_general_consultation(CaseState.from_value(graph_state["case_state"]), graph_state.get("user_message", "")):
             return "general_consultation"
         return "labor_stage_plan" if wants_plan(graph_state.get("user_message", "")) else "fact_extraction"
 

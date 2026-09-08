@@ -30,6 +30,12 @@ class FinalLegalReport(BaseModel):
     costs: list[str] = Field(default_factory=list)
     deadlines: list[dict] = Field(default_factory=list)
     documents: list[dict] = Field(default_factory=list)
+    strategy_comparison: dict = Field(default_factory=dict)
+    service_guide: dict = Field(default_factory=dict)
+    grounded_claims: list[dict] = Field(default_factory=list)
+    knowledge_passages: list[dict] = Field(default_factory=list)
+    retrieval_audit: dict = Field(default_factory=dict)
+    quality_audit: dict = Field(default_factory=dict)
 
 
 def build_final_report(state: CaseState) -> FinalLegalReport:
@@ -100,5 +106,9 @@ def build_final_report(state: CaseState) -> FinalLegalReport:
         deadlines=[{"name": "劳动仲裁时效及收到文书后的救济期限", "status": "须结合请求类型与具体日期核对", "trigger": str(state.event_date or "发生日、解除日或履行期尚待核实"), "action": "先向有管辖权的受理窗口核对起算日期、特殊规则、中断等影响；不把材料收集结束日当作起算日。"}],
         documents=plan_documents(state),
     )
+    from backend.legal_domain.consultation.knowledge import retrieve_for_case
+    from backend.legal_domain.consultation.reporting import intelligence_sections
+    retrieve_for_case(state)
+    report = report.model_copy(update=intelligence_sections(state, report.model_dump(mode='json')))
     state.final_report = report.model_dump(mode="json")
     return report

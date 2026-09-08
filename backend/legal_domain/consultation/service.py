@@ -10,6 +10,8 @@ from .reporting import build_consultation_report
 from .research import research_case
 from .semantic import enrich_consultation
 from .authorities import update_rule_references
+from .knowledge import retrieve_for_case
+from .perspective import case_profile
 
 
 def process_consultation(message: str, state: CaseState) -> dict:
@@ -28,17 +30,27 @@ def process_consultation(message: str, state: CaseState) -> dict:
         related = [d for d in identify_domains(message) if d not in ('general', 'labor_dispute')]
         dossier.domain_ids = list(dict.fromkeys([state.case_type, *dossier.domain_ids, *related]))[:3]
     explicit_plan = wants_plan(message) or bool(re.search(EXHAUSTED_PATTERN, message))
+    # The generation call must see this turn's retrieval, not last turn's status.
+    retrieve_for_case(state)
+    if dossier.jurisdiction_status != 'OUTSIDE_MAINLAND':
+        research_case(state)
+    previous_domain = state.case_type
     if not re.search(UNKNOWN_PATTERN, message) and not re.search(EXHAUSTED_PATTERN, message):
         enrich_consultation(message, state, include_plan=explicit_plan or had_plan)
     else:
         dossier.analysis = ''
         dossier.follow_up = ''
         dossier.tailored_steps = []
-    profile = PROFILES.get(state.case_type, PROFILES['general'])
+        dossier.grounded_claims = []
+        dossier.generation_audit = {}
+    if state.case_type != previous_domain:
+        # A semantic reclassification invalidates retrieval for the prior area.
+        retrieve_for_case(state)
+        dossier.grounded_claims = []
+        dossier.tailored_steps = []
+    profile = case_profile(state)
     refresh_evidence(state)
     rules = update_rule_references(state)
-    if dossier.jurisdiction_status != 'OUTSIDE_MAINLAND':
-        research_case(state)
     state.legal_confidence = 0.0  # Discovery has not established applicability.
     state.legal_issues = [profile.focus]
     state.opponent_analysis = {'arguments': [profile.defense], 'response': profile.response}
@@ -70,7 +82,8 @@ def process_consultation(message: str, state: CaseState) -> dict:
     produce = explicit_plan or had_plan or not missing or dossier.turns >= 6
     if produce:
         report = build_consultation_report(state)
-        pieces += ['**按现有信息，先这样推进**', *[f'{i}. **{s["title"]}**：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”：包括取证方法、办理渠道、材料、费用、期限核对、对方抗辩和沟通草稿。事实或法源尚未核验的部分已标明，后续补充会更新方案。']
+        pieces += ['**建议先走的路线**：' + report['strategy_comparison']['decision_reason'],
+            '**按现有信息，先这样推进**', *[f'{i}. **{s["title"]}**（建议{s["suggested_date"]}开始）：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”，可下载 Word / PDF：包含办理入口、具体操作、材料、费用比较、期限核对和沟通草稿。日程是行动建议，不能替代法定期限。后续补充材料会更新方案。']
         action = LegalAction.GENERATE_DOCUMENT
         reason = '先提供现有信息下可执行的阶段方案，保留事实和法源核验缺口。'
     else:

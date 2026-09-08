@@ -7,11 +7,15 @@ from .models import ActionStep
 from .profiles import PROFILES, domain_label
 from .research import SERVICE_LINKS
 from .authorities import relevant_rules
+from .planning import enhance_steps, compare_routes
+from .services import service_guide
+from .grounding import audit_report
+from .perspective import case_profile
 
 
 def action_plan(state) -> list[dict]:
     dossier = state.consultation
-    profile = PROFILES.get(state.case_type, PROFILES['general'])
+    profile = case_profile(state)
     location = str(state.facts.get('location', '案件所在地（待确认）'))
     goal = str(state.facts.get('goal', '先明确希望解决的问题'))
     material_names = [t.name for t in dossier.evidence_tasks] or ['关键合同或决定', '完整沟通记录', '时间线与证据目录']
@@ -61,11 +65,11 @@ def action_plan(state) -> list[dict]:
             fallback='协商、投诉或调解未解决时重新比较正式救济成本；文书生效后仍不履行的，核对是否可依法申请执行及其条件。',
         ),
     ])
-    return [step.model_dump() for step in first_steps]
+    return enhance_steps(state, [step.model_dump() for step in first_steps])
 
 
 def plan_documents(state) -> list[dict]:
-    profile = PROFILES.get(state.case_type, PROFILES['general'])
+    profile = case_profile(state)
     lines = ['材料名称 | 来源/原件位置 | 形成时间 | 要证明的事实 | 待核对问题', *[f'{t.name} | [填写] | [填写] | {t.proves} | {t.status}' for t in state.consultation.evidence_tasks]]
     return [
         {'title': '事实与诉求整理稿', 'status': '本人核对后使用', 'content': f'适用地区：{state.facts.get("location", "[待填写]")}\n本人和对方身份：[填写，提交时按要求补充正式身份信息]\n最初描述：{state.user_narrative}\n关键事实（陈述，待核实）：\n' + '\n'.join(f'- {LABELS.get(k, k)}：{v}' for k, v in state.facts.items() if k in LABELS) + '\n具体请求：[逐项写明，不清楚的金额先列计算依据]\n附件：按证据目录编号。'},
@@ -75,7 +79,7 @@ def plan_documents(state) -> list[dict]:
 
 
 def build_consultation_report(state) -> dict:
-    profile = PROFILES.get(state.case_type, PROFILES['general'])
+    profile = case_profile(state)
     dossier = state.consultation
     steps = action_plan(state)
     summary = state.user_narrative + '\n\n当前补充：\n' + '\n'.join(f'- {LABELS.get(k, k)}：{v}' for k, v in state.facts.items() if k in LABELS)
@@ -101,6 +105,7 @@ def build_consultation_report(state) -> dict:
         'confidence': 0.0,
         'disclaimer': '律策是 AI 法律咨询与行动辅助工具，不是律师事务所；具体结论需结合完整证据、有效法源和当地实践核实。',
     }
+    report.update(intelligence_sections(state, report))
     if dossier.jurisdiction_status == 'OUTSIDE_MAINLAND':
         report['research_sources'] = []
         report['research_status'] = '需另行核验适用国家或地区的法律及执业服务渠道。'
@@ -110,9 +115,26 @@ def build_consultation_report(state) -> dict:
     return report
 
 
+def intelligence_sections(state, report) -> dict:
+    dossier = state.consultation
+    return {'strategy_comparison': compare_routes(state), 'service_guide': service_guide(state),
+        'grounded_claims': dossier.grounded_claims, 'knowledge_passages': dossier.knowledge_passages,
+        'retrieval_audit': dossier.retrieval_audit, 'quality_audit': audit_report(report, dossier)}
+
+
 def report_markdown(state) -> str:
     report = state.final_report
     lines = [f'# LexPilot {domain_label(state.case_type)}阶段方案', '', f'案件编号：{state.case_id}', '', '## 案情与初步分析', '', report.get('case_summary', state.user_narrative), '', report.get('analysis', '')]
+    strategy = report.get('strategy_comparison', {})
+    if strategy:
+        lines += ['', '## 先选哪条路以及如何减少损失', '', strategy['objective'], '', strategy['decision_reason']]
+        if strategy.get('client_role'):
+            role = strategy['client_role']
+            lines += ['', f'咨询立场：{role["label"]}。{role["basis"]}（身份仍待材料核对）']
+        for route in strategy['routes']:
+            if route['eligible']:
+                lines += ['', f'### {route["name"]}' + (' 建议优先' if route['recommended'] else ''), '', route['reason'], '', f'成本：{route["cost"]}', '', f'何时转下一步：{route["stop_condition"]}']
+        lines += ['', '## 到手金额与投入核对', '', *['- ' + s for s in strategy['benefit_worksheet']]]
     for title, values in [('主要问题', report.get('legal_issues', [])), ('对方可能怎么说及如何回应', report.get('opponent_arguments', [])), ('费用与投入', report.get('costs', []))]:
         if values:
             lines += ['', f'## {title}', '', *[f'- {v}' for v in values]]
@@ -128,7 +150,7 @@ def report_markdown(state) -> str:
         if report.get(key):
             lines += ['', f'## {title}', '']
             for i, step in enumerate(report[key], 1):
-                lines += [f'### {i}. {step["title"]}', '', f'时间安排：{step["when"]}', '', f'办理渠道：{step["channel"]}', '', '材料：' + '、'.join(step['materials']), '', *[f'- {s}' for s in step['instructions']], '', f'完成标志：{step["completion"]}', '', f'不顺利时：{step["fallback"]}', '']
+                lines += [f'### {i}. {step["title"]}', '', f'何时办理：{step.get("suggested_date", "")} {step["when"]}', '', step.get('date_note', ''), '', f'办理渠道：{step["channel"]}', '', '材料：' + '、'.join(step['materials']), '', *[f'- {s}' for s in step['instructions']], '', f'完成标志：{step["completion"]}', '', f'不顺利时：{step["fallback"]}', '']
     if not report.get('action_plan'):
         lines += ['', '## 建议行动', '', *[f'{i}. {s}' for i, s in enumerate(report.get('recommended_actions', []), 1)]]
     for item in report.get('deadlines', []):
@@ -140,6 +162,25 @@ def report_markdown(state) -> str:
         lines += [f'- [{s["title"]}]({s["url"]}) · {s["status"]}' for s in report['research_sources']]
     if report.get('legal_basis'):
         lines += ['', '## 有官方来源的法律规则（本案适用需核对）', '', *[f'- [{s.get("law_name", "")}{s.get("article", "")}]({s.get("source_url", "")})：{s.get("summary", "")} {s.get("applicability", "")}' for s in report['legal_basis']]]
+    guide = report.get('service_guide', {})
+    if guide:
+        lines += ['', '## 去哪里办以及出发前如何确认', '', guide.get('status', ''), '', guide.get('jurisdiction_note', ''), '', guide.get('call_script', '')]
+        for channel in guide.get('online_channels', []):
+            lines += ['', f'[{channel["name"]}]({channel["url"]})', '', channel['use']]
+        for place in guide.get('places', []):
+            lines += ['', f'### {place["name"]}', '', place['address'], '', '电话：' + (place['telephone'] or '接口未提供'), '', f'[查看位置]({place["map_url"]})', '', place['status'], '', place['office_hours']]
+    if report.get('grounded_claims'):
+        lines += ['', '## 结合事实与引文的有条件分析', '']
+        for claim in report['grounded_claims']:
+            lines += [claim['conclusion'], '', '条件：' + '；'.join(claim['conditions']), '', '所用事实：' + '、'.join(LABELS.get(k, k) for k in claim['fact_ids']), '']
+            lines += [f'- [{q["source_id"]}] 原文：{q["quote"]}' for q in claim['quotes']]
+    if report.get('knowledge_passages'):
+        lines += ['', '## 检索到的官方法条正文', '', '以下为有限版本快照，正文匹配不代表当前效力或个案适用已经核实。']
+        for p in report['knowledge_passages']:
+            lines += ['', f'### {p["law_name"]}{p["article"]}', '', f'引用编号：{p["source_id"]}；快照核对日：{p["checked_on"]}；版本施行日：{p["effective_from"]}', '', p['temporal_status'], '', p['text'], '', f'[官方来源]({p["source_url"]})']
+    audit = report.get('quality_audit', {})
+    if audit:
+        lines += ['', '## 方案检查记录', '', f'完整步骤：{audit["complete_step_count"]}/{audit["step_count"]}；正文资料：{audit["retrieved_passages"]}条；引文完整性通过：{audit["accepted_citations"]}项。', '', audit['explanation']]
     estimate = report.get('compensation_estimate', {})
     if estimate:
         lines += ['', '## 金额测算', '', str(estimate.get('amount', '待核对')), '', estimate.get('formula', ''), '', estimate.get('message', '')]
