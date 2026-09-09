@@ -13,6 +13,7 @@ from .grounding import audit_report
 from .perspective import case_profile
 from .counterfactual import build_evidence_counterfactuals
 from .support_bridge import build_support_bridge
+from .decision_delta import build_decision_delta
 
 
 def _evidence_instruction(task) -> str:
@@ -142,12 +143,16 @@ def intelligence_sections(state, report) -> dict:
     bridge = build_support_bridge(state, report, guide)
     audit_input = {
         **report,
+        'strategy_comparison': strategy,
         'evidence_counterfactuals': sandbox,
         'support_bridge': bridge,
     }
+    delta = build_decision_delta(state, audit_input)
+    audit_input['decision_delta'] = delta
     return {'strategy_comparison': strategy, 'service_guide': guide,
         'evidence_counterfactuals': sandbox,
         'support_bridge': bridge,
+        'decision_delta': delta,
         'grounded_claims': dossier.grounded_claims, 'knowledge_passages': dossier.knowledge_passages,
         'retrieval_audit': dossier.retrieval_audit, 'quality_audit': audit_report(audit_input, dossier)}
 
@@ -183,6 +188,15 @@ def report_markdown(state) -> str:
             '仍缺：' + ('、'.join(bridge.get('missing_materials', [])) or '当前清单未显示缺口'), '',
             '### 安全转交', '', *[f'- {item}' for item in bridge.get('privacy_checklist', [])],
             '', f'完成标志：{bridge["completion_signal"]}', '', bridge['data_scope']]
+    delta = report.get('decision_delta', {})
+    if delta:
+        lines += ['', '## 本轮方案变更回执', '', delta['summary']]
+        for item in delta.get('changes', []):
+            lines += ['', f'### {item["label"]} · {item["change_type"]}', '',
+                f'此前：{item["before"]}', '', f'本轮：{item["after"]}', '',
+                f'变化原因：{item["reason"]}', '', f'方案影响：{item["impact"]}']
+        if delta.get('unchanged'):
+            lines += ['', '保持不变：', *[f'- {item}' for item in delta['unchanged']]]
     for title, values in [('主要问题', report.get('legal_issues', [])), ('对方可能怎么说及如何回应', report.get('opponent_arguments', [])), ('费用与投入', report.get('costs', []))]:
         if values:
             lines += ['', f'## {title}', '', *[f'- {v}' for v in values]]

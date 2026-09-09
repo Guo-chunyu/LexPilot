@@ -64,6 +64,15 @@ def render_dossier(state) -> None:
 
 def render_plan_sections(state) -> None:
     report = state.final_report
+    delta = report.get('decision_delta', {})
+    if delta:
+        st.markdown('#### 本轮方案变更回执')
+        st.caption(delta.get('summary', ''))
+        for item in delta.get('changes', []):
+            st.write(f'{item["label"]}：{item["before"]} → {item["after"]}')
+            st.caption(f'原因：{item["reason"]} 影响：{item["impact"]}')
+        for item in delta.get('unchanged', []):
+            st.caption('保持不变：' + item)
     if report.get('analysis'):
         st.markdown('#### 初步分析')
         st.write(report['analysis'])

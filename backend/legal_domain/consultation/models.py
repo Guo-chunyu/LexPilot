@@ -69,3 +69,4 @@ class ConsultationDossier(BaseModel):
     generation_audit: dict = Field(default_factory=dict)
     service_guide: dict = Field(default_factory=dict)
     service_key: str = ''
+    decision_snapshot: dict = Field(default_factory=dict)

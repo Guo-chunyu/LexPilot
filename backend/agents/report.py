@@ -40,6 +40,7 @@ class FinalLegalReport(BaseModel):
     support_bridge: dict = Field(default_factory=dict)
     fact_conflicts: list[dict] = Field(default_factory=list)
     fact_corrections: list[dict] = Field(default_factory=list)
+    decision_delta: dict = Field(default_factory=dict)
 
 
 def build_final_report(state: CaseState) -> FinalLegalReport:

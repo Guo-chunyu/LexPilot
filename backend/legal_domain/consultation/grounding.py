@@ -52,6 +52,7 @@ def audit_report(report: dict, dossier) -> dict:
     steps = report.get('action_plan', [])
     counterfactuals = report.get('evidence_counterfactuals', {}).get('cards', [])
     bridge = report.get('support_bridge', {})
+    delta = report.get('decision_delta', {})
     required = ('when', 'channel', 'materials', 'instructions', 'completion', 'fallback')
     complete = sum(all(s.get(k) for k in required) for s in steps)
     return {'step_count': len(steps), 'complete_step_count': complete,
@@ -68,6 +69,9 @@ def audit_report(report: dict, dossier) -> dict:
             for item in bridge.get('reasons', [])
         ),
         'support_bridge_probability_free': bridge.get('outcome_probability') is None,
+        'decision_delta_present': bool(delta),
+        'decision_delta_traceable': bool(delta.get('summary')) and all(item.get('change_type') and item.get('label') and item.get('before') and item.get('after') and item.get('reason') and item.get('impact') for item in delta.get('changes', [])),
+        'decision_delta_probability_free': delta.get('outcome_probability') is None,
         'citation_issues': dossier.generation_audit.get('issues', []),
         'repair_attempts': dossier.generation_audit.get('repair_attempts', 0),
         'legal_correctness_verified': False,
