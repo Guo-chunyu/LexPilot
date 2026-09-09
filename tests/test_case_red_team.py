@@ -1,5 +1,8 @@
 """End-to-end red-team cases that exercise the public consultation paths."""
 
+import json
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
@@ -12,6 +15,7 @@ from backend.legal_rl.state import EvidenceStatus
 from evaluation.consultation_red_team import (
     audit_red_team_result,
     generate_anonymous_uploads,
+    generate_automatic_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -91,8 +95,27 @@ def test_red_team_generator_covers_every_supported_practice_area_and_risk_dimens
     assert tags >= {
         'opposing_role', 'negation', 'role_correction', 'fact_conflict',
         'procedure_progress', 'urgent', 'deadline', 'evidence_exhausted',
+        'deadline_negation', 'deadline_correction', 'urgent_negation', 'urgent_correction',
     }
     assert len({case.case_id for case in cases}) == len(cases)
+
+
+def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
+    payload = json.loads(Path('evaluation/red_team_state.json').read_text(encoding='utf-8'))
+    active_round = payload['rounds'][-1]
+    generated = generate_automatic_variants(payload['seed'])
+
+    assert payload['round_size'] == len(generated) == 5
+    assert set(payload['case_pool_sources']) == {
+        'human_failures', 'fixed_cases', 'automatic_variants'
+    }
+    assert active_round['selected_case_ids'] == [case.case_id for case in generated]
+    assert active_round['anonymous_cases'] == [
+        {'case_id': case.case_id, 'messages': list(case.messages)} for case in generated
+    ]
+    assert all(case.origin == 'auto_variant' for case in generated)
+    serialized = json.dumps(active_round['anonymous_cases'], ensure_ascii=False)
+    assert not __import__('re').search(r'1[3-9]\d{9}|\d{17}[0-9Xx]', serialized)
 
 
 @pytest.mark.parametrize('case', generate_red_team_cases(), ids=lambda case: case.case_id)

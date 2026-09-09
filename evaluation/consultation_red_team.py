@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from io import BytesIO
+from random import Random
 import re
 
 from backend.legal_domain.consultation.perspective import client_perspective
@@ -22,6 +23,8 @@ class RedTeamCase:
     expected_role: str = ''
     expected_facts: tuple[tuple[str, str], ...] = ()
     forbidden_reply_fragments: tuple[str, ...] = ()
+    expected_urgent: bool | None = None
+    origin: str = 'fixed'
 
 
 @dataclass(frozen=True)
@@ -34,7 +37,7 @@ class AnonymousUpload:
 def generate_red_team_cases() -> list[RedTeamCase]:
     """Generate a stable, reviewable matrix spanning all supported domains."""
 
-    return [
+    cases = [
         RedTeamCase(
             'debt_complete_progress',
             ('debt', 'negation', 'partial_payment', 'procedure_progress'),
@@ -110,6 +113,45 @@ def generate_red_team_cases() -> list[RedTeamCase]:
             'administrative',
         ),
         RedTeamCase(
+            'administrative_negated_deadline',
+            ('administrative', 'negation', 'deadline_negation'),
+            ('我收到行政复议补正通知，但通知没有要求3日内补正，也没有写明截止日期，请给我一般方案。',),
+            'administrative', expected_urgent=False,
+        ),
+        RedTeamCase(
+            'contract_deadline_correction',
+            ('contract', 'negation', 'procedure_progress', 'deadline_correction', 'fact_correction'),
+            (
+                '合同纠纷已经起诉，我收到法院通知，后天开庭，请先给我方案。',
+                '更正一下，我看错了，通知不是后天开庭，也没有写明开庭日期，请更新方案。',
+            ),
+            'contract', expected_facts=(('procedure', '不是后天开庭'),), expected_urgent=False,
+        ),
+        RedTeamCase(
+            'criminal_negated_detention',
+            ('criminal', 'negation', 'urgent_negation'),
+            ('家人没有被刑事拘留，也没有被抓，只是收到普通询问通知，请给我一般方案。',),
+            'criminal', expected_urgent=False,
+        ),
+        RedTeamCase(
+            'criminal_detention_correction',
+            ('criminal', 'negation', 'procedure_progress', 'fact_correction', 'urgent_correction'),
+            (
+                '家人收到刑事拘留通知书，请先给我方案。',
+                '更正一下，我看错了，家人没有被拘留，收到的只是普通询问通知，请更新方案。',
+            ),
+            'criminal', expected_facts=(('procedure', '没有被拘留'),), expected_urgent=False,
+        ),
+        RedTeamCase(
+            'family_safety_correction',
+            ('family', 'negation', 'urgent_correction'),
+            (
+                '准备离婚，对方正在威胁我，我担心人身安全，请先给我方案。',
+                '更正一下，刚才表述不准确，对方没有家暴，也没有人身安全问题，请更新一般方案。',
+            ),
+            'family', expected_urgent=False,
+        ),
+        RedTeamCase(
             'corporate_shareholder', ('corporate', 'identity'),
             ('我是公司股东，书面要求查账后被拒绝，请给我方案。',),
             'corporate',
@@ -158,6 +200,58 @@ def generate_red_team_cases() -> list[RedTeamCase]:
             'unclassified_general', ('general', 'identity_unclear'),
             ('\u8bf7\u5148\u5e2e\u6211\u6574\u7406\u4e8b\u5b9e\u548c\u4e0b\u4e00\u6b65\u65b9\u6848\u3002',),
             'general',
+        ),
+    ]
+    variants = {case.case_id: case for case in generate_automatic_variants()}
+    return [variants.get(case.case_id, case) for case in cases]
+
+
+def generate_automatic_variants(seed: int = 20260909) -> list[RedTeamCase]:
+    """Create reproducible anonymous wording variants for the active red-team round."""
+    randomizer = Random(seed)
+    deadline_denial = randomizer.choice(('没有要求', '并未要求'))
+    detention_denial = randomizer.choice(('没有被刑事拘留', '并未被刑事拘留'))
+    return [
+        RedTeamCase(
+            'administrative_negated_deadline',
+            ('administrative', 'negation', 'deadline_negation'),
+            (f'我收到行政复议补正通知，但通知{deadline_denial}3日内补正，也没有写明截止日期，请给我一般方案。',),
+            'administrative', expected_urgent=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'contract_deadline_correction',
+            ('contract', 'negation', 'procedure_progress', 'deadline_correction', 'fact_correction'),
+            (
+                '合同纠纷已经起诉，我收到法院通知，后天开庭，请先给我方案。',
+                '更正一下，我看错了，通知不是后天开庭，也没有写明开庭日期，请更新方案。',
+            ),
+            'contract', expected_facts=(('procedure', '不是后天开庭'),),
+            expected_urgent=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'criminal_negated_detention',
+            ('criminal', 'negation', 'urgent_negation'),
+            (f'家人{detention_denial}，也没有被抓，只是收到普通询问通知，请给我一般方案。',),
+            'criminal', expected_urgent=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'criminal_detention_correction',
+            ('criminal', 'negation', 'procedure_progress', 'fact_correction', 'urgent_correction'),
+            (
+                '家人收到刑事拘留通知书，请先给我方案。',
+                '更正一下，我看错了，家人没有被拘留，收到的只是普通询问通知，请更新方案。',
+            ),
+            'criminal', expected_facts=(('procedure', '没有被拘留'),),
+            expected_urgent=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'family_safety_correction',
+            ('family', 'negation', 'urgent_correction'),
+            (
+                '准备离婚，对方正在威胁我，我担心人身安全，请先给我方案。',
+                '更正一下，刚才表述不准确，对方没有家暴，也没有人身安全问题，请更新一般方案。',
+            ),
+            'family', expected_urgent=False, origin='auto_variant',
         ),
     ]
 
@@ -210,6 +304,10 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
         role = client_perspective(state)['id']
         if role != case.expected_role:
             failures.append(f'role={role}, expected={case.expected_role}')
+    if case.expected_urgent is not None and bool(state.consultation.urgent_actions) != case.expected_urgent:
+        failures.append(
+            f'urgent={bool(state.consultation.urgent_actions)}, expected={case.expected_urgent}'
+        )
     for key, fragment in case.expected_facts:
         value = str(state.facts.get(key, ''))
         if fragment not in value:

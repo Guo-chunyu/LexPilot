@@ -41,6 +41,10 @@ EVIDENCE_ALIASES = {
     '租赁或购房合同': ('租赁或购房合同', '租赁合同', '租房合同', '购房合同', '合同', '租约'),
 }
 
+SAFETY_URGENT_ACTION = '先到安全地点并联系当地警方；正在遭受伤害时优先求助和就医，不要为了取证单独接触对方。'
+CRIMINAL_URGENT_ACTION = '尽快联系当地刑事律师或法律援助机构，带上通知书核实措施类型、起算日期、办案单位和依法会见途径；不要找关系、串供或删记录。'
+DEADLINE_URGENT_ACTION = '先核对文书载明的截止日期与送达凭证，今天就向受理机关或当地律师确认提交和补正方式；不要等材料全部齐了才处理期限。'
+
 
 def wants_plan(text: str) -> bool:
     return bool(re.search(PLAN_PATTERN, text))
@@ -197,7 +201,13 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     if constraint_sentences:
         value = '；'.join(dict.fromkeys(constraint_sentences))
         put('constraints', value, value)
-    if procedure_sentences:
+    procedure_retraction = correction_context and any(
+        action in {CRIMINAL_URGENT_ACTION, DEADLINE_URGENT_ACTION}
+        for action in retracted_urgent_actions(message)
+    )
+    if procedure_retraction:
+        put('procedure', message, message)
+    elif procedure_sentences:
         value = '；'.join(dict.fromkeys(procedure_sentences))
         put('procedure', value, value)
     if (
@@ -294,16 +304,68 @@ def refresh_evidence(state: CaseState) -> None:
 
 def urgent_actions(message: str, state: CaseState) -> list[str]:
     actions = []
-    if re.search(r'家暴|正在.{0,4}(?:打|威胁)|打死|人身安全|持刀|跟踪', message) and not re.search(r'没有家暴|没有人身安全问题', message):
-        actions.append('先到安全地点并联系当地警方；正在遭受伤害时优先求助和就医，不要为了取证单独接触对方。')
-    if state.case_type == 'criminal' and re.search(r'拘留|逮捕|被抓|看守所', message):
-        actions.append('尽快联系当地刑事律师或法律援助机构，带上通知书核实措施类型、起算日期、办案单位和依法会见途径；不要找关系、串供或删记录。')
-    imminent_document_deadline = bool(re.search(
-        r'(?:今天|明天|后天|本周|这周).{0,16}(?:开庭|补正|提交|举证|答辩|到期|截止)'
-        r'|(?:要求|通知|须|需|应).{0,10}(?:\d+|[一二两三四五六七八九十]+)(?:个)?(?:工作)?日内'
-        r'.{0,16}(?:开庭|补正|提交|举证|答辩|办理|回复)',
-        message,
-    )) and not re.search(r'已经过去|早已超过|半年前|去年', message)
+    if _has_asserted_signal(message, r'家暴|正在.{0,4}(?:打|威胁)|打死|人身安全|持刀|跟踪'):
+        actions.append(SAFETY_URGENT_ACTION)
+    if state.case_type == 'criminal' and _has_asserted_signal(message, r'拘留|逮捕|被抓|看守所'):
+        actions.append(CRIMINAL_URGENT_ACTION)
+    imminent_document_deadline = (
+        _has_asserted_urgent_deadline(message)
+        and not re.search(r'已经过去|早已超过|半年前|去年', message)
+    )
     if imminent_document_deadline or re.search(r'最后一天|马上到期|快过期', message):
-        actions.append('先核对文书载明的截止日期与送达凭证，今天就向受理机关或当地律师确认提交和补正方式；不要等材料全部齐了才处理期限。')
+        actions.append(DEADLINE_URGENT_ACTION)
     return actions
+
+
+def _has_asserted_urgent_deadline(message: str) -> bool:
+    pattern = (
+        r'(?:今天|明天|后天|本周|这周).{0,16}(?:开庭|补正|提交|举证|答辩|到期|截止)'
+        r'|(?:要求|须|需|应).{0,10}(?:\d+|[一二两三四五六七八九十]+)(?:个)?(?:工作)?日内'
+        r'.{0,16}(?:开庭|补正|提交|举证|答辩|办理|回复)'
+    )
+    return _has_asserted_signal(message, pattern)
+
+
+def _signal_states(message: str, pattern: str) -> list[bool]:
+    states = []
+    for match in re.finditer(pattern, message):
+        clause_start = max(message.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
+        prefix = message[clause_start:match.start()]
+        negated = bool(re.search(
+            r'(?:(?:没有|并未|未曾|不是|并非|并不|无需|不需|不存在|尚未|未被|无须)'
+            r'[^，,。；;但]{0,6}|[不非无未])$',
+            prefix,
+        ))
+        states.append(not negated)
+    return states
+
+
+def _has_asserted_signal(message: str, pattern: str) -> bool:
+    return any(_signal_states(message, pattern))
+
+
+def _has_negated_signal(message: str, pattern: str) -> bool:
+    return any(not state for state in _signal_states(message, pattern))
+
+
+def retracted_urgent_actions(message: str) -> set[str]:
+    retracted = set()
+    safety_pattern = r'家暴|正在.{0,4}(?:打|威胁)|打死|人身安全|持刀|跟踪'
+    criminal_pattern = r'拘留|逮捕|被抓|看守所'
+    if _has_negated_signal(message, safety_pattern) and not _has_asserted_signal(message, safety_pattern):
+        retracted.add(SAFETY_URGENT_ACTION)
+    if _has_negated_signal(message, criminal_pattern) and not _has_asserted_signal(message, criminal_pattern):
+        retracted.add(CRIMINAL_URGENT_ACTION)
+    if retracts_urgent_deadline(message):
+        retracted.add(DEADLINE_URGENT_ACTION)
+    return retracted
+
+
+def retracts_urgent_deadline(message: str) -> bool:
+    if _has_asserted_urgent_deadline(message):
+        return False
+    return bool(re.search(
+        r'(?:不是|并非).{0,4}(?:今天|明天|后天|本周|这周).{0,12}(?:开庭|听证|补正|截止)'
+        r'|(?:没有|并未|未曾|未|无)(?:明确|写明|载明|要求)?.{0,10}(?:期限|截止|开庭日期|补正日期)',
+        message,
+    ))

@@ -4,7 +4,10 @@ import re
 
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
-from .intake import QUESTIONS, UNKNOWN_PATTERN, EXHAUSTED_PATTERN, ingest_text, refresh_evidence, urgent_actions, wants_plan
+from .intake import (
+    EXHAUSTED_PATTERN, QUESTIONS, UNKNOWN_PATTERN, ingest_text, refresh_evidence,
+    retracted_urgent_actions, urgent_actions, wants_plan,
+)
 from .profiles import PROFILES, domain_label, identify_domains, route_case
 from .reporting import build_consultation_report
 from .research import research_case
@@ -68,6 +71,9 @@ def process_consultation(message: str, state: CaseState) -> dict:
     had_plan = bool(state.final_report) or any(record.action == LegalAction.GENERATE_DOCUMENT for record in state.action_history)
     previous_slot = state.pending_fact_ids[0] if state.pending_fact_ids else ''
     ingest_text(message, state)
+    retracted = retracted_urgent_actions(message)
+    if retracted:
+        dossier.urgent_actions = [action for action in dossier.urgent_actions if action not in retracted]
     dossier.urgent_actions = list(dict.fromkeys([*dossier.urgent_actions, *urgent_actions(message, state)]))
     refresh_evidence(state)
     update_rule_references(state)
