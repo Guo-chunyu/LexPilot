@@ -167,13 +167,39 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         put('procedure', value, value)
     if (
         'procedure' not in extracted
-        and re.search(
-            r'(?:已经|此前|先后).{0,24}(?:协商|催款|催还|沟通|调解)'
-            r'.{0,36}(?:拒绝|不回复|不理|失败|不成)',
-            message,
+        and (
+            re.search(
+                r'(?:已经|此前|先后).{0,24}(?:协商|催款|催还|沟通|调解)'
+                r'.{0,36}(?:拒绝|不回复|不理|失败|不成)',
+                message,
+            )
+            or re.search(
+                r'(?:协商|催款|催还|沟通|调解)'
+                r'.{0,8}(?:\d+|[一二两三四五六七八九十]+)次'
+                r'.{0,24}(?:拒绝|不回复|不理|失败|不成)',
+                message,
+            )
         )
     ):
         put('procedure', message, message)
+    if state.case_type == 'debt':
+        # The area-specific debt question asks about repayment terms, partial
+        # performance and competing explanations for the transfer. Persist
+        # those answers as `details` even when they appear in separate clauses,
+        # otherwise the generic intake loop asks the same compound question.
+        debt_details = [
+            sentence
+            for sentence in sentences
+            if re.search(
+                r'约定.{0,20}(?:还款|归还|偿还|还)|'
+                r'(?:已还|还过|已偿还|偿还过).{0,20}(?:元|万|块|部分|剩)|'
+                r'(?:赠与|货款|借款用途|款项用途)',
+                sentence,
+            )
+        ]
+        if debt_details:
+            value = '；'.join(dict.fromkeys(debt_details))
+            put('details', value, value)
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
     if amount_sentences:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))
