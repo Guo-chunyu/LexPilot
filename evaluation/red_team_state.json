@@ -312,6 +312,52 @@
         "full_suite": "280 passed, 1 warning"
       },
       "commit_subject": "Advance routes after inspection refusal"
+    },
+    {
+      "round_id": "round-007-role-procedure-jurisdiction",
+      "seed": 20260915,
+      "generator": "generate_round_seven_variants",
+      "status": "in_progress",
+      "selected_case_ids": [
+        "housing_formal_role_synonyms",
+        "labor_indirect_arbitration_filing",
+        "ip_platform_complaint_refused",
+        "inheritance_mainland_to_hong_kong_correction",
+        "medical_exhaustion_scope_negated"
+      ],
+      "anonymous_cases": [
+        {"case_id": "housing_formal_role_synonyms", "messages": ["本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。"]},
+        {"case_id": "labor_indirect_arbitration_filing", "messages": ["我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。"]},
+        {"case_id": "ip_platform_complaint_refused", "messages": ["摄影作品被网店盗用，我已经向平台投诉两次，平台明确拒绝处理，请给我后续方案。"]},
+        {"case_id": "inheritance_mainland_to_hong_kong_correction", "messages": ["父亲去世后留下遗产房屋，房屋在深圳，请先给我方案。", "更正一下，房屋实际位于香港，不在深圳，请更新方案。"]},
+        {"case_id": "medical_exhaustion_scope_negated", "messages": ["医院手术后出现后遗症，不能说没有其他证据，我还有病历复印件和影像，请给我方案。"]}
+      ],
+      "failures_before_fix": [
+        "housing_formal_role_synonyms",
+        "labor_indirect_arbitration_filing",
+        "ip_platform_complaint_refused"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "formal_synonym_role_correction_not_recognized",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/perspective.py"],
+          "verification": "3 path tests, 17 related tests and 283 full tests passed",
+          "commit_subject": "Recognize formal role corrections"
+        }
+      ],
+      "pending_root_causes": [
+        "劳动仲裁已提交并受理但仍推荐协商",
+        "知识产权平台投诉被拒但仍推荐协商"
+      ],
+      "root_cause": "身份纠正规则只接受“不是……，是……”，未覆盖“并非……，而是……”的正式同义表达。",
+      "fix_files": ["backend/legal_domain/consultation/perspective.py"],
+      "verification": {
+        "before_fix": "engine, API and Streamlit: 3 failed",
+        "related_suite": "17 passed",
+        "full_suite": "283 passed, 1 warning"
+      },
+      "commit_subject": "Recognize formal role corrections"
     }
   ]
 }

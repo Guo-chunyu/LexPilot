@@ -461,6 +461,49 @@ def generate_round_six_variants(seed: int = 20260914) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_seven_variants(seed: int = 20260915) -> list[RedTeamCase]:
+    """Generate five unseen role, procedure, refusal and jurisdiction variants."""
+    randomizer = Random(seed)
+    denied_role = randomizer.choice(('出租人', '房东'))
+    platform_action = randomizer.choice(('投诉', '申诉'))
+    medical_material = randomizer.choice(('病历复印件', '完整病历'))
+    return [
+        RedTeamCase(
+            'housing_formal_role_synonyms', ('housing', 'opposing_role', 'negation'),
+            (f'本人并非{denied_role}，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。',),
+            'housing', 'tenant', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'labor_indirect_arbitration_filing', ('labor_dispute', 'procedure_progress'),
+            ('我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。',),
+            'labor_dispute', 'employee',
+            expected_facts=(('procedure', '提交申请'),), expected_route='formal',
+            origin='auto_variant',
+        ),
+        RedTeamCase(
+            'ip_platform_complaint_refused', ('intellectual_property', 'procedure_progress'),
+            (f'摄影作品被网店盗用，我已经向平台{platform_action}两次，平台明确拒绝处理，请给我后续方案。',),
+            'intellectual_property', expected_facts=(('procedure', platform_action),),
+            expected_route='mediation', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'inheritance_mainland_to_hong_kong_correction',
+            ('inheritance', 'fact_correction', 'outside_mainland'),
+            (
+                '父亲去世后留下遗产房屋，房屋在深圳，请先给我方案。',
+                '更正一下，房屋实际位于香港，不在深圳，请更新方案。',
+            ),
+            'inheritance', expected_facts=(('location', '香港'),),
+            origin='auto_variant',
+        ),
+        RedTeamCase(
+            'medical_exhaustion_scope_negated', ('medical', 'negation', 'evidence_not_exhausted'),
+            (f'医院手术后出现后遗症，不能说没有其他证据，我还有{medical_material}和影像，请给我方案。',),
+            'medical', expected_exhausted=False, origin='auto_variant',
+        ),
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document

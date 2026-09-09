@@ -22,6 +22,7 @@ from evaluation.consultation_red_team import (
     generate_round_four_variants,
     generate_round_five_variants,
     generate_round_six_variants,
+    generate_round_seven_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -47,6 +48,7 @@ CONSUMER_EXHAUSTED_START = '健身房关门不退款，我只有付款截图，�
 CONSUMER_EVIDENCE_CORRECTION = '更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。'
 TRAFFIC_WITH_MEDICAL_MATERIALS = '交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。'
 CORPORATE_INSPECTION_REFUSAL = '我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。'
+HOUSING_FORMAL_ROLE_CORRECTION = '本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -79,6 +81,40 @@ def test_corporate_inspection_refusal_advances_streamlit_route():
     at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
     at.chat_input[0].set_value(CORPORATE_INSPECTION_REFUSAL).run(timeout=20)
     _assert_corporate_inspection_refusal_advances_route(at.session_state['case_state'])
+
+
+def _assert_formal_housing_role_correction(state) -> None:
+    assert state.case_type == 'housing'
+    perspective = state.final_report['strategy_comparison']['client_role']
+    assert perspective['id'] == 'tenant'
+    assert '承租人' in state.facts.get('parties', '')
+
+
+def test_formal_housing_role_correction_reaches_engine():
+    result = LexPilotEngine().process(HOUSING_FORMAL_ROLE_CORRECTION)
+    _assert_formal_housing_role_correction(result['case_state'])
+
+
+def test_formal_housing_role_correction_reaches_api():
+    thread_id = 'red_team_formal_housing_role'
+    client = TestClient(api_module.api_app)
+    try:
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': HOUSING_FORMAL_ROLE_CORRECTION,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_formal_housing_role_correction(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_formal_housing_role_correction_reaches_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(HOUSING_FORMAL_ROLE_CORRECTION).run(timeout=20)
+    _assert_formal_housing_role_correction(at.session_state['case_state'])
+
+
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
     assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])
@@ -525,6 +561,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_four_variants': generate_round_four_variants,
         'generate_round_five_variants': generate_round_five_variants,
         'generate_round_six_variants': generate_round_six_variants,
+        'generate_round_seven_variants': generate_round_seven_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
