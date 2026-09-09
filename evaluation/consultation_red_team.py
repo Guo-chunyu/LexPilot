@@ -380,6 +380,48 @@ def generate_round_four_variants(seed: int = 20260912) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_five_variants(seed: int = 20260913) -> list[RedTeamCase]:
+    """Generate five unseen reversal and exhausted-state correction variants."""
+    randomizer = Random(seed)
+    screenshot = randomizer.choice(('付款截图', '支付截图'))
+    return [
+        RedTeamCase(
+            'housing_tenant_unfiled', ('housing', 'negation', 'opposing_role', 'procedure_progress'),
+            ('我不是房东，是租客；房东扣着押金，我还没有起诉，也没有立案，请给我方案。',),
+            'housing', 'tenant', expected_facts=(('procedure', '还没有起诉'),),
+            expected_route='negotiation', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'labor_employer_amount_correction', ('labor_dispute', 'opposing_role', 'fact_correction'),
+            (
+                '我是公司负责人，员工申请仲裁称欠薪5万元。',
+                '更正一下，员工请求金额实际是4万元，请按单位立场给我答辩方案。',
+            ),
+            'labor_dispute', 'employer', expected_facts=(('amount', '4万元'),),
+            origin='auto_variant',
+        ),
+        RedTeamCase(
+            'administrative_double_negative_filing', ('administrative', 'negation', 'procedure_progress'),
+            ('不是尚未申请行政复议，我已经申请并拿到受理号，请给我下一步方案。',),
+            'administrative', expected_facts=(('procedure', '已经申请'),),
+            expected_route='formal', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'consumer_exhaustion_correction', ('consumer', 'negation', 'evidence_correction'),
+            (
+                f'健身房关门不退款，我只有{screenshot}，没有其他材料，请先给我方案。',
+                '更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。',
+            ),
+            'consumer', expected_exhausted=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'criminal_double_negative_detention', ('criminal', 'negation', 'urgent'),
+            ('家人并不是没有被拘留，我收到了拘留通知书，请给我紧急方案。',),
+            'criminal', expected_urgent=True, origin='auto_variant',
+        ),
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document

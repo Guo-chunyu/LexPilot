@@ -20,6 +20,7 @@ from evaluation.consultation_red_team import (
     generate_round_two_variants,
     generate_round_three_variants,
     generate_round_four_variants,
+    generate_round_five_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -39,6 +40,8 @@ ABSOLUTE_SUGGESTED_DATE = re.compile(r'建议\s*20\d{2}-\d{2}-\d{2}\s*开始')
 ISO_DATE = re.compile(r'20\d{2}-\d{2}-\d{2}')
 UNKNOWN_REPAYMENT_TERM = '期限仍无法确定'
 FAMILY_DOUBLE_NEGATIVE_SAFETY = '准备离婚，不是没有人身安全风险，请给我紧急方案。'
+LABOR_EMPLOYER_AMOUNT_START = '我是公司负责人，员工申请仲裁称欠薪5万元。'
+LABOR_EMPLOYER_AMOUNT_CORRECTION = '更正一下，员工请求金额实际是4万元，请按单位立场给我答辩方案。'
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
@@ -81,6 +84,41 @@ def test_double_negative_safety_reaches_streamlit_urgent_path():
     _assert_double_negative_safety_is_urgent(
         at.session_state['case_state'], at.session_state['messages'][-1]['content']
     )
+
+
+def _assert_employer_wage_case_stays_in_labor_domain(state) -> None:
+    assert state.case_type == 'labor_dispute'
+    assert state.final_report['strategy_comparison']['client_role']['id'] == 'employer'
+    assert '4万元' in state.facts['amount']
+
+
+def test_employer_wage_arbitration_routes_through_labor_engine():
+    engine = LexPilotEngine()
+    first = engine.process(LABOR_EMPLOYER_AMOUNT_START)
+    second = engine.process(LABOR_EMPLOYER_AMOUNT_CORRECTION, first['case_state'])
+    _assert_employer_wage_case_stays_in_labor_domain(second['case_state'])
+
+
+def test_employer_wage_arbitration_routes_through_labor_api():
+    thread_id = 'red_team_employer_wage_domain'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': LABOR_EMPLOYER_AMOUNT_START})
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': LABOR_EMPLOYER_AMOUNT_CORRECTION,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_employer_wage_case_stays_in_labor_domain(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_employer_wage_arbitration_routes_through_labor_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(LABOR_EMPLOYER_AMOUNT_START).run(timeout=20)
+    at.chat_input[0].set_value(LABOR_EMPLOYER_AMOUNT_CORRECTION).run(timeout=20)
+    _assert_employer_wage_case_stays_in_labor_domain(at.session_state['case_state'])
 
 
 def _assert_no_invented_action_dates(state, reply: str) -> None:
@@ -378,6 +416,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_two_variants': generate_round_two_variants,
         'generate_round_three_variants': generate_round_three_variants,
         'generate_round_four_variants': generate_round_four_variants,
+        'generate_round_five_variants': generate_round_five_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
