@@ -32,14 +32,22 @@
           "fix_files": ["backend/legal_domain/consultation/authorities.py"],
           "verification": "3 path tests and 238 full tests passed",
           "commit_subject": "Contextualize known repayment terms"
+        },
+        {
+          "id": "litigation_preference_not_persisted_or_routed",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py",
+            "backend/legal_domain/consultation/planning.py"
+          ],
+          "verification": "3 path tests and 241 full tests passed",
+          "commit_subject": "Respect explicit litigation preferences"
         }
       ],
       "pending_root_causes": [
-        "explicit refusal to negotiate still recommends mediation",
         "second response does not explain material and constraint changes",
         "unavailable IOU still appears as an upload action",
-        "ambiguous pending-fact acknowledgement",
-        "litigation preference not persisted as a constraint"
+        "ambiguous pending-fact acknowledgement"
       ]
     }
   ],

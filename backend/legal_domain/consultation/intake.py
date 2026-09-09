@@ -216,7 +216,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
                 dossier.timeline.append(entry)
         if re.search(r'想.{0,10}(?:要回|追回|拿回|退|离婚|解决|申请|查)|希望|我要(?:离婚|追回|退款)|要求(?:退|赔)', sentence) and not wants_plan(sentence):
             put('goal', sentence, sentence)
-        if re.search(r'低成本|预算|不想打官司|不方便到场|无法到场|时间有限|不想影响关系|看不懂|不会操作|不会用|听不清|看不清|需要.{0,4}帮|费用.{0,5}(?:以内|以下|不超过)', sentence):
+        if re.search(r'低成本|预算|不想打官司|不想再.{0,8}(?:催款|协商|调解)|不方便到场|无法到场|时间有限|不想影响关系|看不懂|不会操作|不会用|听不清|看不清|需要.{0,4}帮|费用.{0,5}(?:以内|以下|不超过)', sentence):
             constraint_sentences.append(sentence)
         affirmative_procedure = re.search(
             r'已经(?:起诉|投诉|报案|申请|协商)|收到.{0,10}(?:传票|通知|决定)',

@@ -90,9 +90,11 @@ def compare_routes(state) -> dict:
     urgent = bool(state.consultation.urgent_actions)
     formal_only = state.case_type in ('criminal', 'administrative', 'enforcement')
     procedure = str(state.facts.get('procedure', ''))
+    constraints = str(state.facts.get('constraints', ''))
     failed = bool(re.search(r'拒绝|不回复|不理|协商.{0,8}(?:不成|失败|三次)|调解失败', procedure))
     filed = bool(re.search(r'已经起诉|已立案|收到.{0,8}(?:传票|开庭)|已经申请仲裁', procedure))
-    recommended = 'formal' if urgent or formal_only or filed else 'mediation' if failed else 'negotiation'
+    formal_preference = bool(re.search(r'不想再.{0,10}(?:催款|协商|调解)|(?:准备|直接|转为?).{0,8}(?:起诉|仲裁|正式程序)', constraints))
+    recommended = 'formal' if urgent or formal_only or filed or formal_preference else 'mediation' if failed else 'negotiation'
     route_data = [
         ('negotiation', '一次可留痕的协商', '自行处理通常无需程序费；重点是书面回复和实际到账',
          '可控、关系成本较低，适合尚未交涉且对方愿意沟通；已有拒绝时不重复消耗时间', '拒绝、超过双方约定回复安排或临近法定期限时转正式渠道'),
@@ -102,11 +104,11 @@ def compare_routes(state) -> dict:
          '优先保护到期的程序权利，或处理已经进入正式程序的事项；费用与执行可能分开衡量', '材料被退回时按具体理由补正，收到文书当天核对下一期限'),
     ]
     routes = [{'id': rid, 'name': name, 'cost': cost, 'reason': reason, 'stop_condition': stop,
-        'eligible': rid == 'formal' or not (formal_only or urgent or filed), 'recommended': rid == recommended} for rid, name, cost, reason, stop in route_data]
+        'eligible': rid == 'formal' or not (formal_only or urgent or filed or formal_preference), 'recommended': rid == recommended} for rid, name, cost, reason, stop in route_data]
     return {'model': 'transparent_preference_rules', 'client_role': role, 'recommended_route': recommended, 'routes': routes,
         'success_probability': None,
         'objective': '优先止损与保住权利；在可执行性、费用、时间和用户偏好之间选择合法维权路径。',
-        'decision_reason': '存在紧急事项，先保护程序权利。' if urgent else '已经进入或应当使用正式程序。' if formal_only or filed else '此前协商已受阻，转适配的第三方渠道并保留正式救济。' if failed else '先争取低投入的实际履行，同时准备证据与正式救济材料。',
+        'decision_reason': '存在紧急事项，先保护程序权利。' if urgent else '用户已明确不再继续协商并要求准备正式程序。' if formal_preference else '已经进入或应当使用正式程序。' if formal_only or filed else '此前协商已受阻，转适配的第三方渠道并保留正式救济。' if failed else '先争取低投入的实际履行，同时准备证据与正式救济材料。',
         'benefit_worksheet': ['把已发生的损失与有证据支持的请求分开列，避免重复主张同一损失。',
             '比较总支出＝有依据的应付款项－可依法减免或已支付部分＋程序、取证、代理等成本；先核实义务，不能靠逃避履行制造收益。' if role['id'] in ('debtor', 'employer') else '比较到手净额＝实际收到的款项－本人承担的程序、取证、代理及必要出行成本。',
             '协商底线由本人根据急需用款、可执行财产、证据和预算决定；不把模型生成的数字当胜率或收益。',

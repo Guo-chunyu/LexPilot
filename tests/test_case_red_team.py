@@ -89,6 +89,39 @@ def test_known_repayment_term_reaches_rule_summary_in_streamlit():
     )
 
 
+def _assert_litigation_preference_controls_route(state) -> None:
+    assert '不想再重复催款或协商' in state.facts.get('constraints', '')
+    assert state.final_report['strategy_comparison']['recommended_route'] == 'formal'
+    assert not any('调解' in step['title'] for step in state.final_report['action_plan'])
+
+
+def test_debt_litigation_preference_controls_engine_route():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_CORRECTION)
+    second = engine.process(DEBT_LITIGATION_FOLLOWUP, first['case_state'])
+    _assert_litigation_preference_controls_route(second['case_state'])
+
+
+def test_debt_litigation_preference_controls_api_route():
+    thread_id = 'red_team_debt_litigation_preference'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_CORRECTION})
+        response = client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_LITIGATION_FOLLOWUP})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_litigation_preference_controls_route(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_debt_litigation_preference_controls_streamlit_route():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_CORRECTION).run(timeout=20)
+    at.chat_input[0].set_value(DEBT_LITIGATION_FOLLOWUP).run(timeout=20)
+    _assert_litigation_preference_controls_route(at.session_state['case_state'])
+
+
 def test_debt_followup_does_not_invent_absolute_action_dates_in_engine():
     engine = LexPilotEngine()
     first = engine.process(DEBT_CORRECTION)
