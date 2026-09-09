@@ -10,7 +10,32 @@
   },
   "human_failure_cases": [
     "debt_complete_progress",
-    "labor_evidence_self_report_upload_verification"
+    "labor_evidence_self_report_upload_verification",
+    "debt_litigation_followup_quality"
+  ],
+  "priority_incidents": [
+    {
+      "case_id": "debt_litigation_followup_quality",
+      "source": "human_web_reproduction",
+      "status": "in_progress",
+      "completed_root_causes": [
+        {
+          "id": "invented_absolute_action_dates",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/planning.py"],
+          "verification": "3 path tests, 75 related tests and 235 full tests passed",
+          "commit_subject": "Use relative consultation action schedules"
+        }
+      ],
+      "pending_root_causes": [
+        "known repayment term still described as unknown",
+        "explicit refusal to negotiate still recommends mediation",
+        "second response does not explain material and constraint changes",
+        "unavailable IOU still appears as an upload action",
+        "ambiguous pending-fact acknowledgement",
+        "litigation preference not persisted as a constraint"
+      ]
+    }
   ],
   "rounds": [
     {

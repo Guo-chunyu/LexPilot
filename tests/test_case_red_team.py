@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,6 +29,13 @@ DEBT_CORRECTION = (
     '没有借条，有转账和微信，催款三次且对方拒绝，请给我具体方案。'
 )
 REPEATED_DEBT_QUESTION = '当时约定什么时候还？对方有没有说这笔钱是赠与、货款，或者已经还过一部分？'
+DEBT_LITIGATION_FOLLOWUP = (
+    '我目前有银行转账记录和完整微信聊天，可以证明转款、借款用途、约定一个月后还款，'
+    '以及对方承认还欠4万元并拒绝还款。没有借条，也没有其他材料。此前已经催款三次，'
+    '不想再重复催款或协商，请按现有材料更新为起诉准备方案。'
+)
+ABSOLUTE_SUGGESTED_DATE = re.compile(r'建议\s*20\d{2}-\d{2}-\d{2}\s*开始')
+ISO_DATE = re.compile(r'20\d{2}-\d{2}-\d{2}')
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
@@ -37,6 +45,43 @@ def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert '催款三次且对方拒绝' in state.facts['procedure']
     assert state.final_report['strategy_comparison']['recommended_route'] != 'negotiation'
     assert REPEATED_DEBT_QUESTION not in reply
+
+
+def _assert_no_invented_action_dates(state, reply: str) -> None:
+    public = reply + '\n' + report_markdown(state)
+    assert not ABSOLUTE_SUGGESTED_DATE.search(public)
+    assert all(not ISO_DATE.fullmatch(str(step.get('suggested_date', '')))
+               for step in state.final_report['action_plan'])
+
+
+def test_debt_followup_does_not_invent_absolute_action_dates_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_CORRECTION)
+    second = engine.process(DEBT_LITIGATION_FOLLOWUP, first['case_state'])
+    _assert_no_invented_action_dates(second['case_state'], second['reply'])
+
+
+def test_debt_followup_does_not_invent_absolute_action_dates_in_api():
+    thread_id = 'red_team_debt_no_invented_dates'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_CORRECTION})
+        response = client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_LITIGATION_FOLLOWUP})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == 200
+    state = api_module.CaseState.from_value(response.json()['case_state'])
+    _assert_no_invented_action_dates(state, response.json()['reply'])
+
+
+def test_debt_followup_does_not_invent_absolute_action_dates_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_CORRECTION).run(timeout=20)
+    at.chat_input[0].set_value(DEBT_LITIGATION_FOLLOWUP).run(timeout=20)
+    _assert_no_invented_action_dates(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
+    assert not at.exception
 
 
 def test_complete_debt_correction_updates_real_multiturn_engine_state():

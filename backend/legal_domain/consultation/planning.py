@@ -1,5 +1,4 @@
 """Explainable user-interest planning. No invented win probabilities or returns."""
-from datetime import datetime, timedelta, timezone
 import re
 
 from .perspective import case_profile, client_perspective, ROLE_OPERATIONS, DOMAIN_ROLES
@@ -115,17 +114,16 @@ def compare_routes(state) -> dict:
 
 
 def enhance_steps(state, steps: list[dict]) -> list[dict]:
-    today = datetime.now(timezone(timedelta(hours=8))).date()
     urgent = bool(state.consultation.urgent_actions)
     outside = state.consultation.jurisdiction_status == 'OUTSIDE_MAINLAND'
     role = client_perspective(state)['id']
     operations = ROLE_OPERATIONS.get(role, OPERATIONS.get(state.case_type, [])) if state.case_type in DOMAIN_ROLES else OPERATIONS.get(state.case_type, [])
     if outside:
         operations = []
+    relative_schedule = ('立即', '立即', '材料整理后', '程序条件核对后', '收到对方意见或机关通知后')
     for index, step in enumerate(steps):
-        offset = 0 if urgent else (0, 0, 1, 2, 2)[min(index, 4)]
-        step['suggested_date'] = (today + timedelta(days=offset)).isoformat()
-        step['date_note'] = '这是建议办事日程，不是法定期限；文书期限更早时优先处理。线下办理先核对工作时间。'
+        step['suggested_date'] = '立即' if urgent else relative_schedule[min(index, 4)]
+        step['date_note'] = '这是相对行动顺序，不是法定期限；文书期限更早时优先处理。线下办理先核对工作时间。'
         if not outside and operations:
             if index == 0:
                 step['instructions'].insert(0, operations[0])
