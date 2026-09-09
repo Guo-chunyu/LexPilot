@@ -173,3 +173,17 @@ def test_explicit_fact_correction_is_visible_in_streamlit_without_conflict_warni
     assert not state.consultation.conflicts
     assert any('本轮明确更正' in item.value for item in at.markdown)
     assert not at.exception
+
+
+def test_no_other_questions_is_not_misread_as_no_more_evidence():
+    engine = LexPilotEngine()
+    first = engine.process('朋友向我借款4万元，有转账记录。')
+    before = {item.name: item.status for item in first['case_state'].consultation.evidence_tasks}
+
+    second = engine.process('没有其他问题，请给我方案。', first['case_state'])
+    state = second['case_state']
+    after = {item.name: item.status for item in state.consultation.evidence_tasks}
+
+    assert state.evidence_collection_exhausted is False
+    assert after['借条'] == before['借条'] == '尚未提供'
+    assert after['转账记录'] == '用户称有，尚未上传'
