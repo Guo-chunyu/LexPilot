@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from backend.ai.dialogue import redact_sensitive_text
 from backend.ai.provider import AIProviderError, get_consultation_provider
-from .intake import QUESTIONS, save_fact
+from .intake import AMOUNT_PATTERN, DATE_PATTERN, QUESTIONS, save_fact
 from .models import ActionStep
 from .profiles import PROFILES
 from .authorities import relevant_rules
@@ -43,12 +43,114 @@ class ConsultationDraft(BaseModel):
     grounded_claims: list[GroundedClaim] = Field(default_factory=list, max_length=3)
 
 
+def _literal_case_tokens(text: str) -> set[str]:
+    """Extract amounts and dates in the same Chinese forms accepted by intake."""
+    return {
+        token.strip()
+        for pattern in (AMOUNT_PATTERN, DATE_PATTERN)
+        for token in re.findall(pattern, text or '')
+        if token.strip()
+    }
+
+
 def safe_advice(text: str) -> bool:
     """Do not promote unverified article numbers, deadlines, guarantees or credentials."""
     return not re.search(
         r'第[零一二三四五六七八九十百千万0-9]+条|(?:胜诉率|保证胜诉|必胜|肯定胜诉|一定能赢|肯定违法|一定构成|必然构成|保证取保|我是.{0,8}律师|本律师|本所律师)|https?://|(?:(?:必须|应当|法定).{0,12}[0-9一二三四五六七八九十百]+(?:日|天|年))|(?:诉讼时效|申请期限)从.{0,40}(?:起算|计算)|排除合理怀疑',
         text,
     )
+
+
+def _case_anchors(state) -> set[str]:
+    """Return concrete terms that can tie generated steps to this dossier."""
+    dossier = state.consultation
+    narrative = state.user_narrative or ''
+    anchors: set[str] = set()
+    for key, value in state.facts.items():
+        if key == 'location':
+            continue
+        value = str(value).strip()
+        if len(value) >= 2:
+            anchors.add(value)
+    for domain_id in dossier.domain_ids:
+        profile = PROFILES.get(domain_id)
+        if profile:
+            anchors.update(keyword for keyword in profile.keywords if len(keyword) >= 2 and keyword in narrative)
+    anchors.update(_literal_case_tokens(narrative))
+    for task in dossier.evidence_tasks:
+        if task.status not in {'尚未提供', '用户表示暂无'} and task.name:
+            anchors.add(task.name)
+    return anchors
+
+
+def _steps_are_case_specific(steps: list[ActionStep], state) -> bool:
+    """Reject polished but reusable checklists that do not mention this case."""
+    anchors = _case_anchors(state)
+    if not anchors:
+        return False
+    # One precise fact/evidence reference is useful; keyword-only plans need two
+    # separate details so that merely saying “借款” or “合同” is not enough.
+    precise = {
+        str(value).strip() for key, value in state.facts.items()
+        if key != 'location' and len(str(value).strip()) >= 2
+    }
+    precise.update(
+        task.name for task in state.consultation.evidence_tasks
+        if task.status not in {'尚未提供', '用户表示暂无'} and task.name
+    )
+    precise.update(_literal_case_tokens(state.user_narrative or ''))
+    for step in steps:
+        text = step.model_dump_json()
+        matched = {anchor for anchor in anchors if anchor in text}
+        if not (matched & precise) and len(matched) < 2:
+            return False
+    return True
+
+
+def _analysis_is_case_specific(text: str, state) -> bool:
+    """Require at least one case/domain anchor before replacing the fallback."""
+    if any(anchor in text for anchor in _case_anchors(state)):
+        return True
+    # Analysis may legitimately paraphrase the user's wording (借钱 -> 借款).
+    # Accept that only when it still names a term from the established domain.
+    return any(
+        keyword in text
+        for domain_id in state.consultation.domain_ids
+        for keyword in PROFILES.get(domain_id, PROFILES['general']).keywords
+        if len(keyword) >= 2
+    )
+
+
+FOLLOW_UP_SLOT_PATTERNS = {
+    'location': r'哪里|哪(?:个)?(?:省|市|区|县)|发生地|地点',
+    'event_time': r'什么时候|何时|哪天|日期|时间',
+    'goal': r'希望.{0,8}(?:结果|解决)|想要什么|诉求是什么',
+    'parties': r'什么身份|双方是谁|对方是个人还是|谁和谁',
+    'procedure': r'处理到哪|目前.{0,6}(?:阶段|进展)|是否已经(?:起诉|投诉|报案|申请)',
+    'evidence_inventory': r'有什么.{0,5}(?:材料|证据)|哪些.{0,5}(?:材料|证据)',
+    'constraints': r'预算|能接受.{0,6}(?:时间|费用)|是否方便到场',
+    'amount': r'多少(?:钱|元)?|金额|价款',
+}
+
+
+def _follow_up_is_new(question: str, state) -> bool:
+    """Block questions already answered, declined, or asked verbatim."""
+    normalized_question = re.sub(r'[\s？?，,。；;：:]', '', question)
+    if any(
+        re.sub(r'[\s？?，,。；;：:]', '', asked) == normalized_question
+        for asked in state.consultation.question_history
+    ):
+        return False
+    for slot, pattern in FOLLOW_UP_SLOT_PATTERNS.items():
+        if re.search(pattern, question) and (
+            slot in state.facts or slot in state.consultation.declined_slots
+        ):
+            return False
+    if re.search(FOLLOW_UP_SLOT_PATTERNS['evidence_inventory'], question) and (
+        state.uploaded_files or state.evidence_collection_exhausted
+    ):
+        return False
+    return True
 
 
 def _accept_anchored_facts(draft, state, clean):
@@ -117,7 +219,7 @@ follow_up最多一个与当前事实相关、可直接回答的问题；不得�
 先识别本人是请求一方还是被请求一方；借款人、出租人、用人单位咨询时要从其合法请求或抗辩出发，不套用对方的起诉或索赔话术。身份不明时提出条件分支并追问，不擅自选边。证据可有多种形式；除条文明确规定外，不把发票、评估报告等某一种形式写成唯一或强制证明方法。
 不得一味建议起诉，比较协商、调解、投诉、仲裁或诉讼的适用条件、成本和执行可能。刑事程序不要建议与嫌疑人对质或私了消除刑责。
 grounded_claims最多2项，是“事实→条文→有条件结论”的公开依据摘要，不输出隐含思考过程。每项必须提供真实fact_ids、检索提供的source_ids、对应连续原文quotes和适用conditions；没有相关正文就留空，禁止借用无关引文支撑结论。具体条号只可在grounded_claims里使用且必须来自所引正文，analysis仍不写条号。原文中的时效只是法律规则，不据此擅算本案截止日。analysis控制在450字以内，直接回应诉求。
-action_steps必须结合本案争议、材料和诉求写清如何填表、发给谁、怎样提交、怎样保存回执、何时停止等待；法律步骤未知就明确待核对的那一项。不得编造机构地址、办公时间或窗口号码；真实渠道信息由系统另行附上。
+action_steps必须结合本案争议、材料和诉求写清如何填表、发给谁、怎样提交、怎样保存回执、何时停止等待；每条至少明确引用本案金额、日期、已有材料、当事人角色或两个本案争议关键词，不能只把“合同”“证据”“起诉”等通用词换进模板。法律步骤未知就明确待核对的那一项。不得编造机构地址、办公时间或窗口号码；真实渠道信息由系统另行附上。
 涉及取证不得建议侵入账户、购买个人信息、诱导造假或删改证据。没有材料也给出合法替代方法。
 只返回规定的JSON对象。\n''' + json.dumps(context, ensure_ascii=False)
     try:
@@ -151,16 +253,33 @@ action_steps必须结合本案争议、材料和诉求写清如何填表、发�
     if state.case_type == 'general' and draft.domain in PROFILES and draft.domain != 'general':
         state.case_type = draft.domain
         dossier.domain_ids = [draft.domain]
-    if draft.analysis and safe_advice(draft.analysis) and not checks['issues']:
+    if draft.analysis and safe_advice(draft.analysis) and not checks['issues'] and _analysis_is_case_specific(draft.analysis, state):
         dossier.analysis = draft.analysis
     elif checks['accepted']:
         dossier.analysis = '\n\n'.join(c['conclusion'] + ' 前提是：' + '；'.join(c['conditions']) for c in checks['accepted'])
         dossier.semantic_status = '部分分析未通过引用检查；已保留有原文和事实编号的有条件分析。'
     elif checks['issues']:
         dossier.semantic_status = '个案生成未通过引用检查，已使用可执行的分领域方案。'
-    if draft.follow_up and safe_advice(draft.follow_up) and draft.follow_up.count('？') + draft.follow_up.count('?') <= 1:
+    elif draft.analysis and safe_advice(draft.analysis):
+        dossier.generation_audit['issues'].append('分析未引用本案事实或领域争点，已舍弃通用回答。')
+        dossier.semantic_status = 'AI 分析过于通用，已使用分领域接谈与行动清单。'
+    if (
+        draft.follow_up
+        and safe_advice(draft.follow_up)
+        and draft.follow_up.count('？') + draft.follow_up.count('?') <= 1
+        and _follow_up_is_new(draft.follow_up, state)
+    ):
         dossier.follow_up = draft.follow_up
+    elif draft.follow_up and safe_advice(draft.follow_up):
+        dossier.generation_audit['issues'].append('追问重复已回答、已拒答或已完成的材料事项，已舍弃。')
     if include_plan and draft.action_steps and not checks['issues']:
-        if all(safe_advice(step.model_dump_json()) and all((step.title, step.when, step.channel, step.materials, step.instructions, step.completion, step.fallback)) for step in draft.action_steps):
+        complete_and_safe = all(
+            safe_advice(step.model_dump_json())
+            and all((step.title, step.when, step.channel, step.materials, step.instructions, step.completion, step.fallback))
+            for step in draft.action_steps
+        )
+        if complete_and_safe and _steps_are_case_specific(draft.action_steps, state):
             dossier.tailored_steps = draft.action_steps
             dossier.tailored_for = state.user_narrative
+        elif complete_and_safe:
+            dossier.generation_audit['issues'].append('个案步骤未引用足够的本案事实或已有材料，已舍弃通用模板。')

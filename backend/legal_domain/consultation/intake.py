@@ -40,11 +40,36 @@ def wants_plan(text: str) -> bool:
     return bool(re.search(PLAN_PATTERN, text))
 
 
+def _plausible_pending_answer(slot: str, message: str) -> bool:
+    """Prevent unrelated free text from becoming a structured fact."""
+    if slot == 'location':
+        return bool(
+            re.search(r'(?:中国大陆|大陆|.{2,12}(?:省|市|县|区))', message)
+            or any(word in message for word in OUTSIDE_MAINLAND)
+        )
+    if slot == 'event_time':
+        return bool(
+            re.search(DATE_PATTERN, message)
+            or re.search(r'上周|本周|这个月|本月|前几天|几天前|\d+\s*(?:天|个月|年)前', message)
+        )
+    if slot == 'amount':
+        return bool(re.search(AMOUNT_PATTERN, message))
+    return True
+
+
 def _evidence_mention(text: str, name: str) -> tuple[bool, bool]:
     """Return (mentioned, unavailable) without treating “没有借条” as possession."""
     terms = EVIDENCE_ALIASES.get(name, (name,))
     mentioned = any(term in text for term in terms)
-    unavailable = any(re.search(rf'(?:没有|没|找不到|无).{{0,6}}{re.escape(term)}', text) for term in terms)
+    unavailable = any(
+        re.search(
+            rf'(?:没有|找不到|无法提供|无).{{0,6}}{re.escape(term)}'
+            rf'|没(?:有|找到|拿到|保存|留住|了)?\s*{re.escape(term)}'
+            rf'|{re.escape(term)}.{{0,4}}(?:没有(?!问题)|没(?:了|找到|拿到|保存)|找不到|无法提供|无(?!问题|异议))',
+            text,
+        )
+        for term in terms
+    )
     return mentioned, unavailable
 
 
@@ -117,7 +142,11 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     if contextual and pending and not unknown and not wants_plan(message) and not re.search(EXHAUSTED_PATTERN, message):
         # A short answer belongs to the previous question only when it is not
         # demonstrably a different slot (e.g. an amount supplied to a date question).
-        if pending in QUESTIONS and (pending in extracted or not extracted):
+        if (
+            pending in QUESTIONS
+            and (pending in extracted or not extracted)
+            and _plausible_pending_answer(pending, message)
+        ):
             put(pending, state.facts.get(pending, message) if pending in extracted else message, message)
     if contextual and re.search(EXHAUSTED_PATTERN, message):
         state.mark_evidence_unavailable(list(state.pending_evidence_requests), exhausted=True)

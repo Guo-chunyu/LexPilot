@@ -14,12 +14,25 @@ ROLE_PATTERNS = {
     'employee': ('劳动者', r'(?:我是|本人是|我作为)(?:员工|劳动者|职工)|公司[^，。；]{0,8}(?:拖欠我|辞退我)'),
 }
 DOMAIN_ROLES = {'debt': ('debtor', 'creditor'), 'housing': ('landlord', 'tenant'), 'labor_dispute': ('employer', 'employee')}
+ROLE_CORRECTIONS = {
+    'debtor': r'(?:我|本人)不是[^，,；;]{1,16}[，,；;]\s*(?:我)?是(?:借款人|债务人)',
+    'creditor': r'(?:我|本人)不是[^，,；;]{1,16}[，,；;]\s*(?:我)?是(?:出借人|债权人)',
+    'landlord': r'(?:我|本人)不是[^，,；;]{1,16}[，,；;]\s*(?:我)?是(?:房东|出租人)',
+    'tenant': r'(?:我|本人)不是[^，,；;]{1,16}[，,；;]\s*(?:我)?是(?:租客|承租人)',
+    'employer': r'(?:我|本人)不是[^，,；;]{1,16}[，,；;]\s*(?:我)?是(?:用人单位|公司负责人|企业负责人)',
+    'employee': r'(?:我|本人)不是[^，,；;]{1,16}[，,；;]\s*(?:我)?是(?:员工|劳动者|职工)',
+}
 
 
 def client_perspective(state, message='') -> dict:
     # Later explicit identity corrections take precedence. Never infer the role
     # merely because the other party's label occurs somewhere in a complaint.
     for text in (message, str(state.facts.get('parties', '')), state.user_narrative):
+        corrected = [(rid, re.search(ROLE_CORRECTIONS[rid], text)) for rid in DOMAIN_ROLES.get(state.case_type, ())]
+        corrected = [(rid, match) for rid, match in corrected if match]
+        if len(corrected) == 1:
+            rid, match = corrected[0]
+            return {'id': rid, 'label': ROLE_PATTERNS[rid][0], 'basis': '对话陈述：' + match.group(0), 'verified': False}
         matches = [(rid, re.search(ROLE_PATTERNS[rid][1], text)) for rid in DOMAIN_ROLES.get(state.case_type, ())]
         matches = [(rid, match) for rid, match in matches if match]
         if len(matches) == 1:

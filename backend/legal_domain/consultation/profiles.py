@@ -241,6 +241,7 @@ PROFILES['labor_dispute'] = PracticeProfile(
 
 LABOR_KEYWORDS = ('劳动', '试用期', '辞退', '工资', '加班', '入职', '解雇', '裁员', '社保', '工伤', '用人单位', '上班', '工作了', '工作8个月', '不用来了')
 OUTSIDE_MAINLAND = ('香港', '澳门', '台湾', '美国', '加州', '纽约', '英国', '加拿大', '澳大利亚', '新加坡', '日本', '韩国', '德国', '法国', '海外', '境外', '涉外')
+CORRECTION_MARKERS = ('而是', '其实是', '实际是', '准确说是', '应该是', '应当是', '更正为', '更正成', '说错了')
 
 
 def identify_domains(text: str) -> list[str]:
@@ -262,8 +263,42 @@ def identify_domains(text: str) -> list[str]:
     return list(dict.fromkeys(matches))[:3] or ['general']
 
 
+def _explicit_domain_correction(message: str) -> str:
+    """Return only the user's corrected description, never an incidental topic."""
+    positions = [(message.rfind(marker), marker) for marker in CORRECTION_MARKERS if marker in message]
+    if not positions:
+        return ''
+    index, marker = max(positions)
+    tail = message[index + len(marker):].lstrip('，,：:；;。 ')
+    return tail[1:].lstrip('，,：:；;。 ') if tail.startswith('这') else tail
+
+
+def _reset_domain_drafts(state, domains: list[str]) -> None:
+    """Invalidate outputs tied to the old area while preserving user facts."""
+    dossier = state.consultation
+    state.case_type = domains[0]
+    dossier.domain_ids = [] if domains[0] == 'labor_dispute' else domains
+    state.final_report = {}
+    dossier.analysis = ''
+    dossier.follow_up = ''
+    dossier.tailored_steps = []
+    dossier.tailored_for = ''
+    dossier.grounded_claims = []
+    dossier.knowledge_passages = []
+    dossier.retrieval_audit = {}
+    dossier.research_sources = []
+    dossier.research_status = '尚未检索'
+    dossier.research_key = ''
+
+
 def route_case(message, state) -> str:
     """Preserve a case's practice area across short answers; refine unclassified cases."""
+    corrected = _explicit_domain_correction(message)
+    if corrected:
+        corrected_domains = identify_domains(corrected)
+        if corrected_domains[0] != 'general' and corrected_domains[0] != state.case_type:
+            _reset_domain_drafts(state, corrected_domains)
+            return state.case_type
     if state.consultation.domain_ids and state.case_type != 'general':
         return state.case_type
     if state.case_type == 'labor_dispute' and (state.dispute_type != 'unknown' or state.action_history):

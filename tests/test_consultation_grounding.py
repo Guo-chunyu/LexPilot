@@ -33,6 +33,44 @@ def test_model_fact_must_be_contained_in_its_own_quote():
     assert 'amount' not in state.facts
 
 
+def test_generic_safe_analysis_cannot_replace_case_specific_fallback():
+    state = LexPilotEngine().process('朋友借钱不还')['case_state']
+    provider = DraftProvider({'analysis': '建议先收集相关证据，再咨询专业人士。'})
+
+    enrich_consultation('请继续分析', state, provider=provider)
+
+    assert not state.consultation.analysis
+    assert any('通用回答' in issue for issue in state.consultation.generation_audit['issues'])
+
+
+def test_analysis_with_domain_dispute_anchor_is_retained():
+    state = LexPilotEngine().process('朋友借钱不还')['case_state']
+    provider = DraftProvider({'analysis': '先核对借款的实际交付和剩余金额，再判断下一步。'})
+
+    enrich_consultation('请继续分析', state, provider=provider)
+
+    assert state.consultation.analysis.startswith('先核对借款')
+
+
+def test_ai_follow_up_does_not_repeat_an_amount_already_provided():
+    state = LexPilotEngine().process('朋友借了我五万元，到期不还')['case_state']
+    provider = DraftProvider({'follow_up': '争议金额是多少？'})
+
+    enrich_consultation('请继续分析', state, provider=provider)
+
+    assert not state.consultation.follow_up
+    assert any('追问重复' in issue for issue in state.consultation.generation_audit['issues'])
+
+
+def test_ai_follow_up_keeps_a_new_case_specific_question():
+    state = LexPilotEngine().process('朋友借了我五万元，到期不还')['case_state']
+    provider = DraftProvider({'follow_up': '对方有没有在聊天中承认这是借款？'})
+
+    enrich_consultation('请继续分析', state, provider=provider)
+
+    assert state.consultation.follow_up == '对方有没有在聊天中承认这是借款？'
+
+
 def test_remote_failure_keeps_deterministic_plan_available():
     class BrokenProvider:
         def generate_json(self, *args, **kwargs):
@@ -108,3 +146,66 @@ def test_model_rephrasing_same_turn_is_not_a_fact_conflict():
     enrich_consultation(message, state, provider=provider)
     assert state.facts['location'] == '深圳'
     assert not state.consultation.conflicts
+
+
+def _action_step(**overrides):
+    step = {
+        'title': '整理后提交',
+        'when': '材料核对后',
+        'channel': '有权受理的正式渠道',
+        'materials': ['相关材料'],
+        'instructions': ['整理材料目录并保存提交回执'],
+        'completion': '取得回执',
+        'fallback': '受理要求不明时先核实要求',
+    }
+    step.update(overrides)
+    return step
+
+
+def test_generic_ai_action_step_is_rejected_instead_of_published_as_tailored():
+    state = LexPilotEngine().process('朋友借钱不还，只有转账记录')['case_state']
+    provider = DraftProvider({'action_steps': [_action_step()]})
+
+    enrich_consultation('请给我方案', state, provider=provider, include_plan=True)
+
+    assert not state.consultation.tailored_steps
+    assert any('通用模板' in issue for issue in state.consultation.generation_audit['issues'])
+
+
+def test_ai_action_step_with_existing_case_evidence_is_retained():
+    state = LexPilotEngine().process('朋友借钱不还，只有转账记录')['case_state']
+    provider = DraftProvider({'action_steps': [_action_step(
+        title='按转账记录逐笔核对借款',
+        materials=['转账记录', '与每笔转账对应的聊天'],
+        instructions=['导出含交易号的转账记录，并标明对方承认借款的聊天位置'],
+    )]})
+
+    enrich_consultation('请给我方案', state, provider=provider, include_plan=True)
+
+    assert state.consultation.tailored_steps
+    assert state.consultation.tailored_steps[0].title == '按转账记录逐笔核对借款'
+
+
+def test_ai_action_step_can_anchor_to_a_chinese_written_amount():
+    state = LexPilotEngine().process('朋友借了我五万元，到期不还')['case_state']
+    provider = DraftProvider({'action_steps': [_action_step(
+        title='核对五万元借款余额',
+        materials=['五万元交付与还款明细'],
+    )]})
+
+    enrich_consultation('请给我方案', state, provider=provider, include_plan=True)
+
+    assert state.consultation.tailored_steps
+
+
+def test_one_specific_step_cannot_hide_a_second_generic_step():
+    state = LexPilotEngine().process('朋友借钱不还，只有转账记录')['case_state']
+    provider = DraftProvider({'action_steps': [
+        _action_step(title='按转账记录逐笔核对借款', materials=['转账记录', '借款聊天']),
+        _action_step(title='准备下一步'),
+    ]})
+
+    enrich_consultation('请给我方案', state, provider=provider, include_plan=True)
+
+    assert not state.consultation.tailored_steps
+    assert any('通用模板' in issue for issue in state.consultation.generation_audit['issues'])

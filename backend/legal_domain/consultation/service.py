@@ -11,15 +11,20 @@ from .research import research_case
 from .semantic import enrich_consultation
 from .authorities import update_rule_references
 from .knowledge import retrieve_for_case
-from .perspective import case_profile
+from .perspective import case_profile, client_perspective
 
 
 def _case_opening(state, profile) -> str:
     """Give a direct case-aware answer when semantic AI is unavailable."""
     text = state.user_narrative + '\n' + '\n'.join(str(value) for value in state.facts.values())
+    role = client_perspective(state)['id']
     if state.case_type == 'debt' and re.search(r'没有借条|没(?:有)?借条|只有.{0,20}(?:转账|聊天)', text):
+        if role == 'debtor':
+            return '没有借条不代表债务当然不存在，也不代表对方主张的金额都正确。你先按每笔实际到账、已经偿还的本金和利息逐项对账，保存还款记录及双方对款项性质的完整沟通；如已收到法院材料，优先按文书要求核对答辩和举证节点。'
         return '没有借条不等于可以直接下结论。先把每笔转账的时间、金额、收款人，与能说明款项用途、还款约定和催还情况的完整聊天逐笔对应；真正需要补的是“这笔钱为什么是借款、是否已经到期、还剩多少”，不是补造一张借条。'
     if state.case_type == 'housing' and re.search(r'押金|扣款', text):
+        if role == 'landlord':
+            return '押金不能不经核算就当然全部没收。先把欠租、欠费、正常损耗和有证据的实际损坏分别列账，用入住与退房记录、维修凭证和合同条款说明每项扣款；无争议的余额应与争议项目分开处理。'
         return '房东只说“有损坏”，还不足以算清应扣多少。先让对方列出具体损坏位置、合同依据、交接前后记录和实际费用；你这边保留退房、钥匙交还、房屋状态及押金支付记录，把正常使用痕迹与确有损坏的项目分开核对。'
     if state.case_type == 'consumer' and re.search(r'关门|停业|跑路|会员卡|预付', text):
         return '先确认是门店停业、迁址，还是经营主体已经异常，并立即固定余额、剩余服务次数和停业信息。退款请求要写清“谁收了款、还有多少未履行、要求怎样处理”；平台投诉或监管处理可以帮助留痕，但不能自动等同于钱已经退回。'
@@ -29,6 +34,22 @@ def _case_opening(state, profile) -> str:
         return '现在最重要的不是先猜结果，而是根据通知书核对办案机关、涉嫌事项、采取措施和时间，并尽快联系当地刑事律师或法律援助机构了解依法会见等程序。家属只整理真实材料，不找关系、不串供、不删除记录。'
     if state.case_type == 'contract' and re.search(r'没交货|不交货|违约|解除|退款', text):
         return '先把合同约定、你方已履行、对方未履行和催告经过按时间对齐，再判断是要求继续履行、补救、解除退款还是赔偿损失；这些请求的条件和证据不同，不宜一开始全部堆在一起。'
+    if state.case_type == 'administrative':
+        return '先看决定书写明的作出机关、具体处理、送达方式和救济告知，不要只按聊天中的日期估算期限。把你不服的事实认定、程序或处理幅度分别列出，再核对是复议、诉讼还是需要先走特定程序。'
+    if state.case_type == 'corporate' and re.search(r'股东|股权|查账|分红|出资|清算', text):
+        return '先用登记信息、章程、股东名册或出资材料确认你的股东身份和权利范围，再把查阅、分红、退出或追责拆成不同请求。尤其是查账，应写清查阅目的、材料范围和此前被拒绝的经过，不能把公司责任直接算到老板个人名下。'
+    if state.case_type == 'intellectual_property':
+        return '先别急着只做下架投诉：在页面可能消失前，完整保存网址、账号、发布时间、使用方式和可见交易信息，同时整理你的创作源文件、首次发表或授权链。权利归属与对方实际使用要分别证明，赔偿金额也不能只凭浏览量直接推定。'
+    if state.case_type == 'inheritance':
+        return '先确定哪些财产确属被继承人、是否存在共同财产和债务，再谈如何分配。遗嘱案件还要优先保管原件，并核对形成时间、形式、见证情况及当时行为能力；只凭某位家属转述，暂时不能判断遗嘱是否有效。'
+    if state.case_type == 'traffic':
+        return '先持续治疗并保存病历、医嘱和票据，同时取得事故认定及保险信息。责任比例、治疗关联和具体损失是三个不同问题；伤情和后续治疗尚未明确时，慎重签署一次性结清或放弃后续请求的文件。'
+    if state.case_type == 'medical':
+        return '先保证后续治疗，并尽快申请复制、必要时依法保存完整病历，把具体诊疗行为、告知内容和损害结果按时间对应。不良结果本身不能直接证明医疗过错，是否存在过错及因果关系通常还需专业审查。'
+    if state.case_type == 'tort':
+        return '先制止仍在持续的伤害，并保存原始页面、账号、网址、完整上下文和时间信息；不要为了反击再次扩散对方或自己的隐私。之后再分别核对行为人身份、内容真伪、传播范围和能够证明的实际影响。'
+    if state.case_type == 'enforcement':
+        return '胜诉不等于款项会自动到账。先核对生效文书、履行期限、已经履行的部分和是否已申请执行，再按合法来源整理被执行人的财产线索；已经立案的，应通过案号补充线索并留存提交记录。'
     return profile.focus
 
 

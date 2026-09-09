@@ -52,6 +52,32 @@ def test_debt_intake_remembers_short_answers_and_unknowns():
     assert result['case_state'].fact_provenance
 
 
+def test_unrelated_reply_is_not_saved_as_a_location():
+    engine = LexPilotEngine()
+    state = engine.process('朋友借钱不还')['case_state']
+    state = engine.process('对方一直不回消息', state)['case_state']
+    assert 'location' not in state.facts
+    assert state.pending_fact_ids == ['location']
+
+
+def test_unrelated_reply_is_not_saved_as_an_event_time():
+    engine = LexPilotEngine()
+    state = engine.process('朋友借钱不还')['case_state']
+    state = engine.process('广东省深圳市南山区', state)['case_state']
+    assert state.pending_fact_ids == ['event_time']
+    state = engine.process('对方一直不回消息', state)['case_state']
+    assert 'event_time' not in state.facts
+    assert state.pending_fact_ids == ['event_time']
+
+
+def test_relative_time_answer_is_still_accepted_for_event_time():
+    engine = LexPilotEngine()
+    state = engine.process('朋友借钱不还')['case_state']
+    state = engine.process('广东省深圳市南山区', state)['case_state']
+    state = engine.process('前几天', state)['case_state']
+    assert state.facts['event_time'] == '前几天'
+
+
 def test_plan_is_available_before_all_evidence_is_collected():
     engine = LexPilotEngine()
     state = engine.process("深圳朋友欠我50000元，2025年5月转账，我想追回借款")['case_state']
@@ -147,6 +173,30 @@ def test_missing_iou_uses_alternative_and_does_not_reask_stated_goal():
 def test_background_salary_does_not_turn_a_rental_dispute_into_labor():
     result = LexPilotEngine().process('房东不退租房押金，我每月工资只有3000元，希望低成本处理')
     assert result['case_state'].case_type == 'housing'
+
+
+def test_explicit_correction_can_replace_a_wrong_nonlabor_domain():
+    engine = LexPilotEngine()
+    state = engine.process('我们签了采购合同，对方一直没有交货')['case_state']
+    state = engine.process('更正一下，其实是医院手术后出现后遗症，我问的是医疗问题', state)['case_state']
+    assert state.case_type == 'medical'
+    assert state.consultation.domain_ids[0] == 'medical'
+    assert '不良结果本身不能直接证明医疗过错' in state.consultation.analysis
+
+
+def test_explicit_correction_can_switch_general_flow_to_employee_labor_flow():
+    engine = LexPilotEngine()
+    state = engine.process('我们有一份采购合同，对方没有履行')['case_state']
+    result = engine.process('更正一下，其实是公司拖欠我的工资', state)
+    assert result['case_state'].case_type == 'labor_dispute'
+    assert '房东' not in result['reply']
+
+
+def test_incidental_new_topic_does_not_reclassify_an_established_case():
+    engine = LexPilotEngine()
+    state = engine.process('我们签了采购合同，对方一直没有交货')['case_state']
+    state = engine.process('我每月工资3000元，预算有限', state)['case_state']
+    assert state.case_type == 'contract'
 
 
 def test_administrative_detention_is_not_assumed_to_be_criminal():
