@@ -21,6 +21,7 @@ from evaluation.consultation_red_team import (
     generate_round_three_variants,
     generate_round_four_variants,
     generate_round_five_variants,
+    generate_round_six_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -44,6 +45,7 @@ LABOR_EMPLOYER_AMOUNT_START = '我是公司负责人，员工申请仲裁称欠�
 LABOR_EMPLOYER_AMOUNT_CORRECTION = '更正一下，员工请求金额实际是4万元，请按单位立场给我答辩方案。'
 CONSUMER_EXHAUSTED_START = '健身房关门不退款，我只有付款截图，没有其他材料，请先给我方案。'
 CONSUMER_EVIDENCE_CORRECTION = '更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。'
+TRAFFIC_WITH_MEDICAL_MATERIALS = '交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。'
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
@@ -161,6 +163,38 @@ def test_new_consumer_evidence_reopens_collection_in_streamlit():
     _assert_new_consumer_evidence_reopens_collection(
         at.session_state['case_state'], at.session_state['messages'][-1]['content']
     )
+
+
+def _assert_traffic_event_outweighs_medical_material_terms(state) -> None:
+    assert state.case_type == 'traffic'
+    assert state.final_report['domain'] == '交通事故'
+    assert '事故认定及保险信息' in state.final_report['analysis']
+    assert '责任比例、治疗关联和具体损失' in state.final_report['analysis']
+
+
+def test_traffic_event_with_medical_materials_routes_in_engine():
+    result = LexPilotEngine().process(TRAFFIC_WITH_MEDICAL_MATERIALS)
+    _assert_traffic_event_outweighs_medical_material_terms(result['case_state'])
+
+
+def test_traffic_event_with_medical_materials_routes_in_api():
+    thread_id = 'red_team_traffic_medical_materials'
+    client = TestClient(api_module.api_app)
+    try:
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': TRAFFIC_WITH_MEDICAL_MATERIALS,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_traffic_event_outweighs_medical_material_terms(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_traffic_event_with_medical_materials_routes_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(TRAFFIC_WITH_MEDICAL_MATERIALS).run(timeout=20)
+    _assert_traffic_event_outweighs_medical_material_terms(at.session_state['case_state'])
 
 
 def _assert_no_invented_action_dates(state, reply: str) -> None:
@@ -459,6 +493,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_three_variants': generate_round_three_variants,
         'generate_round_four_variants': generate_round_four_variants,
         'generate_round_five_variants': generate_round_five_variants,
+        'generate_round_six_variants': generate_round_six_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 

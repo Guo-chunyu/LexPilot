@@ -423,6 +423,43 @@ def generate_round_five_variants(seed: int = 20260913) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_six_variants(seed: int = 20260914) -> list[RedTeamCase]:
+    """Generate five unseen specialist-domain and jurisdiction variants."""
+    randomizer = Random(seed)
+    source_material = randomizer.choice(('创作源文件', '原始工程文件'))
+    medical_material = randomizer.choice(('病历复印件', '出院记录'))
+    return [
+        RedTeamCase(
+            'ip_nonexclusive_source_materials', ('intellectual_property', 'negation', 'evidence_not_exhausted'),
+            (f'摄影作品被网店盗用，不是只有网页截图，我还有{source_material}和首次发布时间记录，请给我方案。',),
+            'intellectual_property', expected_exhausted=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'medical_records_not_absent', ('medical', 'negation', 'evidence_not_exhausted'),
+            (f'手术后出现后遗症，并不是没有诊疗材料，我有{medical_material}和收费票据，请给我方案。',),
+            'medical', expected_exhausted=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'traffic_insurer_refusal_negated', ('traffic', 'negation', 'opponent_response'),
+            ('交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。',),
+            'traffic', expected_route='negotiation', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'corporate_repeated_inspection_refusal', ('corporate', 'procedure_progress'),
+            ('我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。',),
+            'corporate', expected_route='mediation', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'outside_mainland_location_correction', ('contract', 'fact_correction', 'jurisdiction_correction'),
+            (
+                '事情发生在香港，是合同退款争议，请先给我方案。',
+                '更正一下，实际发生在深圳，不涉及香港或其他境外地区，请更新方案。',
+            ),
+            'contract', expected_facts=(('location', '深圳'),), origin='auto_variant',
+        ),
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document

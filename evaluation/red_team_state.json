@@ -262,6 +262,41 @@
         "full_suite": "269 passed, 1 warning"
       },
       "commit_subject": "Reopen collection for newly found evidence"
+    },
+    {
+      "round_id": "round-006-specialist-and-jurisdiction",
+      "seed": 20260914,
+      "generator": "generate_round_six_variants",
+      "status": "in_progress",
+      "selected_case_ids": [
+        "ip_nonexclusive_source_materials",
+        "medical_records_not_absent",
+        "traffic_insurer_refusal_negated",
+        "corporate_repeated_inspection_refusal",
+        "outside_mainland_location_correction"
+      ],
+      "anonymous_cases": [
+        {"case_id": "ip_nonexclusive_source_materials", "messages": ["摄影作品被网店盗用，不是只有网页截图，我还有原始工程文件和首次发布时间记录，请给我方案。"]},
+        {"case_id": "medical_records_not_absent", "messages": ["手术后出现后遗症，并不是没有诊疗材料，我有出院记录和收费票据，请给我方案。"]},
+        {"case_id": "traffic_insurer_refusal_negated", "messages": ["交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。"]},
+        {"case_id": "corporate_repeated_inspection_refusal", "messages": ["我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。"]},
+        {"case_id": "outside_mainland_location_correction", "messages": ["事情发生在香港，是合同退款争议，请先给我方案。", "更正一下，实际发生在深圳，不涉及香港或其他境外地区，请更新方案。"]}
+      ],
+      "failures_before_fix": ["traffic_insurer_refusal_negated", "corporate_repeated_inspection_refusal"],
+      "completed_root_causes": [
+        {
+          "id": "traffic_event_outweighed_by_material_terms",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/profiles.py"],
+          "verification": "3 path tests, 8 related tests and 272 full tests passed",
+          "commit_subject": "Prioritize traffic events over material terms"
+        }
+      ],
+      "pending_root_causes": ["公司查账被拒后仍推荐继续协商"],
+      "root_cause": "待逐项修复",
+      "fix_files": ["backend/legal_domain/consultation/profiles.py"],
+      "verification": {},
+      "commit_subject": ""
     }
   ]
 }

@@ -264,12 +264,20 @@ def identify_domains(text: str) -> list[str]:
     ]
     scores.sort(key=lambda pair: -pair[0])
     matches = [key for score, key in scores if score > 0]
-    # A special procedure takes precedence over background words such as “合同”.
-    for primary in ('criminal', 'administrative', 'enforcement', 'medical', 'traffic', 'inheritance', 'family'):
-        if primary in matches:
-            matches.remove(primary)
-            matches.insert(0, primary)
-            break
+    # An explicit traffic event outranks incidental treatment-material words
+    # such as “病历”; substantive allegations against a provider remain medical.
+    traffic_event = bool(re.search(r'交通事故|车祸|汽车撞|事故认定', text))
+    medical_claim = bool(re.search(r'医疗纠纷|医疗事故|医院|手术|误诊|诊疗.{0,8}(?:不当|过错)', text))
+    if traffic_event and not medical_claim and 'traffic' in matches:
+        matches.remove('traffic')
+        matches.insert(0, 'traffic')
+    else:
+        # A special procedure takes precedence over background words such as “合同”.
+        for primary in ('criminal', 'administrative', 'enforcement', 'medical', 'traffic', 'inheritance', 'family'):
+            if primary in matches:
+                matches.remove(primary)
+                matches.insert(0, primary)
+                break
     if '行政拘留' in text and '刑事' not in text and 'administrative' in matches:
         matches.remove('administrative')
         matches.insert(0, 'administrative')
