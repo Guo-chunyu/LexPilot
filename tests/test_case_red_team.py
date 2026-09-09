@@ -164,6 +164,49 @@ def test_debt_followup_explains_material_and_constraint_changes_in_streamlit():
     )
 
 
+def _assert_unavailable_iou_is_not_an_upload_action(state, public_text: str) -> None:
+    iou = next(item for item in state.final_report['evidence_checklist'] if item['name'] == '借条')
+    assert iou['status'] == '暂无法提供'
+    assert all('借条' not in step['materials'] for step in state.final_report['action_plan'])
+    assert '转账备注、借条和聊天' not in public_text
+    assert '上传转账、借条或聊天' not in public_text
+    assert '不要倒签或补造借条' in public_text
+
+
+def test_unavailable_iou_is_not_an_upload_action_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_CORRECTION)
+    second = engine.process(DEBT_LITIGATION_FOLLOWUP, first['case_state'])
+    public = second['reply'] + '\n' + report_markdown(second['case_state'])
+    _assert_unavailable_iou_is_not_an_upload_action(second['case_state'], public)
+
+
+def test_unavailable_iou_is_not_an_upload_action_in_api_export():
+    thread_id = 'red_team_debt_unavailable_iou'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_CORRECTION})
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': DEBT_LITIGATION_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert exported.status_code == 200
+    state = api_module.CaseState.from_value(response.json()['case_state'])
+    public = response.json()['reply'] + '\n' + exported.content.decode('utf-8')
+    _assert_unavailable_iou_is_not_an_upload_action(state, public)
+
+
+def test_unavailable_iou_is_not_an_upload_action_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_CORRECTION).run(timeout=20)
+    at.chat_input[0].set_value(DEBT_LITIGATION_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    public = at.session_state['messages'][-1]['content'] + '\n' + report_markdown(state)
+    _assert_unavailable_iou_is_not_an_upload_action(state, public)
+
+
 def test_debt_followup_does_not_invent_absolute_action_dates_in_engine():
     engine = LexPilotEngine()
     first = engine.process(DEBT_CORRECTION)

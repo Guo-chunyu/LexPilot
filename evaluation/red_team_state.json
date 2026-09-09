@@ -52,10 +52,19 @@
           ],
           "verification": "3 path tests, 6 related tests and 244 full tests passed",
           "commit_subject": "Explain cross-turn plan changes in chat"
+        },
+        {
+          "id": "unavailable_evidence_copied_into_upload_actions",
+          "before_fix": "engine, API export and Streamlit: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/reporting.py",
+            "backend/legal_domain/consultation/planning.py"
+          ],
+          "verification": "3 path tests and 247 full tests passed",
+          "commit_subject": "Exclude unavailable evidence from upload actions"
         }
       ],
       "pending_root_causes": [
-        "unavailable IOU still appears as an upload action",
         "ambiguous pending-fact acknowledgement"
       ]
     }

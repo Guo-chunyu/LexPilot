@@ -115,11 +115,33 @@ def compare_routes(state) -> dict:
             '分期和解写明金额、每期日期、付款账户、违约安排和可依法取得的履行保障；以实际到账核对，不提前确认全部结清。']}
 
 
+def _adapt_operations_to_available_evidence(state, operations: list[str]) -> list[str]:
+    unavailable = {
+        task.name for task in state.consultation.evidence_tasks
+        if task.status == '暂无法提供'
+    }
+    if state.case_type != 'debt' or '借条' not in unavailable:
+        return operations
+    adapted = []
+    for operation in operations:
+        operation = operation.replace(
+            '转账备注、借条和聊天中“借款/还款”',
+            '现有转账记录和聊天中“借款/还款”',
+        )
+        operation = operation.replace(
+            '同步上传转账、借条或聊天与证据目录',
+            '同步上传现有转账、聊天及证据目录',
+        )
+        adapted.append(operation)
+    return adapted
+
+
 def enhance_steps(state, steps: list[dict]) -> list[dict]:
     urgent = bool(state.consultation.urgent_actions)
     outside = state.consultation.jurisdiction_status == 'OUTSIDE_MAINLAND'
     role = client_perspective(state)['id']
     operations = ROLE_OPERATIONS.get(role, OPERATIONS.get(state.case_type, [])) if state.case_type in DOMAIN_ROLES else OPERATIONS.get(state.case_type, [])
+    operations = _adapt_operations_to_available_evidence(state, operations)
     if outside:
         operations = []
     relative_schedule = ('立即', '立即', '材料整理后', '程序条件核对后', '收到对方意见或机关通知后')

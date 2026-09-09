@@ -36,7 +36,14 @@ def action_plan(state) -> list[dict]:
     profile = case_profile(state)
     location = str(state.facts.get('location', '案件所在地（待确认）'))
     goal = str(state.facts.get('goal', '先明确希望解决的问题'))
-    material_names = [t.name for t in dossier.evidence_tasks] or ['关键合同或决定', '完整沟通记录', '时间线与证据目录']
+    material_names = [
+        task.name for task in dossier.evidence_tasks
+        if task.status != '暂无法提供'
+    ]
+    if not material_names:
+        material_names = ['现有材料与替代线索'] if dossier.evidence_tasks else [
+            '关键合同或决定', '完整沟通记录', '时间线与证据目录',
+        ]
     first_materials = list(dict.fromkeys([*material_names[:2], '关键事件时间线', '当前具体诉求']))
     outside = dossier.jurisdiction_status == 'OUTSIDE_MAINLAND'
     channel = '适用地区的执业律师、法律援助机构或官方受理窗口（需先确认）' if outside else profile.channel
