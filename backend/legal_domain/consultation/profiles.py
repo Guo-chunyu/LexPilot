@@ -245,6 +245,7 @@ CORRECTION_MARKERS = ('而是', '其实是', '实际是', '准确说是', '应�
 
 
 DOMAIN_ROUTE_HINTS = {
+    'contract': ('供应商', '合同退款', '收款后不交货'),
     'criminal': ('\u4fa6\u67e5\u673a\u5173', '\u8fa9\u62a4\u4eba', '\u5ba1\u67e5\u8d77\u8bc9'),
     'intellectual_property': ('\u77e5\u8bc6\u4ea7\u6743', '\u4fb5\u5bb3\u77e5\u8bc6\u4ea7\u6743'),
     'enforcement': ('\u7533\u8bf7\u6267\u884c', '\u6267\u884c\u7acb\u6848', '\u751f\u6548\u5224\u51b3', '\u6267\u884c\u6cd5\u9662'),

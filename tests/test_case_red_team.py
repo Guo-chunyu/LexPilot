@@ -1,10 +1,16 @@
 """End-to-end red-team cases that exercise the public consultation paths."""
 
+import pytest
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 
 import backend.api as api_module
 from backend.workflow import LexPilotEngine
+from evaluation.consultation_red_team import (
+    audit_red_team_result,
+    generate_anonymous_uploads,
+    generate_red_team_cases,
+)
 from tests.test_streamlit_app import APP_PATH
 
 
@@ -67,3 +73,83 @@ def test_complete_debt_correction_reaches_streamlit_report():
     )
     assert at.get('download_button')
     assert not at.exception
+
+
+def test_red_team_generator_covers_every_supported_practice_area_and_risk_dimension():
+    cases = generate_red_team_cases()
+    domains = {case.expected_domain for case in cases}
+    tags = {tag for case in cases for tag in case.tags}
+
+    assert domains >= {
+        'debt', 'family', 'housing', 'consumer', 'contract', 'criminal',
+        'administrative', 'corporate', 'intellectual_property', 'inheritance',
+        'traffic', 'medical', 'tort', 'enforcement', 'labor_dispute', 'general',
+    }
+    assert tags >= {
+        'opposing_role', 'negation', 'role_correction', 'fact_conflict',
+        'procedure_progress', 'urgent', 'deadline', 'evidence_exhausted',
+    }
+    assert len({case.case_id for case in cases}) == len(cases)
+
+
+@pytest.mark.parametrize('case', generate_red_team_cases(), ids=lambda case: case.case_id)
+def test_generated_red_team_case_passes_real_multiturn_engine(case):
+    engine = LexPilotEngine()
+    state = None
+    replies = []
+    prior_facts = {}
+    for message in case.messages:
+        result = engine.process(message, state)
+        state = result['case_state']
+        replies.append(result['reply'])
+        if 'fact_conflict' not in case.tags:
+            assert all(state.facts.get(key) == value for key, value in prior_facts.items())
+        prior_facts = dict(state.facts)
+
+    assert audit_red_team_result(case, state, replies) == []
+    if 'fact_conflict' in case.tags:
+        assert state.consultation.conflicts
+    if 'evidence_exhausted' in case.tags:
+        assert state.evidence_collection_exhausted is True
+    if 'urgent' in case.tags:
+        assert state.consultation.urgent_actions
+    if 'outside_mainland' in case.tags:
+        assert state.consultation.jurisdiction_status == 'OUTSIDE_MAINLAND'
+        assert state.final_report['research_sources'] == []
+
+
+def test_anonymous_multiformat_files_use_real_api_and_remain_unverified(tmp_path, monkeypatch):
+    thread_id = 'red_team_multiformat_upload'
+    uploads = generate_anonymous_uploads()
+    client = TestClient(api_module.api_app)
+    monkeypatch.setattr(api_module, '_upload_root', lambda: tmp_path)
+    try:
+        first = client.post('/chat', json={
+            'thread_id': thread_id,
+            'query': '朋友向我借款4万元，有转账和微信，没有借条，请给我方案。',
+        })
+        response = client.post(
+            f'/cases/{thread_id}/evidence',
+            data={'query': '这些都是匿名合成测试材料，请更新方案。'},
+            files=[('files', (item.name, item.data, item.media_type)) for item in uploads],
+        )
+        markdown = client.get(f'/cases/{thread_id}/report.md')
+        docx = client.get(f'/cases/{thread_id}/report.docx')
+        pdf = client.get(f'/cases/{thread_id}/report.pdf')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+
+    assert first.status_code == 200
+    assert response.status_code == 200
+    payload = response.json()
+    records = payload['case_state']['uploaded_files']
+    assert {record['extension'] for record in records} == {'.txt', '.pdf', '.docx', '.png'}
+    assert 'stored_path' not in str(payload)
+    tasks = {item['name']: item for item in payload['final_report']['evidence_checklist']}
+    assert tasks['转账记录']['status'].startswith('已上传')
+    assert tasks['催款记录']['status'].startswith('已上传')
+    assert all(item['status'] != 'PROVEN' for item in tasks.values())
+    assert markdown.status_code == docx.status_code == pdf.status_code == 200
+    assert '证据清单' in markdown.content.decode('utf-8')
+    assert docx.content.startswith(b'PK')
+    assert pdf.content.startswith(b'%PDF')
