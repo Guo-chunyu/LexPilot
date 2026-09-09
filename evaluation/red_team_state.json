@@ -354,24 +354,31 @@
           ],
           "verification": "3 path tests, 3 workflow tests and 286 full tests passed",
           "commit_subject": "Persist labor procedure progress"
+        },
+        {
+          "id": "accepted_arbitration_word_order_not_treated_as_filed",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/planning.py"],
+          "verification": "3 path tests, 21 related tests and 289 full tests passed",
+          "commit_subject": "Route accepted arbitration to formal procedure"
         }
       ],
       "pending_root_causes": [
-        "劳动仲裁程序事实已保存但路线仍未切换",
         "知识产权平台投诉被拒但仍推荐协商"
       ],
-      "root_cause": "已确认多个独立根因：正式同义身份纠正未覆盖；劳动者图路径绕过通用程序事实提取；其余路线问题待逐项修复。",
+      "root_cause": "已确认多个独立根因：正式同义身份纠正未覆盖；劳动者图路径绕过通用程序事实提取；正式仲裁路线只识别固定词序；知识产权投诉进展仍待修复。",
       "fix_files": [
         "backend/legal_domain/consultation/perspective.py",
         "backend/workflow.py",
-        "backend/graph.py"
+        "backend/graph.py",
+        "backend/legal_domain/consultation/planning.py"
       ],
       "verification": {
         "latest_before_fix": "engine, API and Streamlit: 3 failed",
-        "latest_related_suite": "3 workflow tests passed",
-        "latest_full_suite": "286 passed, 1 warning"
+        "latest_related_suite": "21 passed",
+        "latest_full_suite": "289 passed, 1 warning"
       },
-      "commit_subject": "Persist labor procedure progress"
+      "commit_subject": "Route accepted arbitration to formal procedure"
     }
   ]
 }

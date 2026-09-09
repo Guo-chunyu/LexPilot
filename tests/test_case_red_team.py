@@ -146,6 +146,40 @@ def test_indirect_arbitration_filing_persists_in_streamlit():
     _assert_indirect_arbitration_filing_persists(at.session_state['case_state'])
 
 
+def _assert_accepted_arbitration_uses_formal_route(state) -> None:
+    _assert_indirect_arbitration_filing_persists(state)
+    assert state.final_report['strategy_comparison']['recommended_route'] == 'formal'
+    assert any(
+        '正式程序' in step['title']
+        for step in state.final_report['action_plan']
+    )
+
+
+def test_accepted_arbitration_uses_formal_route_in_engine():
+    result = LexPilotEngine().process(LABOR_INDIRECT_ARBITRATION_FILING)
+    _assert_accepted_arbitration_uses_formal_route(result['case_state'])
+
+
+def test_accepted_arbitration_uses_formal_route_in_api():
+    thread_id = 'red_team_accepted_arbitration_route'
+    client = TestClient(api_module.api_app)
+    try:
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': LABOR_INDIRECT_ARBITRATION_FILING,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_accepted_arbitration_uses_formal_route(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_accepted_arbitration_uses_formal_route_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(LABOR_INDIRECT_ARBITRATION_FILING).run(timeout=20)
+    _assert_accepted_arbitration_uses_formal_route(at.session_state['case_state'])
+
+
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
     assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])

@@ -92,7 +92,12 @@ def compare_routes(state) -> dict:
     procedure = str(state.facts.get('procedure', ''))
     constraints = str(state.facts.get('constraints', ''))
     failed = bool(re.search(r'拒绝|不回复|不理|协商.{0,8}(?:不成|失败|三次)|调解失败', procedure))
-    filed = bool(re.search(r'已经起诉|已立案|收到.{0,8}(?:传票|开庭)|已经申请仲裁', procedure))
+    filed = bool(re.search(
+        r'已经起诉|已立案|收到.{0,8}(?:传票|开庭)|已经申请仲裁|'
+        r'(?:已经|已).{0,36}(?:仲裁委员会|劳动仲裁).{0,16}(?:提交申请|受理)|'
+        r'(?:仲裁委员会|劳动仲裁).{0,16}(?:已经|已)?受理',
+        procedure,
+    ))
     formal_preference = bool(re.search(r'不想再.{0,10}(?:催款|协商|调解)|(?:准备|直接|转为?).{0,8}(?:起诉|仲裁|正式程序)', constraints))
     recommended = 'formal' if urgent or formal_only or filed or formal_preference else 'mediation' if failed else 'negotiation'
     route_data = [
