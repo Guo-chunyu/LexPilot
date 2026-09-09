@@ -49,6 +49,11 @@ def render_dossier(state) -> None:
         with st.expander('需要核对的不同陈述', expanded=True, icon=':material/compare_arrows:'):
             for conflict in dossier.conflicts:
                 st.write(f'{conflict["fact"]}：此前“{conflict["previous"]}”，本轮“{conflict["current"]}”。请核对，金额变化也可能是已还款等原因。')
+    if dossier.corrections:
+        with st.expander('已确认的事实更正', icon=':material/edit_note:'):
+            st.caption('当前方案采用更正后的值；旧值仅保留在变更记录中。')
+            for correction in dossier.corrections:
+                st.write(f'{correction["fact"]}：此前“{correction["previous"]}”，现更正为“{correction["current"]}”。')
     if dossier.timeline:
         with st.expander('事实时间线', icon=':material/timeline:'):
             st.caption('按记录顺序呈现；相对日期保留原话，尚未推算成确定日期。')
@@ -62,6 +67,11 @@ def render_plan_sections(state) -> None:
     if report.get('analysis'):
         st.markdown('#### 初步分析')
         st.write(report['analysis'])
+    if report.get('fact_corrections'):
+        st.markdown('#### 本轮明确更正')
+        st.caption('当前方案采用更正后的值，旧值仅作为历史记录。')
+        for correction in report['fact_corrections']:
+            st.write(f'{correction["fact"]}：此前“{correction["previous"]}”，现更正为“{correction["current"]}”。')
     strategy = report.get('strategy_comparison', {})
     if strategy:
         st.markdown('#### 先走哪条路')

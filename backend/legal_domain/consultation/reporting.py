@@ -108,7 +108,8 @@ def build_consultation_report(state) -> dict:
         'case_summary': summary, 'domain': domain_label(state.case_type),
         'legal_issues': state.legal_issues, 'analysis': dossier.analysis or profile.focus,
         'facts': [{'name': LABELS.get(k, k), 'value': v, 'status': '用户陈述或材料记载，待核实'} for k, v in state.facts.items() if k in LABELS],
-        'fact_conflicts': dossier.conflicts, 'timeline': [t.model_dump() for t in dossier.timeline],
+        'fact_conflicts': dossier.conflicts, 'fact_corrections': dossier.corrections,
+        'timeline': [t.model_dump() for t in dossier.timeline],
         'evidence_checklist': [t.model_dump() for t in dossier.evidence_tasks],
         'opponent_arguments': [profile.defense, '应对：' + profile.response],
         'action_plan': steps,
@@ -187,6 +188,8 @@ def report_markdown(state) -> str:
             lines += ['', f'## {title}', '', *[f'- {v}' for v in values]]
     if report.get('fact_conflicts'):
         lines += ['', '## 需要核对的不同陈述', '', *[f'- {v["fact"]}：此前“{v["previous"]}”；本轮“{v["current"]}”。{v["status"]}' for v in report['fact_conflicts']]]
+    if report.get('fact_corrections'):
+        lines += ['', '## 本轮明确更正', '', *[f'- {v["fact"]}：此前“{v["previous"]}”；现更正为“{v["current"]}”。{v["status"]}' for v in report['fact_corrections']]]
     if report.get('timeline'):
         lines += ['', '## 事实时间线', '', *[f'- {v["date_text"]}：{v["description"]}（{v["source_ref"]}；{v["status"]}）' for v in report['timeline']]]
     if report.get('evidence_checklist'):

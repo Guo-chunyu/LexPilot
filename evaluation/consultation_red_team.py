@@ -48,10 +48,19 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         ),
         RedTeamCase(
             'debt_role_and_amount_correction',
-            ('debt', 'role_correction', 'fact_conflict'),
+            ('debt', 'role_correction', 'fact_correction'),
             (
                 '我是借款人，争议本金是5万元。',
                 '说错了，我不是借款人，是出借人；实际尚欠4万元，请给我方案。',
+            ),
+            'debt', 'creditor', (('amount', '4万元'),),
+        ),
+        RedTeamCase(
+            'debt_unresolved_amount_conflict',
+            ('debt', 'fact_conflict'),
+            (
+                '朋友向我借款5万元，我有转账记录。',
+                '借款金额是4万元，请给我方案。',
             ),
             'debt', 'creditor', (('amount', '4万元'),),
         ),

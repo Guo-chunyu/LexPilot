@@ -6,6 +6,7 @@ from streamlit.testing.v1 import AppTest
 
 import backend.api as api_module
 from backend.workflow import LexPilotEngine
+from backend.legal_domain.consultation.reporting import report_markdown
 from evaluation.consultation_red_team import (
     audit_red_team_result,
     generate_anonymous_uploads,
@@ -102,13 +103,18 @@ def test_generated_red_team_case_passes_real_multiturn_engine(case):
         result = engine.process(message, state)
         state = result['case_state']
         replies.append(result['reply'])
-        if 'fact_conflict' not in case.tags:
+        if not {'fact_conflict', 'fact_correction'} & set(case.tags):
             assert all(state.facts.get(key) == value for key, value in prior_facts.items())
         prior_facts = dict(state.facts)
 
     assert audit_red_team_result(case, state, replies) == []
     if 'fact_conflict' in case.tags:
         assert state.consultation.conflicts
+    if 'fact_correction' in case.tags:
+        assert state.consultation.corrections
+        assert not state.consultation.conflicts
+        assert state.final_report['fact_corrections'] == state.consultation.corrections
+        assert '本轮明确更正' in report_markdown(state)
     if 'evidence_exhausted' in case.tags:
         assert state.evidence_collection_exhausted is True
     if 'urgent' in case.tags:
@@ -153,3 +159,17 @@ def test_anonymous_multiformat_files_use_real_api_and_remain_unverified(tmp_path
     assert '证据清单' in markdown.content.decode('utf-8')
     assert docx.content.startswith(b'PK')
     assert pdf.content.startswith(b'%PDF')
+
+
+def test_explicit_fact_correction_is_visible_in_streamlit_without_conflict_warning():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value('我是借款人，争议本金是5万元。').run(timeout=20)
+    at.chat_input[0].set_value(
+        '说错了，我不是借款人，是出借人；实际尚欠4万元，请给我方案。'
+    ).run(timeout=20)
+
+    state = at.session_state['case_state']
+    assert state.consultation.corrections
+    assert not state.consultation.conflicts
+    assert any('本轮明确更正' in item.value for item in at.markdown)
+    assert not at.exception

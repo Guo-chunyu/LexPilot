@@ -94,15 +94,30 @@ def _evidence_mention(text: str, name: str) -> tuple[bool, bool]:
     return mentioned, unavailable
 
 
-def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='') -> None:
+def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='', correction_context=False) -> None:
     value = str(value).strip()[:1200]
     if not value:
         return
     old = state.facts.get(key)
     if old and str(old) != value:
-        change = {'fact': LABELS.get(key, key), 'previous': str(old), 'current': value, 'source_ref': source_ref, 'status': '存在不同陈述，请核对'}
-        if change not in state.consultation.conflicts:
-            state.consultation.conflicts.append(change)
+        label = LABELS.get(key, key)
+        explicit_correction = source_type == 'user_message' and bool(correction_context or
+            re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正为|更正成|说错了', quote)
+            or re.search(r'(?:我|本人)不是[^，,；;]{1,20}[，,；;]\s*(?:我)?是', quote)
+        )
+        if explicit_correction:
+            change = {'fact': label, 'previous': str(old), 'current': value,
+                'source_ref': source_ref, 'status': '用户明确更正，旧值仅保留为历史记录，当前方案采用本轮值'}
+            if change not in state.consultation.corrections:
+                state.consultation.corrections.append(change)
+            state.consultation.conflicts = [
+                item for item in state.consultation.conflicts if item.get('fact') != label
+            ]
+        else:
+            change = {'fact': label, 'previous': str(old), 'current': value,
+                'source_ref': source_ref, 'status': '存在不同陈述，请核对'}
+            if change not in state.consultation.conflicts:
+                state.consultation.conflicts.append(change)
     state.apply_facts({key: value})
     state.add_fact_provenance(key, source_type=source_type, source_ref=source_ref, quote=quote, extraction_method='consultation_intake')
     if key in state.consultation.declined_slots:
@@ -125,9 +140,14 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     extracted: set[str] = set()
     constraint_sentences: list[str] = []
     procedure_sentences: list[str] = []
+    correction_context = source_type == 'user_message' and bool(
+        re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正为|更正成|说错了', message)
+        or re.search(r'(?:我|本人)不是[^，,；;]{1,20}[，,；;]\s*(?:我)?是', message)
+    )
 
     def put(key, value, quote):
-        save_fact(state, key, value, quote, source_type=source_type, source_ref=source_ref)
+        save_fact(state, key, value, quote, source_type=source_type, source_ref=source_ref,
+            correction_context=correction_context)
         extracted.add(key)
 
     if source_type == 'user_message':

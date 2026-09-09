@@ -38,6 +38,8 @@ class FinalLegalReport(BaseModel):
     quality_audit: dict = Field(default_factory=dict)
     evidence_counterfactuals: dict = Field(default_factory=dict)
     support_bridge: dict = Field(default_factory=dict)
+    fact_conflicts: list[dict] = Field(default_factory=list)
+    fact_corrections: list[dict] = Field(default_factory=list)
 
 
 def build_final_report(state: CaseState) -> FinalLegalReport:

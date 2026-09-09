@@ -50,6 +50,7 @@ class ConsultationDossier(BaseModel):
     question_history: list[str] = Field(default_factory=list)
     timeline: list[TimelineEntry] = Field(default_factory=list)
     conflicts: list[dict[str, str]] = Field(default_factory=list)
+    corrections: list[dict[str, str]] = Field(default_factory=list)
     evidence_tasks: list[EvidenceTask] = Field(default_factory=list)
     urgent_actions: list[str] = Field(default_factory=list)
     research_sources: list[ResearchSource] = Field(default_factory=list)
