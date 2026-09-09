@@ -16,6 +16,7 @@ from evaluation.consultation_red_team import (
     audit_red_team_result,
     generate_anonymous_uploads,
     generate_automatic_variants,
+    generate_round_two_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -103,7 +104,11 @@ def test_red_team_generator_covers_every_supported_practice_area_and_risk_dimens
 def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
     payload = json.loads(Path('evaluation/red_team_state.json').read_text(encoding='utf-8'))
     active_round = payload['rounds'][-1]
-    generated = generate_automatic_variants(payload['seed'])
+    generators = {
+        'generate_automatic_variants': generate_automatic_variants,
+        'generate_round_two_variants': generate_round_two_variants,
+    }
+    generated = generators[active_round['generator']](active_round['seed'])
 
     assert payload['round_size'] == len(generated) == 5
     assert set(payload['case_pool_sources']) == {

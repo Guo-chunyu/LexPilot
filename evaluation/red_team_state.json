@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "seed": 20260909,
+  "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
   "case_pool_sources": {
@@ -15,6 +15,8 @@
   "rounds": [
     {
       "round_id": "round-001-urgent-negation",
+      "seed": 20260909,
+      "generator": "generate_automatic_variants",
       "status": "completed",
       "selected_case_ids": [
         "administrative_negated_deadline",
@@ -48,6 +50,42 @@
         "full_suite": "222 passed, 1 warning"
       },
       "commit_subject": "Handle negated and corrected urgent signals"
+    },
+    {
+      "round_id": "round-002-identity-procedure-evidence",
+      "seed": 20260910,
+      "generator": "generate_round_two_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "housing_negated_landlord_role",
+        "labor_negated_employee_role",
+        "debt_negated_filing",
+        "consumer_evidence_not_exhausted",
+        "contract_amount_correction"
+      ],
+      "anonymous_cases": [
+        {"case_id": "housing_negated_landlord_role", "messages": ["我不是房东，是租客；退租后房东不退押金，请给我方案。"]},
+        {"case_id": "labor_negated_employee_role", "messages": ["我不是员工，我是用人单位负责人；员工申请劳动仲裁称拖欠工资，我需要答辩方案。"]},
+        {"case_id": "debt_negated_filing", "messages": ["朋友欠我4万元，我没有起诉，也没有立案，只发过一次催款，请给我方案。"]},
+        {"case_id": "consumer_evidence_not_exhausted", "messages": ["健身房关门不退款，不是没有更多证据，我还有订单和聊天，稍后上传，请给我方案。"]},
+        {"case_id": "contract_amount_correction", "messages": ["采购合同争议金额5万元，对方没有交货。", "更正一下，实际争议金额是4万元，请按新金额给我方案。"]}
+      ],
+      "failures_before_fix": [
+        "debt_negated_filing",
+        "consumer_evidence_not_exhausted"
+      ],
+      "root_cause": "接谈层没有判断否定短语本身是否被断言，导致双重否定被误当作材料耗尽，同时漏记真实的否定程序进展。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py",
+        "backend/legal_domain/consultation/service.py"
+      ],
+      "verification": {
+        "before_fix": "2 failed, 3 passed",
+        "selected_cases_after_fix": "5 passed",
+        "related_suite": "109 passed",
+        "full_suite": "227 passed, 1 warning"
+      },
+      "commit_subject": "Respect negated intake assertions"
     }
   ]
 }

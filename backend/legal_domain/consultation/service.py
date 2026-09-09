@@ -5,8 +5,8 @@ import re
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
 from .intake import (
-    EXHAUSTED_PATTERN, QUESTIONS, UNKNOWN_PATTERN, ingest_text, refresh_evidence,
-    retracted_urgent_actions, urgent_actions, wants_plan,
+    QUESTIONS, UNKNOWN_PATTERN, ingest_text, refresh_evidence,
+    retracted_urgent_actions, says_evidence_exhausted, urgent_actions, wants_plan,
 )
 from .profiles import PROFILES, domain_label, identify_domains, route_case
 from .reporting import build_consultation_report
@@ -81,13 +81,14 @@ def process_consultation(message: str, state: CaseState) -> dict:
     if len(message) > 25:
         related = [d for d in identify_domains(message) if d not in ('general', 'labor_dispute')]
         dossier.domain_ids = list(dict.fromkeys([state.case_type, *dossier.domain_ids, *related]))[:3]
-    explicit_plan = wants_plan(message) or bool(re.search(EXHAUSTED_PATTERN, message))
+    exhausted_statement = says_evidence_exhausted(message)
+    explicit_plan = wants_plan(message) or exhausted_statement
     # The generation call must see this turn's retrieval, not last turn's status.
     retrieve_for_case(state)
     if dossier.jurisdiction_status != 'OUTSIDE_MAINLAND':
         research_case(state)
     previous_domain = state.case_type
-    if not re.search(UNKNOWN_PATTERN, message) and not re.search(EXHAUSTED_PATTERN, message):
+    if not re.search(UNKNOWN_PATTERN, message) and not exhausted_statement:
         enrich_consultation(message, state, include_plan=explicit_plan or had_plan)
     else:
         dossier.analysis = ''

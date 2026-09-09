@@ -50,6 +50,17 @@ def wants_plan(text: str) -> bool:
     return bool(re.search(PLAN_PATTERN, text))
 
 
+def says_evidence_exhausted(text: str) -> bool:
+    """Accept an exhaustion statement only when the matched phrase is asserted."""
+    for match in re.finditer(EXHAUSTED_PATTERN, text):
+        clause_start = max(text.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
+        prefix = text[clause_start:match.start()]
+        if re.search(r'(?:不是|并非|不代表|不等于|不能说|并不意味着)\s*$', prefix):
+            continue
+        return True
+    return False
+
+
 def _plausible_pending_answer(slot: str, message: str) -> bool:
     """Prevent unrelated free text from becoming a structured fact."""
     if slot == 'location':
@@ -196,7 +207,15 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             put('goal', sentence, sentence)
         if re.search(r'低成本|预算|不想打官司|不方便到场|无法到场|时间有限|不想影响关系|看不懂|不会操作|不会用|听不清|看不清|需要.{0,4}帮|费用.{0,5}(?:以内|以下|不超过)', sentence):
             constraint_sentences.append(sentence)
-        if re.search(r'已经(?:起诉|投诉|报案|申请|协商)|收到.{0,10}(?:传票|通知|决定)|尚未|还没(?:投诉|起诉|协商)', sentence):
+        affirmative_procedure = re.search(
+            r'已经(?:起诉|投诉|报案|申请|协商)|收到.{0,10}(?:传票|通知|决定)',
+            sentence,
+        )
+        negative_procedure = re.search(
+            r'(?<!不是)(?<!并非)(?:没有|尚未|还没)(?:起诉|立案|投诉|报案|申请|协商)',
+            sentence,
+        )
+        if affirmative_procedure or negative_procedure:
             procedure_sentences.append(sentence)
     if constraint_sentences:
         value = '；'.join(dict.fromkeys(constraint_sentences))
@@ -248,7 +267,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
     if amount_sentences:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))
-    if contextual and pending and not unknown and not wants_plan(message) and not re.search(EXHAUSTED_PATTERN, message):
+    if contextual and pending and not unknown and not wants_plan(message) and not says_evidence_exhausted(message):
         # A short answer belongs to the previous question only when it is not
         # demonstrably a different slot (e.g. an amount supplied to a date question).
         if (
@@ -257,7 +276,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             and _plausible_pending_answer(pending, message)
         ):
             put(pending, state.facts.get(pending, message) if pending in extracted else message, message)
-    if contextual and re.search(EXHAUSTED_PATTERN, message):
+    if contextual and says_evidence_exhausted(message):
         state.mark_evidence_unavailable(list(state.pending_evidence_requests), exhausted=True)
         if 'evidence_inventory' not in dossier.declined_slots:
             dossier.declined_slots.append('evidence_inventory')

@@ -24,6 +24,8 @@ class RedTeamCase:
     expected_facts: tuple[tuple[str, str], ...] = ()
     forbidden_reply_fragments: tuple[str, ...] = ()
     expected_urgent: bool | None = None
+    expected_exhausted: bool | None = None
+    expected_route: str = ''
     origin: str = 'fixed'
 
 
@@ -203,7 +205,8 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         ),
     ]
     variants = {case.case_id: case for case in generate_automatic_variants()}
-    return [variants.get(case.case_id, case) for case in cases]
+    cases = [variants.get(case.case_id, case) for case in cases]
+    return [*cases, *generate_round_two_variants()]
 
 
 def generate_automatic_variants(seed: int = 20260909) -> list[RedTeamCase]:
@@ -252,6 +255,43 @@ def generate_automatic_variants(seed: int = 20260909) -> list[RedTeamCase]:
                 '更正一下，刚才表述不准确，对方没有家暴，也没有人身安全问题，请更新一般方案。',
             ),
             'family', expected_urgent=False, origin='auto_variant',
+        ),
+    ]
+
+
+def generate_round_two_variants(seed: int = 20260910) -> list[RedTeamCase]:
+    """Generate the next five unseen identity, procedure and evidence variants."""
+    randomizer = Random(seed)
+    evidence_lead = randomizer.choice(('不是没有更多证据', '并不是材料已经用完'))
+    return [
+        RedTeamCase(
+            'housing_negated_landlord_role', ('housing', 'negation', 'role_reversal'),
+            ('我不是房东，是租客；退租后房东不退押金，请给我方案。',),
+            'housing', 'tenant', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'labor_negated_employee_role', ('labor_dispute', 'negation', 'role_reversal'),
+            ('我不是员工，我是用人单位负责人；员工申请劳动仲裁称拖欠工资，我需要答辩方案。',),
+            'labor_dispute', 'employer', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'debt_negated_filing', ('debt', 'negation', 'procedure_progress'),
+            ('朋友欠我4万元，我没有起诉，也没有立案，只发过一次催款，请给我方案。',),
+            'debt', 'creditor', expected_facts=(('procedure', '没有起诉'),),
+            expected_route='negotiation', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'consumer_evidence_not_exhausted', ('consumer', 'negation', 'evidence_not_exhausted'),
+            (f'健身房关门不退款，{evidence_lead}，我还有订单和聊天，稍后上传，请给我方案。',),
+            'consumer', expected_exhausted=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'contract_amount_correction', ('contract', 'fact_correction'),
+            (
+                '采购合同争议金额5万元，对方没有交货。',
+                '更正一下，实际争议金额是4万元，请按新金额给我方案。',
+            ),
+            'contract', expected_facts=(('amount', '4万元'),), origin='auto_variant',
         ),
     ]
 
@@ -308,6 +348,14 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
         failures.append(
             f'urgent={bool(state.consultation.urgent_actions)}, expected={case.expected_urgent}'
         )
+    if case.expected_exhausted is not None and state.evidence_collection_exhausted != case.expected_exhausted:
+        failures.append(
+            f'evidence_exhausted={state.evidence_collection_exhausted}, expected={case.expected_exhausted}'
+        )
+    if case.expected_route:
+        route = report.get('strategy_comparison', {}).get('recommended_route', '')
+        if route != case.expected_route:
+            failures.append(f'route={route}, expected={case.expected_route}')
     for key, fragment in case.expected_facts:
         value = str(state.facts.get(key, ''))
         if fragment not in value:
