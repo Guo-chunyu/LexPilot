@@ -105,13 +105,20 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
     if not value:
         return
     old = state.facts.get(key)
+    accepted = True
     if old and str(old) != value:
         label = LABELS.get(key, key)
         explicit_correction = source_type == 'user_message' and bool(correction_context or
-            re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正为|更正成|说错了', quote)
+            re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正(?:一下|为|成)?|说错了', quote)
             or re.search(r'(?:我|本人)不是[^，,；;]{1,20}[，,；;]\s*(?:我)?是', quote)
         )
-        if explicit_correction:
+        if source_type == 'uploaded_file':
+            accepted = False
+            change = {'fact': label, 'previous': str(old), 'current': value,
+                'source_ref': source_ref, 'status': '上传材料记载与当前事实不同，未自动覆盖，需核对原件、上下文及双方解释'}
+            if change not in state.consultation.conflicts:
+                state.consultation.conflicts.append(change)
+        elif explicit_correction:
             change = {'fact': label, 'previous': str(old), 'current': value,
                 'source_ref': source_ref, 'status': '用户明确更正，旧值仅保留为历史记录，当前方案采用本轮值'}
             if change not in state.consultation.corrections:
@@ -124,8 +131,10 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
                 'source_ref': source_ref, 'status': '存在不同陈述，请核对'}
             if change not in state.consultation.conflicts:
                 state.consultation.conflicts.append(change)
-    state.apply_facts({key: value})
-    state.add_fact_provenance(key, source_type=source_type, source_ref=source_ref, quote=quote, extraction_method='consultation_intake')
+    if accepted:
+        state.apply_facts({key: value})
+    state.add_fact_provenance(key, source_type=source_type, source_ref=source_ref, quote=quote,
+        extraction_method='consultation_intake', accepted=accepted)
     if key in state.consultation.declined_slots:
         state.consultation.declined_slots.remove(key)
 
@@ -147,7 +156,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     constraint_sentences: list[str] = []
     procedure_sentences: list[str] = []
     correction_context = source_type == 'user_message' and bool(
-        re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正为|更正成|说错了', message)
+        re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正(?:一下|为|成)?|说错了', message)
         or re.search(r'(?:我|本人)不是[^，,；;]{1,20}[，,；;]\s*(?:我)?是', message)
     )
 

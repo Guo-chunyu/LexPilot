@@ -187,3 +187,38 @@ def test_no_other_questions_is_not_misread_as_no_more_evidence():
     assert state.evidence_collection_exhausted is False
     assert after['借条'] == before['借条'] == '尚未提供'
     assert after['转账记录'] == '用户称有，尚未上传'
+
+
+def test_conflicting_uploaded_amount_does_not_silently_replace_user_fact(tmp_path, monkeypatch):
+    thread_id = 'red_team_upload_fact_conflict'
+    client = TestClient(api_module.api_app)
+    monkeypatch.setattr(api_module, '_upload_root', lambda: tmp_path)
+    try:
+        first = client.post('/chat', json={
+            'thread_id': thread_id,
+            'query': '朋友向我借款4万元，有转账记录，请给我方案。',
+        })
+        second = client.post(
+            f'/cases/{thread_id}/evidence',
+            data={'query': '这是匿名合成材料，请更新方案。'},
+            files=[('files', (
+                '匿名借条.txt',
+                '匿名合成借条，记载借款金额50000元，不含真实姓名。'.encode('utf-8'),
+                'text/plain',
+            ))],
+        )
+    finally:
+        api_module._sessions.pop(thread_id, None)
+
+    assert first.status_code == second.status_code == 200
+    state = api_module.CaseState.from_value(second.json()['case_state'])
+    assert '4万元' in state.facts['amount']
+    conflict = next(item for item in state.consultation.conflicts if item['fact'] == '金额陈述')
+    assert '50000元' in conflict['current']
+    assert '未自动覆盖' in conflict['status']
+    source = next(
+        item for item in state.fact_provenance
+        if item.fact_id == 'amount' and item.source_type == 'uploaded_file'
+    )
+    assert source.accepted is False
+    assert '4万元' in second.json()['final_report']['case_summary']

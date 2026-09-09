@@ -157,7 +157,8 @@ def test_stage_report_refreshes_after_user_correction():
     state = engine.process('更正一下，金额是30000元，已经还了20000元', state)['case_state']
     assert '30000' in str(state.facts['amount'])
     assert state.final_report['action_plan']
-    assert state.final_report['fact_conflicts'], 'Keep the changed amount visible for reconciliation'
+    assert state.final_report['fact_corrections'], 'Keep the explicit correction visible in report history'
+    assert not state.final_report['fact_conflicts']
 
 
 def test_missing_iou_uses_alternative_and_does_not_reask_stated_goal():
