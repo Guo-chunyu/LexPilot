@@ -207,6 +207,41 @@ def test_unavailable_iou_is_not_an_upload_action_in_streamlit():
     _assert_unavailable_iou_is_not_an_upload_action(state, public)
 
 
+def _assert_pending_fact_acknowledgement_is_specific(state, reply: str) -> None:
+    assert 'location' in state.consultation.declined_slots
+    assert '“适用地区”暂时记为待核实' in reply
+    assert '这项先记为待核实' not in reply
+
+
+def test_unknown_pending_fact_is_acknowledged_by_name_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_CORRECTION)
+    second = engine.process('不清楚', first['case_state'])
+    _assert_pending_fact_acknowledgement_is_specific(second['case_state'], second['reply'])
+
+
+def test_unknown_pending_fact_is_acknowledged_by_name_in_api():
+    thread_id = 'red_team_specific_pending_ack'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_CORRECTION})
+        response = client.post('/chat', json={'thread_id': thread_id, 'query': '不清楚'})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_pending_fact_acknowledgement_is_specific(
+        api_module.CaseState.from_value(response.json()['case_state']), response.json()['reply']
+    )
+
+
+def test_unknown_pending_fact_is_acknowledged_by_name_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_CORRECTION).run(timeout=20)
+    at.chat_input[0].set_value('不清楚').run(timeout=20)
+    _assert_pending_fact_acknowledgement_is_specific(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
+
+
 def test_debt_followup_does_not_invent_absolute_action_dates_in_engine():
     engine = LexPilotEngine()
     first = engine.process(DEBT_CORRECTION)

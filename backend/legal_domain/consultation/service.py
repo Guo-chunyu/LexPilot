@@ -5,7 +5,7 @@ import re
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
 from .intake import (
-    QUESTIONS, UNKNOWN_PATTERN, ingest_text, refresh_evidence,
+    LABELS, QUESTIONS, UNKNOWN_PATTERN, ingest_text, refresh_evidence,
     retracted_urgent_actions, says_evidence_exhausted, urgent_actions, wants_plan,
 )
 from .profiles import PROFILES, domain_label, identify_domains, route_case
@@ -125,7 +125,8 @@ def process_consultation(message: str, state: CaseState) -> dict:
     if dossier.jurisdiction_status == 'OUTSIDE_MAINLAND':
         pieces += ['你描述的情况涉及中国大陆以外的地区或涉外因素，需要先核对当地适用法和程序；目前先整理事实与材料。', '']
     if previous_slot in dossier.declined_slots:
-        pieces.append('明白，这项先记为待核实，不会反复追问同一个问题。')
+        label = LABELS.get(previous_slot, previous_slot)
+        pieces.append(f'明白，“{label}”暂时记为待核实，不会反复追问同一个问题。')
     if state.evidence_collection_exhausted:
         pieces.append('现有材料就按这些整理，不会再重复让你补同样的材料；缺的部分会列出合法替代办法。')
     current_analysis = dossier.analysis or _case_opening(state, profile)

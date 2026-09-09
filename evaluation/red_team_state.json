@@ -17,7 +17,7 @@
     {
       "case_id": "debt_litigation_followup_quality",
       "source": "human_web_reproduction",
-      "status": "in_progress",
+      "status": "completed",
       "completed_root_causes": [
         {
           "id": "invented_absolute_action_dates",
@@ -62,11 +62,16 @@
           ],
           "verification": "3 path tests and 247 full tests passed",
           "commit_subject": "Exclude unavailable evidence from upload actions"
+        },
+        {
+          "id": "pending_fact_acknowledgement_lost_slot_label",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/service.py"],
+          "verification": "3 path tests and 250 full tests passed",
+          "commit_subject": "Name deferred facts in acknowledgements"
         }
       ],
-      "pending_root_causes": [
-        "ambiguous pending-fact acknowledgement"
-      ]
+      "pending_root_causes": []
     }
   ],
   "rounds": [
