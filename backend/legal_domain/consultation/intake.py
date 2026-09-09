@@ -61,6 +61,17 @@ def says_evidence_exhausted(text: str) -> bool:
     return False
 
 
+def asserted_exclusive_inventory(text: str):
+    """Return an asserted “only these materials” match, excluding scope negation."""
+    for match in re.finditer(r'(?:只有|仅有)([^，。；\n]{1,80})', text):
+        clause_start = max(text.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
+        prefix = text[clause_start:match.start()]
+        if re.search(r'(?:不是|并非|并不是)\s*$', prefix):
+            continue
+        return match
+    return None
+
+
 def _plausible_pending_answer(slot: str, message: str) -> bool:
     """Prevent unrelated free text from becoming a structured fact."""
     if slot == 'location':
@@ -281,7 +292,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if 'evidence_inventory' not in dossier.declined_slots:
             dossier.declined_slots.append('evidence_inventory')
     if source_type == 'user_message':
-        only = re.search(r'(?:只有|仅有)([^，。；\n]{1,80})', message)
+        only = asserted_exclusive_inventory(message)
         if only and re.search(r'转账|聊天|截图|合同|通知|材料|证据|视频|借条', only.group(1)):
             # Explicitly exclusive inventory, not an assertion that missing
             # documents never existed or that supplied evidence proves the case.

@@ -86,6 +86,37 @@
         "full_suite": "227 passed, 1 warning"
       },
       "commit_subject": "Respect negated intake assertions"
+    },
+    {
+      "round_id": "round-003-attribution-and-negation-scope",
+      "seed": 20260911,
+      "generator": "generate_round_three_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "debt_negated_creditor_role",
+        "housing_role_correction_multiturn",
+        "consumer_nonexclusive_inventory",
+        "administrative_historical_deadline",
+        "debt_double_negative_filing"
+      ],
+      "anonymous_cases": [
+        {"case_id": "debt_negated_creditor_role", "messages": ["我不是出借人，是借款人；借了4万元，已经还了1万元，请给我应对方案。"]},
+        {"case_id": "housing_role_correction_multiturn", "messages": ["我是租客，退租押金有争议。", "说错了，我不是租客，是房东；争议是房屋损坏扣押金，请给我方案。"]},
+        {"case_id": "consumer_nonexclusive_inventory", "messages": ["健身房关门不退款，不是只有支付截图，我还有订单和聊天，稍后上传，请给我方案。"]},
+        {"case_id": "administrative_historical_deadline", "messages": ["去年收到行政复议补正通知，文书要求3日内补正，但该期限早已过去，请给我当前方案。"]},
+        {"case_id": "debt_double_negative_filing", "messages": ["朋友欠我4万元，不是尚未起诉，我已经起诉并拿到案号，请给我方案。"]}
+      ],
+      "failures_before_fix": ["consumer_nonexclusive_inventory"],
+      "case_adjustments": ["administrative_historical_deadline 补充行政复议语境，期限断言不变"],
+      "root_cause": "排他材料提取直接搜索只有或仅有，没有判断短语是否处于不是或并非的否定范围。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "1 product failure, 3 passed, 1 fixture corrected",
+        "selected_cases_after_fix": "5 passed",
+        "related_suite": "42 passed",
+        "full_suite": "232 passed, 1 warning"
+      },
+      "commit_subject": "Respect negated exclusive evidence statements"
     }
   ]
 }

@@ -206,7 +206,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
     ]
     variants = {case.case_id: case for case in generate_automatic_variants()}
     cases = [variants.get(case.case_id, case) for case in cases]
-    return [*cases, *generate_round_two_variants()]
+    return [*cases, *generate_round_two_variants(), *generate_round_three_variants()]
 
 
 def generate_automatic_variants(seed: int = 20260909) -> list[RedTeamCase]:
@@ -292,6 +292,43 @@ def generate_round_two_variants(seed: int = 20260910) -> list[RedTeamCase]:
                 '更正一下，实际争议金额是4万元，请按新金额给我方案。',
             ),
             'contract', expected_facts=(('amount', '4万元'),), origin='auto_variant',
+        ),
+    ]
+
+
+def generate_round_three_variants(seed: int = 20260911) -> list[RedTeamCase]:
+    """Generate five unseen attribution, correction and negation-scope variants."""
+    randomizer = Random(seed)
+    payment_material = randomizer.choice(('付款截图', '支付截图'))
+    return [
+        RedTeamCase(
+            'debt_negated_creditor_role', ('debt', 'negation', 'role_reversal'),
+            ('我不是出借人，是借款人；借了4万元，已经还了1万元，请给我应对方案。',),
+            'debt', 'debtor', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'housing_role_correction_multiturn', ('housing', 'role_correction', 'fact_correction'),
+            (
+                '我是租客，退租押金有争议。',
+                '说错了，我不是租客，是房东；争议是房屋损坏扣押金，请给我方案。',
+            ),
+            'housing', 'landlord', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'consumer_nonexclusive_inventory', ('consumer', 'negation', 'evidence_not_exhausted'),
+            (f'健身房关门不退款，不是只有{payment_material}，我还有订单和聊天，稍后上传，请给我方案。',),
+            'consumer', expected_exhausted=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'administrative_historical_deadline', ('administrative', 'deadline', 'historical'),
+            ('去年收到行政复议补正通知，文书要求3日内补正，但该期限早已过去，请给我当前方案。',),
+            'administrative', expected_urgent=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'debt_double_negative_filing', ('debt', 'negation', 'procedure_progress'),
+            ('朋友欠我4万元，不是尚未起诉，我已经起诉并拿到案号，请给我方案。',),
+            'debt', 'creditor', expected_facts=(('procedure', '已经起诉'),),
+            expected_route='formal', origin='auto_variant',
         ),
     ]
 
