@@ -6,6 +6,24 @@ from hashlib import sha256
 import json
 
 
+FACT_LABELS = {
+    'amount': '金额与履行情况',
+    'constraints': '办理偏好与限制',
+    'details': '关键事实与材料说明',
+    'event_time': '事件时间',
+    'evidence_inventory': '材料清单',
+    'goal': '办理目标',
+    'location': '地区与管辖线索',
+    'parties': '当事人身份',
+    'procedure': '程序与交涉进展',
+}
+ROUTE_LABELS = {
+    'negotiation': '协商',
+    'mediation': '调解',
+    'formal': '正式程序',
+}
+
+
 def _snapshot(state, report: dict) -> dict:
     return {
         'facts': {key: str(value) for key, value in sorted(state.facts.items())},
@@ -55,7 +73,7 @@ def build_decision_delta(state, report: dict) -> dict:
             continue
         kind = 'fact_added' if key not in old_facts else 'fact_changed'
         reason = '本轮新增了结构化事实。' if kind == 'fact_added' else '本轮陈述更新了此前记录；是否属于明确更正或冲突以事实记录为准。'
-        changes.append(_change(kind, key, old_facts.get(key), new_facts.get(key), reason,
+        changes.append(_change(kind, FACT_LABELS.get(key, key), old_facts.get(key), new_facts.get(key), reason,
             '已重新生成事实摘要、路线比较和行动步骤；该事实仍须材料核对。'))
 
     old_evidence, new_evidence = previous.get('evidence', {}), current['evidence']
@@ -92,3 +110,25 @@ def build_decision_delta(state, report: dict) -> dict:
         'summary': summary, 'changes': changes, 'unchanged': unchanged,
         'snapshot_id': snapshot_id, 'outcome_probability': None,
     }
+
+
+def decision_delta_reply_lines(delta: dict) -> list[str]:
+    """Render the material cross-turn changes in the chat, not only in the report."""
+    if delta.get('status') != 'changed':
+        return []
+    visible = [
+        item for item in delta.get('changes', [])
+        if item.get('change_type') not in {'support_mode_changed', 'action_plan_changed'}
+    ]
+    lines = [f'**本轮方案变化**：{delta["summary"]}']
+    for item in visible:
+        before, after = item['before'], item['after']
+        if item.get('change_type') == 'route_changed':
+            before = ROUTE_LABELS.get(before, before)
+            after = ROUTE_LABELS.get(after, after)
+        lines.append(
+            f'- {item["label"]}：{before} → {after}。'
+            f'{item["reason"]}{item["impact"]}'
+        )
+    lines.append('')
+    return lines

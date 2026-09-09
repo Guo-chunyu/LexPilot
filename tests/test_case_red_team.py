@@ -122,6 +122,48 @@ def test_debt_litigation_preference_controls_streamlit_route():
     _assert_litigation_preference_controls_route(at.session_state['case_state'])
 
 
+def _assert_debt_followup_explains_decision_changes(state, reply: str) -> None:
+    delta = state.final_report['decision_delta']
+    assert delta['status'] == 'changed'
+    assert '**本轮方案变化**' in reply
+    assert '关键事实与材料说明' in reply
+    assert '可以证明转款、借款用途、约定一个月后还款' in reply
+    assert '办理偏好与限制' in reply
+    assert '不想再重复催款或协商' in reply
+    assert '建议路线：调解 → 正式程序' in reply
+
+
+def test_debt_followup_explains_material_and_constraint_changes_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_CORRECTION)
+    second = engine.process(DEBT_LITIGATION_FOLLOWUP, first['case_state'])
+    _assert_debt_followup_explains_decision_changes(second['case_state'], second['reply'])
+
+
+def test_debt_followup_explains_material_and_constraint_changes_in_api():
+    thread_id = 'red_team_debt_decision_changes'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_CORRECTION})
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': DEBT_LITIGATION_FOLLOWUP,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_debt_followup_explains_decision_changes(
+        api_module.CaseState.from_value(response.json()['case_state']), response.json()['reply']
+    )
+
+
+def test_debt_followup_explains_material_and_constraint_changes_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_CORRECTION).run(timeout=20)
+    at.chat_input[0].set_value(DEBT_LITIGATION_FOLLOWUP).run(timeout=20)
+    _assert_debt_followup_explains_decision_changes(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
+
+
 def test_debt_followup_does_not_invent_absolute_action_dates_in_engine():
     engine = LexPilotEngine()
     first = engine.process(DEBT_CORRECTION)

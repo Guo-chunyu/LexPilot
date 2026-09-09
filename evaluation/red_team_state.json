@@ -42,10 +42,19 @@
           ],
           "verification": "3 path tests and 241 full tests passed",
           "commit_subject": "Respect explicit litigation preferences"
+        },
+        {
+          "id": "decision_delta_missing_from_chat_reply",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/decision_delta.py",
+            "backend/legal_domain/consultation/service.py"
+          ],
+          "verification": "3 path tests, 6 related tests and 244 full tests passed",
+          "commit_subject": "Explain cross-turn plan changes in chat"
         }
       ],
       "pending_root_causes": [
-        "second response does not explain material and constraint changes",
         "unavailable IOU still appears as an upload action",
         "ambiguous pending-fact acknowledgement"
       ]

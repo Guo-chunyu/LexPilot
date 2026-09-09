@@ -15,6 +15,7 @@ from .semantic import enrich_consultation
 from .authorities import update_rule_references
 from .knowledge import retrieve_for_case
 from .perspective import case_profile, client_perspective
+from .decision_delta import decision_delta_reply_lines
 
 
 def _case_opening(state, profile) -> str:
@@ -137,6 +138,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
     produce = explicit_plan or had_plan or not missing or dossier.turns >= 6
     if produce:
         report = build_consultation_report(state)
+        pieces += decision_delta_reply_lines(report.get('decision_delta', {}))
         pieces += ['**建议先走的路线**：' + report['strategy_comparison']['decision_reason'],
             '**按现有信息，先这样推进**', *[f'{i}. **{s["title"]}**（建议{s["suggested_date"]}开始）：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”，可下载 Word / PDF：包含办理入口、具体操作、材料、费用比较、期限核对和沟通草稿。日程是行动建议，不能替代法定期限。后续补充材料会更新方案。']
         action = LegalAction.GENERATE_DOCUMENT
