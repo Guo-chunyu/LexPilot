@@ -98,6 +98,18 @@ def generate_red_team_cases() -> list[RedTeamCase]:
             'administrative',
         ),
         RedTeamCase(
+            'court_hearing_day_after_tomorrow',
+            ('contract', 'deadline', 'urgent', 'relative_deadline'),
+            ('合同纠纷已经起诉，我收到法院通知，后天开庭，请给我方案。',),
+            'contract', expected_facts=(('procedure', '已经起诉'),),
+        ),
+        RedTeamCase(
+            'administrative_three_day_cure',
+            ('administrative', 'deadline', 'urgent', 'document_period'),
+            ('行政复议材料收到补正通知，文书要求3日内补正，请给我方案。',),
+            'administrative',
+        ),
+        RedTeamCase(
             'corporate_shareholder', ('corporate', 'identity'),
             ('我是公司股东，书面要求查账后被拒绝，请给我方案。',),
             'corporate',

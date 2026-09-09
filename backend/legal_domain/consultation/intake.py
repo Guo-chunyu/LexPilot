@@ -289,6 +289,12 @@ def urgent_actions(message: str, state: CaseState) -> list[str]:
         actions.append('先到安全地点并联系当地警方；正在遭受伤害时优先求助和就医，不要为了取证单独接触对方。')
     if state.case_type == 'criminal' and re.search(r'拘留|逮捕|被抓|看守所', message):
         actions.append('尽快联系当地刑事律师或法律援助机构，带上通知书核实措施类型、起算日期、办案单位和依法会见途径；不要找关系、串供或删记录。')
-    if re.search(r'明天.{0,5}(?:开庭|到期)|今天.{0,5}到期|最后一天|马上到期|快过期', message):
+    imminent_document_deadline = bool(re.search(
+        r'(?:今天|明天|后天|本周|这周).{0,16}(?:开庭|补正|提交|举证|答辩|到期|截止)'
+        r'|(?:要求|通知|须|需|应).{0,10}(?:\d+|[一二两三四五六七八九十]+)(?:个)?(?:工作)?日内'
+        r'.{0,16}(?:开庭|补正|提交|举证|答辩|办理|回复)',
+        message,
+    )) and not re.search(r'已经过去|早已超过|半年前|去年', message)
+    if imminent_document_deadline or re.search(r'最后一天|马上到期|快过期', message):
         actions.append('先核对文书载明的截止日期与送达凭证，今天就向受理机关或当地律师确认提交和补正方式；不要等材料全部齐了才处理期限。')
     return actions
