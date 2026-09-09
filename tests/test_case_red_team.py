@@ -36,11 +36,12 @@ DEBT_LITIGATION_FOLLOWUP = (
 )
 ABSOLUTE_SUGGESTED_DATE = re.compile(r'建议\s*20\d{2}-\d{2}-\d{2}\s*开始')
 ISO_DATE = re.compile(r'20\d{2}-\d{2}-\d{2}')
+UNKNOWN_REPAYMENT_TERM = '期限仍无法确定'
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
-    assert '约定一个月后归还' in state.facts['details']
+    assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])
     assert '已还1万元剩4万元' in state.facts['details']
     assert '催款三次且对方拒绝' in state.facts['procedure']
     assert state.final_report['strategy_comparison']['recommended_route'] != 'negotiation'
@@ -52,6 +53,40 @@ def _assert_no_invented_action_dates(state, reply: str) -> None:
     assert not ABSOLUTE_SUGGESTED_DATE.search(public)
     assert all(not ISO_DATE.fullmatch(str(step.get('suggested_date', '')))
                for step in state.final_report['action_plan'])
+
+
+def _assert_known_repayment_term_is_not_described_as_unknown(state, reply: str) -> None:
+    assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])
+    assert UNKNOWN_REPAYMENT_TERM not in reply
+    assert UNKNOWN_REPAYMENT_TERM not in report_markdown(state)
+
+
+def test_known_repayment_term_reaches_rule_summary_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_CORRECTION)
+    second = engine.process(DEBT_LITIGATION_FOLLOWUP, first['case_state'])
+    _assert_known_repayment_term_is_not_described_as_unknown(second['case_state'], second['reply'])
+
+
+def test_known_repayment_term_reaches_rule_summary_in_api():
+    thread_id = 'red_team_debt_known_repayment_term'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_CORRECTION})
+        response = client.post('/chat', json={'thread_id': thread_id, 'query': DEBT_LITIGATION_FOLLOWUP})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    state = api_module.CaseState.from_value(response.json()['case_state'])
+    _assert_known_repayment_term_is_not_described_as_unknown(state, response.json()['reply'])
+
+
+def test_known_repayment_term_reaches_rule_summary_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_CORRECTION).run(timeout=20)
+    at.chat_input[0].set_value(DEBT_LITIGATION_FOLLOWUP).run(timeout=20)
+    _assert_known_repayment_term_is_not_described_as_unknown(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
 
 
 def test_debt_followup_does_not_invent_absolute_action_dates_in_engine():

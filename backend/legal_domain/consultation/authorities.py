@@ -42,6 +42,7 @@ def relevant_rules(state) -> list[dict]:
             continue
         if year and int(year.group(1)) < start.year:
             continue
+        contextual_summary = '本案陈述已有还款约定；应核对约定原文、交付时间和对应到期节点，不再按期限无法确定的催告路径概括。' if domain == 'debt' and article == '第六百七十五条' and re.search(r'约定.{0,20}(?:归还|还款|偿还)', text) else summary
         # A year alone cannot prove a version was effective on a particular day.
         applicable = '需核对本案事实、发生日、法律过渡规则及相关司法解释；不是最终适用结论。'
         if not year:
@@ -50,7 +51,7 @@ def relevant_rules(state) -> list[dict]:
             applicable += '应再次核对来源是否有后续修订。'
         result.append({
             'source_id': f'{domain}_{RULES.index((domain, article, summary, url, law, start, terms))}',
-            'law_name': law, 'article': article, 'summary': summary, 'source_url': url,
+            'law_name': law, 'article': article, 'summary': contextual_summary, 'source_url': url,
             'effective_from': start.isoformat(), 'checked_on': CHECKED_ON.isoformat(),
             'temporal_validated': False, 'applicability': applicable,
         })

@@ -25,10 +25,16 @@
           "fix_files": ["backend/legal_domain/consultation/planning.py"],
           "verification": "3 path tests, 75 related tests and 235 full tests passed",
           "commit_subject": "Use relative consultation action schedules"
+        },
+        {
+          "id": "known_repayment_term_generic_summary",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/authorities.py"],
+          "verification": "3 path tests and 238 full tests passed",
+          "commit_subject": "Contextualize known repayment terms"
         }
       ],
       "pending_root_causes": [
-        "known repayment term still described as unknown",
         "explicit refusal to negotiate still recommends mediation",
         "second response does not explain material and constraint changes",
         "unavailable IOU still appears as an upload action",
