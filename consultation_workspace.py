@@ -116,6 +116,25 @@ def render_plan_sections(state) -> None:
                 st.write('要证明：' + item['proves'])
                 st.write(item['how'])
                 st.caption('替代办法：' + item['alternative'])
+    sandbox = report.get('evidence_counterfactuals', {})
+    if sandbox.get('cards'):
+        st.markdown('#### 证据反事实沙盘')
+        st.caption(sandbox['explanation'])
+        for index, card in enumerate(sandbox['cards']):
+            with st.expander(
+                f'{card["name"]} · {card["priority"]}',
+                expanded=index == 0,
+                icon=':material/account_tree:',
+            ):
+                st.caption(f'当前状态：{card["current_status"]} · 要核对：{card["proves"]}')
+                st.markdown('**如果材料支持**')
+                st.write(card['if_supports'])
+                st.markdown('**如果材料冲突**')
+                st.write(card['if_conflicts'])
+                st.markdown('**如果最终拿不到**')
+                st.write(card['if_unavailable'])
+                st.write('现在做：' + card['next_action'])
+                st.caption('完成标志：' + card['completion_signal'])
     if report.get('opponent_arguments'):
         with st.expander('对方可能怎么说，如何准备', icon=':material/forum:'):
             for item in report['opponent_arguments']:

@@ -11,11 +11,30 @@
 5. 每步提供建议日期、办理渠道、材料、具体操作、完成标志与失败替代路径。建议日期与法定期限分开，不在缺少起算事实时虚构截止日。
 6. 页面及 API 均可下载中文 Word/PDF，包含全部行动、文书整理草稿、官方入口、条文正文及检查信息，来源链接可点击。
 
+## 原创组合：证据反事实沙盘
+
+竞品与研究给出的共同信号并不是“再做一个聊天框”。CoCounsel 的官方产品页把核心能力集中在面向法律专业人员的权威检索、文档分析与起草；英国司法部的法律支持综述认为数字自助适合作为可扩展的第一线支持，尤其适合程序明确的早期问题，但效果受可访问性、相关性和用户基础能力限制；Stanford 对法律 RAG 产品的实证评估则说明，即使使用检索增强，错误信息和错误归因仍不能被视为已经消除。
+
+- [CoCounsel Legal 官方产品说明](https://legal.thomsonreuters.com/en/products/cocounsel-legal/corp)
+- [英国司法部：法律支持服务有效性综述](https://www.gov.uk/government/publications/evidence-on-the-effectiveness-of-legal-support-literature-review)
+- [Stanford：Hallucination-Free? 法律 RAG 可靠性研究](https://law.stanford.edu/publications/hallucination-free-assessing-the-reliability-of-leading-ai-legal-research-tools/)
+
+LexPilot 因此增加面向普通咨询者的“证据反事实沙盘”。它不宣称是行业首创的法律推理算法，而是本项目的原创产品组合：
+
+1. 从案件当前证据任务中优先选择已上传、用户称有、尚缺和需替代取证的材料。
+2. 对每份材料同时显示“核对后支持当前陈述”“与其他材料冲突”“最终无法取得”三条路径。
+3. 每条路径都说明要证明的事项、现在能做的动作、完成标志和不应越过的边界。
+4. 概率字段固定为空；材料上传或用户自述不会被写成事实已证明。
+5. 同一结构进入页面、API、Markdown、Word 和 PDF，并在质量审计中检查是否错误生成概率。
+
+这一设计把“AI 给答案”改成“用户能看懂材料变化如何影响行动”，重点解决静态证据清单缺少策略反馈、普通用户容易把单份材料等同于胜诉、以及系统只展示有利路径而忽略冲突材料的问题。
+
 ## 技术闭环
 
 ```mermaid
 flowchart TD
     U[咨询者描述与合法持有的材料] --> F[事实来源、身份、地区、程序与约束]
+    F --> X[证据反事实沙盘：支持 / 冲突 / 拿不到]
     F --> K[SQLite FTS5：中文 BM25 + 加权多查询 RRF]
     K --> V[领域与版本条件筛选，官方正文与哈希]
     V --> G[结构化个案分析与条件结论]
@@ -25,11 +44,12 @@ flowchart TD
     C -->|保留通过检查的内容| P[咨询者立场 + 路线条件 + 办理步骤]
     C -->|仍不足| B[保留实用基础清单并标明缺口]
     B --> P
+    X --> P
     P --> S[官方办理入口 + 可选真实机构查询]
     S --> D[同一报告生成页面、Word、PDF、Markdown]
 ```
 
-实现位置：`backend/legal_domain/consultation/knowledge.py`、`semantic.py`、`grounding.py`、`perspective.py`、`planning.py`、`services.py`、`exports.py`。Web、离线执行器和 LangGraph 使用同一咨询处理函数；API 导出读取当前案件的最终报告。
+实现位置：`backend/legal_domain/consultation/knowledge.py`、`semantic.py`、`grounding.py`、`perspective.py`、`planning.py`、`counterfactual.py`、`services.py`、`exports.py`。Web、离线执行器和 LangGraph 使用同一咨询处理函数；API 导出读取当前案件的最终报告。
 
 ## 研究方法与实现边界
 
@@ -95,6 +115,7 @@ SQLite 使用 FTS5 与中文双字切分，不需启动额外数据库服务。�
 3. 展开依据，说明用户陈述、官方原文、引用结构检查和法律适用确认是不同层次。
 4. 在新案件中以“我是房东”咨询欠租，展示立场、话术和证据方向变化。
 5. 下载 Word 和 PDF，打开核对完整行动方案、官方链接和条文附录。
+6. 展开“证据反事实沙盘”，以转账记录或交房视频演示：材料支持时如何进入证据目录、发生冲突时为什么不能隐藏不利内容、拿不到时怎样切换替代取证；指出概率字段固定为空。
 
 API：先通过 `/chat` 在同一 `thread_id` 生成方案，再请求 `/cases/{thread_id}/report.docx` 或 `/cases/{thread_id}/report.pdf`。不存在案件返回 404，尚无报告返回 409，不支持的格式返回 400。
 

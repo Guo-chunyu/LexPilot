@@ -150,6 +150,8 @@ def test_general_case_can_generate_plan_then_continue_and_reset():
     at.button(key='generate_current_plan').click().run()
     state = at.session_state['case_state']
     assert state.final_report['action_plan']
+    assert state.final_report['evidence_counterfactuals']['cards']
+    assert any('证据反事实沙盘' in item.value for item in at.markdown)
     assert len(at.expander) >= 4, 'Concrete steps must be exposed for review'
     assert at.get('download_button'), 'Plans and working drafts must be downloadable'
     at.chat_input[0].set_value('广东省深圳市南山区').run()

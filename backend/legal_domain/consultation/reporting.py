@@ -11,6 +11,7 @@ from .planning import enhance_steps, compare_routes
 from .services import service_guide
 from .grounding import audit_report
 from .perspective import case_profile
+from .counterfactual import build_evidence_counterfactuals
 
 
 def _evidence_instruction(task) -> str:
@@ -133,9 +134,13 @@ def build_consultation_report(state) -> dict:
 
 def intelligence_sections(state, report) -> dict:
     dossier = state.consultation
-    return {'strategy_comparison': compare_routes(state), 'service_guide': service_guide(state),
+    strategy = compare_routes(state)
+    sandbox = build_evidence_counterfactuals(state, strategy)
+    audit_input = {**report, 'evidence_counterfactuals': sandbox}
+    return {'strategy_comparison': strategy, 'service_guide': service_guide(state),
+        'evidence_counterfactuals': sandbox,
         'grounded_claims': dossier.grounded_claims, 'knowledge_passages': dossier.knowledge_passages,
-        'retrieval_audit': dossier.retrieval_audit, 'quality_audit': audit_report(report, dossier)}
+        'retrieval_audit': dossier.retrieval_audit, 'quality_audit': audit_report(audit_input, dossier)}
 
 
 def report_markdown(state) -> str:
@@ -162,6 +167,17 @@ def report_markdown(state) -> str:
         lines += ['', '## 证据清单', '']
         for item in report['evidence_checklist']:
             lines += [f'### {item["name"]} · {item["status"]}', '', f'证明目的：{item["proves"]}', '', f'怎么准备：{item["how"]}', '', f'暂时没有：{item["alternative"]}', '']
+    sandbox = report.get('evidence_counterfactuals', {})
+    if sandbox.get('cards'):
+        lines += ['', '## 证据反事实沙盘', '', sandbox['explanation']]
+        for card in sandbox['cards']:
+            lines += ['', f'### {card["name"]} · {card["priority"]}', '',
+                f'当前状态：{card["current_status"]}；要核对：{card["proves"]}', '',
+                f'如果材料支持：{card["if_supports"]}', '',
+                f'如果材料冲突：{card["if_conflicts"]}', '',
+                f'如果最终拿不到：{card["if_unavailable"]}', '',
+                f'现在做：{card["next_action"]}', '',
+                f'完成标志：{card["completion_signal"]}']
     for title, key in [('具体行动步骤', 'action_plan'), ('结合本案的补充步骤（AI 草案，待核对）', 'tailored_action_plan')]:
         if report.get(key):
             lines += ['', f'## {title}', '']

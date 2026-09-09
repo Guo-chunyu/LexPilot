@@ -50,13 +50,18 @@ def verify_claims(claims: list[dict], state, passages: list[dict]) -> dict:
 
 def audit_report(report: dict, dossier) -> dict:
     steps = report.get('action_plan', [])
+    counterfactuals = report.get('evidence_counterfactuals', {}).get('cards', [])
     required = ('when', 'channel', 'materials', 'instructions', 'completion', 'fallback')
     complete = sum(all(s.get(k) for k in required) for s in steps)
     return {'step_count': len(steps), 'complete_step_count': complete,
         'action_completeness': round(complete / max(len(steps), 1), 3),
         'retrieved_passages': len(dossier.knowledge_passages),
         'accepted_citations': len(dossier.grounded_claims),
+        'counterfactual_card_count': len(counterfactuals),
+        'counterfactual_probability_free': all(
+            card.get('outcome_probability') is None for card in counterfactuals
+        ),
         'citation_issues': dossier.generation_audit.get('issues', []),
         'repair_attempts': dossier.generation_audit.get('repair_attempts', 0),
         'legal_correctness_verified': False,
-        'explanation': '检查步骤字段、事实引用和引文真实性；不代表法律结论正确率或胜诉概率。'}
+        'explanation': '检查步骤字段、事实引用、引文真实性和证据沙盘是否禁用胜率；不代表法律结论正确率或胜诉概率。'}
