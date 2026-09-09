@@ -50,6 +50,7 @@ TRAFFIC_WITH_MEDICAL_MATERIALS = '交通事故仍在治疗，保险公司没有�
 CORPORATE_INSPECTION_REFUSAL = '我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。'
 HOUSING_FORMAL_ROLE_CORRECTION = '本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。'
 LABOR_INDIRECT_ARBITRATION_FILING = '我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。'
+IP_PLATFORM_COMPLAINT_REFUSED = '摄影作品被网店盗用，我已经向平台投诉两次，平台明确拒绝处理，请给我后续方案。'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -178,6 +179,38 @@ def test_accepted_arbitration_uses_formal_route_in_streamlit():
     at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
     at.chat_input[0].set_value(LABOR_INDIRECT_ARBITRATION_FILING).run(timeout=20)
     _assert_accepted_arbitration_uses_formal_route(at.session_state['case_state'])
+
+
+def _assert_platform_complaint_refusal_advances(state) -> None:
+    assert state.case_type == 'intellectual_property'
+    assert '投诉两次' in state.facts.get('procedure', '')
+    assert '拒绝处理' in state.facts['procedure']
+    assert state.final_report['strategy_comparison']['recommended_route'] == 'mediation'
+
+
+def test_platform_complaint_refusal_advances_engine():
+    result = LexPilotEngine().process(IP_PLATFORM_COMPLAINT_REFUSED)
+    _assert_platform_complaint_refusal_advances(result['case_state'])
+
+
+def test_platform_complaint_refusal_advances_api():
+    thread_id = 'red_team_ip_platform_refusal'
+    client = TestClient(api_module.api_app)
+    try:
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': IP_PLATFORM_COMPLAINT_REFUSED,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_platform_complaint_refusal_advances(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_platform_complaint_refusal_advances_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(IP_PLATFORM_COMPLAINT_REFUSED).run(timeout=20)
+    _assert_platform_complaint_refusal_advances(at.session_state['case_state'])
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:

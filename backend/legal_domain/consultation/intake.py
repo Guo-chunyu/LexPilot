@@ -255,12 +255,12 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         'procedure' not in extracted
         and (
             re.search(
-                r'(?:已经|此前|先后).{0,24}(?:协商|催款|催还|沟通|调解)'
+                r'(?:已经|此前|先后).{0,24}(?:协商|催款|催还|沟通|调解|投诉|申诉)'
                 r'.{0,36}(?:拒绝|不回复|不理|失败|不成)',
                 message,
             )
             or re.search(
-                r'(?:协商|催款|催还|沟通|调解)'
+                r'(?:协商|催款|催还|沟通|调解|投诉|申诉)'
                 r'.{0,8}(?:\d+|[一二两三四五六七八九十]+)次'
                 r'.{0,24}(?:拒绝|不回复|不理|失败|不成)',
                 message,

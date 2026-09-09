@@ -3,6 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
+  "loop_status": "paused_by_user",
+  "pause_reason": "用户要求第 7 轮完成后暂停，等待人工补充案例或明确恢复。",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -317,7 +319,7 @@
       "round_id": "round-007-role-procedure-jurisdiction",
       "seed": 20260915,
       "generator": "generate_round_seven_variants",
-      "status": "in_progress",
+      "status": "completed",
       "selected_case_ids": [
         "housing_formal_role_synonyms",
         "labor_indirect_arbitration_filing",
@@ -361,24 +363,32 @@
           "fix_files": ["backend/legal_domain/consultation/planning.py"],
           "verification": "3 path tests, 21 related tests and 289 full tests passed",
           "commit_subject": "Route accepted arbitration to formal procedure"
+        },
+        {
+          "id": "platform_complaint_refusal_not_recorded_as_procedure",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "3 path tests, 9 selected tests and 297 full tests passed",
+          "commit_subject": "Advance routes after platform refusal"
         }
       ],
-      "pending_root_causes": [
-        "知识产权平台投诉被拒但仍推荐协商"
-      ],
-      "root_cause": "已确认多个独立根因：正式同义身份纠正未覆盖；劳动者图路径绕过通用程序事实提取；正式仲裁路线只识别固定词序；知识产权投诉进展仍待修复。",
+      "pending_root_causes": [],
+      "root_cause": "四个独立根因：正式同义身份纠正未覆盖；劳动者图路径绕过通用程序事实提取；正式仲裁路线只识别固定词序；跨片段交涉进展未覆盖平台投诉与申诉。",
       "fix_files": [
         "backend/legal_domain/consultation/perspective.py",
         "backend/workflow.py",
         "backend/graph.py",
-        "backend/legal_domain/consultation/planning.py"
+        "backend/legal_domain/consultation/planning.py",
+        "backend/legal_domain/consultation/intake.py"
       ],
       "verification": {
-        "latest_before_fix": "engine, API and Streamlit: 3 failed",
-        "latest_related_suite": "21 passed",
-        "latest_full_suite": "289 passed, 1 warning"
+        "before_fix": "3 failed, 2 passed",
+        "selected_cases_after_fix": "5 passed",
+        "latest_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "297 passed, 1 warning"
       },
-      "commit_subject": "Route accepted arbitration to formal procedure"
+      "commit_subject": "Advance routes after platform refusal"
     }
   ]
 }
