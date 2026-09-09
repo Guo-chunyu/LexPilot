@@ -267,7 +267,7 @@
       "round_id": "round-006-specialist-and-jurisdiction",
       "seed": 20260914,
       "generator": "generate_round_six_variants",
-      "status": "in_progress",
+      "status": "completed",
       "selected_case_ids": [
         "ip_nonexclusive_source_materials",
         "medical_records_not_absent",
@@ -290,13 +290,28 @@
           "fix_files": ["backend/legal_domain/consultation/profiles.py"],
           "verification": "3 path tests, 8 related tests and 272 full tests passed",
           "commit_subject": "Prioritize traffic events over material terms"
+        },
+        {
+          "id": "corporate_inspection_refusal_not_persisted_as_procedure",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "3 path tests, 9 selected tests and 280 full tests passed",
+          "commit_subject": "Advance routes after inspection refusal"
         }
       ],
-      "pending_root_causes": ["公司查账被拒后仍推荐继续协商"],
-      "root_cause": "待逐项修复",
-      "fix_files": ["backend/legal_domain/consultation/profiles.py"],
-      "verification": {},
-      "commit_subject": ""
+      "pending_root_causes": [],
+      "root_cause": "两个独立根因：交通事故被病历和票据误路由到医疗；公司查账请求和明确拒绝分处不同片段，未进入程序事实。",
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py",
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "before_fix": "2 failed, 3 passed",
+        "selected_cases_after_fix": "5 passed",
+        "related_suite": "9 passed",
+        "full_suite": "280 passed, 1 warning"
+      },
+      "commit_subject": "Advance routes after inspection refusal"
     }
   ]
 }

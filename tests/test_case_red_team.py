@@ -46,8 +46,39 @@ LABOR_EMPLOYER_AMOUNT_CORRECTION = '更正一下，员工请求金额实际是4�
 CONSUMER_EXHAUSTED_START = '健身房关门不退款，我只有付款截图，没有其他材料，请先给我方案。'
 CONSUMER_EVIDENCE_CORRECTION = '更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。'
 TRAFFIC_WITH_MEDICAL_MATERIALS = '交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。'
+CORPORATE_INSPECTION_REFUSAL = '我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。'
 
 
+def _assert_corporate_inspection_refusal_advances_route(state) -> None:
+    assert state.case_type == 'corporate'
+    assert '查账两次' in state.facts.get('procedure', '')
+    assert state.final_report['strategy_comparison']['recommended_route'] == 'mediation'
+    assert not any('先提出一次' in step['title'] for step in state.final_report['action_plan'])
+
+
+def test_corporate_inspection_refusal_advances_engine_route():
+    result = LexPilotEngine().process(CORPORATE_INSPECTION_REFUSAL)
+    _assert_corporate_inspection_refusal_advances_route(result['case_state'])
+
+
+def test_corporate_inspection_refusal_advances_api_route():
+    thread_id = 'red_team_corporate_inspection_refusal'
+    client = TestClient(api_module.api_app)
+    try:
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': CORPORATE_INSPECTION_REFUSAL,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_corporate_inspection_refusal_advances_route(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_corporate_inspection_refusal_advances_streamlit_route():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(CORPORATE_INSPECTION_REFUSAL).run(timeout=20)
+    _assert_corporate_inspection_refusal_advances_route(at.session_state['case_state'])
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
     assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])

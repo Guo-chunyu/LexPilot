@@ -229,7 +229,15 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'(?<!不是)(?<!并非)(?:没有|尚未|还没)(?:起诉|立案|投诉|报案|申请|协商)',
             sentence,
         )
-        if affirmative_procedure or negative_procedure:
+        corporate_inspection_refusal = (
+            state.case_type == 'corporate'
+            and re.search(
+                r'(?:已经|此前|先后).{0,12}(?:书面)?(?:要求|申请)?'
+                r'(?:查账|查阅).{0,20}(?:拒绝|不回复|未回复)',
+                sentence,
+            )
+        )
+        if affirmative_procedure or negative_procedure or corporate_inspection_refusal:
             procedure_sentences.append(sentence)
     if constraint_sentences:
         value = '；'.join(dict.fromkeys(constraint_sentences))
@@ -256,6 +264,14 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
                 r'.{0,8}(?:\d+|[一二两三四五六七八九十]+)次'
                 r'.{0,24}(?:拒绝|不回复|不理|失败|不成)',
                 message,
+            )
+            or (
+                state.case_type == 'corporate'
+                and re.search(
+                    r'(?:已经|此前|先后).{0,40}(?:查账|查阅)'
+                    r'.{0,40}(?:拒绝|不回复|未回复)',
+                    message,
+                )
             )
         )
     ):
