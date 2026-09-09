@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from backend.legal_domain.labor.model import get_labor_model
-from backend.legal_rl.state import CaseState, EvidenceGap, EvidenceStatus
+from backend.legal_rl.state import CaseState, EvidenceGap, EvidenceStatus, EvidenceVerificationStatus
 
 
 def detect_evidence_gaps(state: CaseState) -> list[EvidenceGap]:
@@ -11,6 +11,10 @@ def detect_evidence_gaps(state: CaseState) -> list[EvidenceGap]:
     model.prepare_state(state)
     config = model.get(state.dispute_type)
     present = {item.name for item in state.evidence}
+    verified = {
+        item.name for item in state.evidence
+        if item.verification_status == EvidenceVerificationStatus.VERIFIED
+    }
     conflict_elements = set(state.facts.get("conflict_elements", []))
     gaps: list[EvidenceGap] = []
 
@@ -19,17 +23,18 @@ def detect_evidence_gaps(state: CaseState) -> list[EvidenceGap]:
         evidence_candidates = element.get("evidence_any", [])
         known_facts = [key for key in required_facts if _known(state.facts.get(key))]
         matched_evidence = [name for name in evidence_candidates if name in present]
+        verified_evidence = [name for name in evidence_candidates if name in verified]
         missing_evidence = [name for name in evidence_candidates if name not in present]
 
         if element["id"] in conflict_elements or element["name"] in conflict_elements:
             status = EvidenceStatus.CONFLICT
             reason = "同一法律要素存在相互冲突的事实或证据。"
-        elif len(known_facts) == len(required_facts) and matched_evidence:
+        elif len(known_facts) == len(required_facts) and verified_evidence:
             status = EvidenceStatus.PROVEN
-            reason = "必要事实已知且至少有一项关联证据。"
+            reason = "必要事实已知且至少有一项关联证据已完成人工核验。"
         elif known_facts or matched_evidence:
             status = EvidenceStatus.PARTIAL
-            reason = "已掌握部分事实或证据，但证据链尚不完整。"
+            reason = "已掌握部分事实或证据，但自述或上传不等于人工核验，证据链尚不完整。"
         else:
             status = EvidenceStatus.MISSING
             reason = "必要事实和支持证据均不足。"

@@ -20,10 +20,18 @@ class EvidenceStatus(str, Enum):
     CONFLICT = "CONFLICT"
 
 
+class EvidenceVerificationStatus(str, Enum):
+    SELF_REPORTED = "SELF_REPORTED"
+    UPLOADED_UNVERIFIED = "UPLOADED_UNVERIFIED"
+    VERIFIED = "VERIFIED"
+
+
 class EvidenceItem(BaseModel):
     name: str
     source: str = "user"
     notes: str = ""
+    verification_status: EvidenceVerificationStatus = EvidenceVerificationStatus.SELF_REPORTED
+    verification_ref: str = ""
 
 
 class FactProvenance(BaseModel):
@@ -307,9 +315,30 @@ class CaseState(BaseModel):
         normalized = name.strip()
         if not normalized:
             return
-        existing = {item.name for item in self.evidence}
-        if normalized not in existing:
-            self.evidence.append(EvidenceItem(name=normalized, source=source, notes=notes))
+        level = (
+            EvidenceVerificationStatus.VERIFIED
+            if source in {"human_verified", "official_verified", "verified", "initial_case", "simulator"}
+            else EvidenceVerificationStatus.UPLOADED_UNVERIFIED
+            if source == "uploaded_file"
+            else EvidenceVerificationStatus.SELF_REPORTED
+        )
+        ranks = {
+            EvidenceVerificationStatus.SELF_REPORTED: 0,
+            EvidenceVerificationStatus.UPLOADED_UNVERIFIED: 1,
+            EvidenceVerificationStatus.VERIFIED: 2,
+        }
+        item = next((item for item in self.evidence if item.name == normalized), None)
+        changed = False
+        if item is None:
+            self.evidence.append(EvidenceItem(name=normalized, source=source, notes=notes,
+                verification_status=level))
+            changed = True
+        elif ranks[level] > ranks[item.verification_status]:
+            item.source = source
+            item.notes = notes or item.notes
+            item.verification_status = level
+            changed = True
+        if changed:
             self.judge_result = None
             self.verification_result = None
             self.final_report = {}
@@ -322,6 +351,22 @@ class CaseState(BaseModel):
             self.missing_evidence.remove(normalized)
         if normalized in self.unavailable_evidence:
             self.unavailable_evidence.remove(normalized)
+
+    def verify_evidence(self, name: str, *, reviewer_ref: str) -> None:
+        """Promote an existing item only through an explicit human-review call."""
+        normalized = name.strip()
+        reference = reviewer_ref.strip()
+        if not normalized or not reference:
+            raise ValueError("Evidence name and reviewer reference are required")
+        item = next((item for item in self.evidence if item.name == normalized), None)
+        if item is None:
+            raise ValueError("Evidence must be registered before verification")
+        item.verification_status = EvidenceVerificationStatus.VERIFIED
+        item.verification_ref = reference[:160]
+        item.source = "human_verified"
+        self.judge_result = None
+        self.verification_result = None
+        self.final_report = {}
 
     def mark_evidence_unavailable(self, names: list[str], *, exhausted: bool = False) -> None:
         """Remember a user's negative answer so the same materials are not requested again."""

@@ -7,6 +7,8 @@ from streamlit.testing.v1 import AppTest
 import backend.api as api_module
 from backend.workflow import LexPilotEngine
 from backend.legal_domain.consultation.reporting import report_markdown
+from backend.legal_domain.labor.evidence_gap import detect_evidence_gaps
+from backend.legal_rl.state import EvidenceStatus
 from evaluation.consultation_red_team import (
     audit_red_team_result,
     generate_anonymous_uploads,
@@ -226,3 +228,45 @@ def test_conflicting_uploaded_amount_does_not_silently_replace_user_fact(tmp_pat
     assert '从正文识别' in second.json()['reply']
     assert '未自动覆盖' in second.json()['reply']
     assert '4万元' in second.json()['final_report']['case_summary']
+
+
+def test_labor_evidence_distinguishes_self_report_upload_and_human_verification(tmp_path, monkeypatch):
+    thread_id = 'red_team_labor_evidence_levels'
+    client = TestClient(api_module.api_app)
+    monkeypatch.setattr(api_module, '_upload_root', lambda: tmp_path)
+    docx_fixture = next(item for item in generate_anonymous_uploads() if item.name.endswith('.docx'))
+    try:
+        first = client.post('/chat', json={
+            'thread_id': thread_id,
+            'query': '我是员工，签了劳动合同，合同期限三年，试用期六个月，我有劳动合同，公司说试用期不合格，请给我方案。',
+        })
+        second = client.post(
+            f'/cases/{thread_id}/evidence',
+            data={'query': '这是匿名合成劳动合同，请更新方案。'},
+            files=[('files', ('匿名劳动合同.docx', docx_fixture.data, docx_fixture.media_type))],
+        )
+    finally:
+        api_module._sessions.pop(thread_id, None)
+
+    assert first.status_code == second.status_code == 200
+    first_state = api_module.CaseState.from_value(first.json()['case_state'])
+    self_reported = next(item for item in first_state.evidence if item.name == '劳动合同')
+    assert self_reported.verification_status == 'SELF_REPORTED'
+    assert next(
+        item for item in first_state.evidence_gaps if item.element_id == 'valid_probation_term'
+    ).status != EvidenceStatus.PROVEN
+
+    state = api_module.CaseState.from_value(second.json()['case_state'])
+    uploaded = next(item for item in state.evidence if item.name == '劳动合同')
+    assert uploaded.verification_status == 'UPLOADED_UNVERIFIED'
+    gap = next(item for item in state.evidence_gaps if item.element_id == 'valid_probation_term')
+    assert gap.status == EvidenceStatus.PARTIAL
+
+    state.verify_evidence('劳动合同', reviewer_ref='synthetic-human-review')
+    assert state.final_report == {}
+    detect_evidence_gaps(state)
+    verified = next(item for item in state.evidence if item.name == '劳动合同')
+    assert verified.verification_status == 'VERIFIED'
+    assert next(
+        item for item in state.evidence_gaps if item.element_id == 'valid_probation_term'
+    ).status == EvidenceStatus.PROVEN

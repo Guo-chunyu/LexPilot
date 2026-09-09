@@ -47,7 +47,11 @@ class RuleBasedPolicy(LegalPolicy):
             return PolicyDecision(action=LegalAction.ASK_FACT, reason="赔偿估算仍缺少月工资基数。")
         if state.dispute_type == "unsigned_contract" and "unsigned_months" in state.missing_facts:
             return PolicyDecision(action=LegalAction.ASK_FACT, reason="双倍工资估算仍缺少未签合同期间。")
-        if state.evidence_completeness < 0.65 and not state.evidence_collection_exhausted:
+        if (
+            state.evidence_completeness < 0.65
+            and not state.evidence_collection_exhausted
+            and not _has_requested_evidence(state)
+        ):
             return PolicyDecision(action=LegalAction.REQUEST_EVIDENCE, reason="核心证据链尚未达到 65% 的调查目标。")
         if not state.retrieved_laws:
             return PolicyDecision(action=LegalAction.SEARCH_LAW, reason="尚无可追溯的劳动法依据。")
@@ -66,7 +70,7 @@ class RuleBasedPolicy(LegalPolicy):
         if state.missing_facts:
             return PolicyDecision(action=LegalAction.ASK_FACT, reason=state.judge_result.reason)
         if (
-            any(gap.status != EvidenceStatus.PROVEN for gap in state.evidence_gaps)
+            any(gap.status in {EvidenceStatus.MISSING, EvidenceStatus.CONFLICT} for gap in state.evidence_gaps)
             and not state.evidence_collection_exhausted
         ):
             return PolicyDecision(action=LegalAction.REQUEST_EVIDENCE, reason=state.judge_result.reason)
@@ -159,7 +163,11 @@ def valid_actions(state: CaseState) -> list[LegalAction]:
     allowed: list[LegalAction] = []
     if state.missing_facts:
         allowed.append(LegalAction.ASK_FACT)
-    if state.evidence_completeness < 0.65 and not state.evidence_collection_exhausted:
+    if (
+        state.evidence_completeness < 0.65
+        and not state.evidence_collection_exhausted
+        and not _has_requested_evidence(state)
+    ):
         allowed.append(LegalAction.REQUEST_EVIDENCE)
     if not state.retrieved_laws:
         allowed.append(LegalAction.SEARCH_LAW)
@@ -184,3 +192,7 @@ def valid_actions(state: CaseState) -> list[LegalAction]:
     if state.step_count >= state.max_steps - 1:
         allowed.append(LegalAction.ESCALATE_HUMAN)
     return list(dict.fromkeys(allowed)) or [LegalAction.ESCALATE_HUMAN]
+
+
+def _has_requested_evidence(state: CaseState) -> bool:
+    return any(record.action == LegalAction.REQUEST_EVIDENCE for record in state.action_history)

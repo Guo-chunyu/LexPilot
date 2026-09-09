@@ -27,7 +27,7 @@ def test_evidence_gap_supports_all_four_statuses():
         "contract_term_months": 36,
         "probation_period_months": 6,
     })
-    state.add_evidence("劳动合同")
+    state.add_evidence("劳动合同", source="verified")
     detect_evidence_gaps(state)
     assert next(g for g in state.evidence_gaps if g.element_id == "valid_probation_term").status == EvidenceStatus.PROVEN
     state.facts["conflict_elements"] = ["termination_occurred"]
@@ -53,7 +53,7 @@ def test_stop_requires_judge_approval():
     state.apply_facts({key: True for key in state.key_facts})
     state.facts.update({"monthly_salary": 10000, "employment_duration_months": 8})
     for name in state.key_evidence:
-        state.add_evidence(name)
+        state.add_evidence(name, source="verified")
     state.retrieved_laws = search_law("试用期解除 违法解除 经济补偿")
     detect_evidence_gaps(state)
     state.retrieved_cases = [{"case_id": "labor_001"}]

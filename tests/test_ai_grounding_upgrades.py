@@ -76,7 +76,7 @@ def _complete_probation_state() -> CaseState:
     for key in state.key_facts:
         state.add_fact_provenance(key, quote=f"原文支持 {key}", extraction_method="rules")
     for name in state.key_evidence:
-        state.add_evidence(name)
+        state.add_evidence(name, source="verified")
     detect_evidence_gaps(state)
     state.retrieved_laws = search_law_for_state(state)
     detect_evidence_gaps(state)
