@@ -344,20 +344,34 @@
           "fix_files": ["backend/legal_domain/consultation/perspective.py"],
           "verification": "3 path tests, 17 related tests and 283 full tests passed",
           "commit_subject": "Recognize formal role corrections"
+        },
+        {
+          "id": "labor_graph_bypassed_shared_procedure_intake",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": [
+            "backend/workflow.py",
+            "backend/graph.py"
+          ],
+          "verification": "3 path tests, 3 workflow tests and 286 full tests passed",
+          "commit_subject": "Persist labor procedure progress"
         }
       ],
       "pending_root_causes": [
-        "劳动仲裁已提交并受理但仍推荐协商",
+        "劳动仲裁程序事实已保存但路线仍未切换",
         "知识产权平台投诉被拒但仍推荐协商"
       ],
-      "root_cause": "身份纠正规则只接受“不是……，是……”，未覆盖“并非……，而是……”的正式同义表达。",
-      "fix_files": ["backend/legal_domain/consultation/perspective.py"],
+      "root_cause": "已确认多个独立根因：正式同义身份纠正未覆盖；劳动者图路径绕过通用程序事实提取；其余路线问题待逐项修复。",
+      "fix_files": [
+        "backend/legal_domain/consultation/perspective.py",
+        "backend/workflow.py",
+        "backend/graph.py"
+      ],
       "verification": {
-        "before_fix": "engine, API and Streamlit: 3 failed",
-        "related_suite": "17 passed",
-        "full_suite": "283 passed, 1 warning"
+        "latest_before_fix": "engine, API and Streamlit: 3 failed",
+        "latest_related_suite": "3 workflow tests passed",
+        "latest_full_suite": "286 passed, 1 warning"
       },
-      "commit_subject": "Recognize formal role corrections"
+      "commit_subject": "Persist labor procedure progress"
     }
   ]
 }

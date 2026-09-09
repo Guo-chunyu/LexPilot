@@ -49,6 +49,7 @@ CONSUMER_EVIDENCE_CORRECTION = '更正一下，我后来找到了订单和完整
 TRAFFIC_WITH_MEDICAL_MATERIALS = '交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。'
 CORPORATE_INSPECTION_REFUSAL = '我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。'
 HOUSING_FORMAL_ROLE_CORRECTION = '本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。'
+LABOR_INDIRECT_ARBITRATION_FILING = '我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -113,6 +114,36 @@ def test_formal_housing_role_correction_reaches_streamlit():
     at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
     at.chat_input[0].set_value(HOUSING_FORMAL_ROLE_CORRECTION).run(timeout=20)
     _assert_formal_housing_role_correction(at.session_state['case_state'])
+
+
+def _assert_indirect_arbitration_filing_persists(state) -> None:
+    assert state.case_type == 'labor_dispute'
+    assert '提交申请' in state.facts.get('procedure', '')
+
+
+def test_indirect_arbitration_filing_persists_in_engine():
+    result = LexPilotEngine().process(LABOR_INDIRECT_ARBITRATION_FILING)
+    _assert_indirect_arbitration_filing_persists(result['case_state'])
+
+
+def test_indirect_arbitration_filing_persists_in_api():
+    thread_id = 'red_team_indirect_arbitration_filing'
+    client = TestClient(api_module.api_app)
+    try:
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': LABOR_INDIRECT_ARBITRATION_FILING,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_indirect_arbitration_filing_persists(
+        api_module.CaseState.from_value(response.json()['case_state'])
+    )
+
+
+def test_indirect_arbitration_filing_persists_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(LABOR_INDIRECT_ARBITRATION_FILING).run(timeout=20)
+    _assert_indirect_arbitration_filing_persists(at.session_state['case_state'])
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:

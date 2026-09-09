@@ -5,12 +5,10 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any, TypedDict
 
-from backend.legal_domain.labor.evidence_gap import detect_evidence_gaps
-from backend.legal_domain.labor.facts import extract_labor_facts
 from backend.legal_rl.actions import ACTION_TO_NODE
 from backend.legal_rl.policy import PolicyDecision, RuleBasedPolicy
 from backend.legal_rl.state import CaseState
-from backend.workflow import LexPilotEngine, execute_action
+from backend.workflow import LexPilotEngine, execute_action, prepare_labor_turn
 
 try:
     from langgraph.checkpoint.memory import InMemorySaver
@@ -33,8 +31,7 @@ class LexPilotGraphState(TypedDict, total=False):
 def _fact_extraction(graph_state: LexPilotGraphState) -> dict:
     case = CaseState.from_value(graph_state.get("case_state"))
     message = graph_state.get("user_message", "")
-    case = extract_labor_facts(message, case)
-    detect_evidence_gaps(case)
+    case = prepare_labor_turn(message, case)
     return {"case_state": case, "reply": "", "requires_user": False, "auto_steps": 0}
 
 
@@ -95,8 +92,10 @@ def build_graph():
     workflow.add_node("general_consultation", general_consultation)
     def labor_plan_node(graph_state):
         from backend.workflow import labor_stage_plan
-        case = extract_labor_facts(graph_state.get("user_message", ""), CaseState.from_value(graph_state["case_state"]))
-        detect_evidence_gaps(case)
+        case = prepare_labor_turn(
+            graph_state.get("user_message", ""),
+            CaseState.from_value(graph_state["case_state"]),
+        )
         return labor_stage_plan(case)
     workflow.add_node("labor_stage_plan", labor_plan_node)
     workflow.add_node("fact_extraction", _fact_extraction)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 from backend.agents.ask_fact import ask_fact_node
 from backend.agents.dialogue import compose_evidence_follow_up, compose_fact_follow_up
@@ -152,6 +153,23 @@ def execute_action(
     return execution
 
 
+def prepare_labor_turn(message: str, state: CaseState) -> CaseState:
+    """Apply specialist and shared intake extraction for every labor entry point."""
+    case = extract_labor_facts(message, state)
+    # Keep the labor interview's own evidence and pending-answer semantics.
+    # Only procedure-bearing turns need the cross-domain procedure extractor.
+    if re.search(
+        r'(?:已经|已).{0,36}(?:起诉|投诉|报案|申请|协商|仲裁|提交)|'
+        r'收到.{0,12}(?:传票|受理通知|开庭通知|裁决|判决)|'
+        r'(?:没有|尚未|还没).{0,12}(?:起诉|立案|投诉|报案|申请|协商|仲裁)',
+        message,
+    ):
+        from backend.legal_domain.consultation.intake import ingest_text
+        ingest_text(message, case, contextual=False)
+    detect_evidence_gaps(case)
+    return case
+
+
 class LexPilotEngine:
     """Offline-compatible runner that mirrors the LangGraph policy loop."""
 
@@ -167,8 +185,7 @@ class LexPilotEngine:
         route_case(message, case)
         if uses_general_consultation(case, message):
             return process_consultation(message, case)
-        case = extract_labor_facts(message, case)
-        detect_evidence_gaps(case)
+        case = prepare_labor_turn(message, case)
         from backend.legal_domain.consultation.intake import wants_plan
         if wants_plan(message):
             return labor_stage_plan(case)
