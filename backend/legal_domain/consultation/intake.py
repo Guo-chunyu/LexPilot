@@ -61,15 +61,36 @@ def _evidence_mention(text: str, name: str) -> tuple[bool, bool]:
     """Return (mentioned, unavailable) without treating “没有借条” as possession."""
     terms = EVIDENCE_ALIASES.get(name, (name,))
     mentioned = any(term in text for term in terms)
-    unavailable = any(
-        re.search(
-            rf'(?:没有|找不到|无法提供|无).{{0,6}}{re.escape(term)}'
-            rf'|没(?:有|找到|拿到|保存|留住|了)?\s*{re.escape(term)}'
-            rf'|{re.escape(term)}.{{0,4}}(?:没有(?!问题)|没(?:了|找到|拿到|保存)|找不到|无法提供|无(?!问题|异议))',
-            text,
-        )
-        for term in terms
-    )
+    clauses = [part.strip() for part in re.split(r'[，,。；;\n]', text) if part.strip()]
+    unavailable = False
+    for term in terms:
+        escaped = re.escape(term)
+        for clause in clauses:
+            if term not in clause:
+                continue
+            # A negation before the material must stay inside the same clause
+            # and may only contain a short modifier, not another evidence name.
+            before = re.search(
+                rf'(?:没有|找不到|无法提供|没(?:有|找到|拿到|保存|留住)?|无)'
+                rf'\s*(?:(?:任何|相关|完整|原始)(?:的)?\s*)?{escaped}',
+                clause,
+            )
+            match = re.search(escaped, clause)
+            tail = clause[match.end():].strip() if match else ''
+            # Postposed Chinese such as “借条我没有” is accepted only when the
+            # rest of the clause is purely the negation. This prevents
+            # “有转账记录，没有借条” from negating the transfer record.
+            after = re.fullmatch(
+                r'(?:(?:原件|材料|记录)\s*)?(?:(?:我|本人|手头|目前|现在)\s*)?'
+                r'(?:没有(?!问题)|没(?:有|了|找到|拿到|保存|留住)?|找不到|无法提供|无(?!问题|异议))'
+                r'[啊呀呢吧]?',
+                tail,
+            )
+            if before or after:
+                unavailable = True
+                break
+        if unavailable:
+            break
     return mentioned, unavailable
 
 
@@ -102,6 +123,8 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         dossier.declined_slots.append(pending)
     sentences = [part.strip() for part in re.split(r'[，。；\n]', message) if part.strip()]
     extracted: set[str] = set()
+    constraint_sentences: list[str] = []
+    procedure_sentences: list[str] = []
 
     def put(key, value, quote):
         save_fact(state, key, value, quote, source_type=source_type, source_ref=source_ref)
@@ -132,10 +155,25 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
                 dossier.timeline.append(entry)
         if re.search(r'想.{0,10}(?:要回|追回|拿回|退|离婚|解决|申请|查)|希望|我要(?:离婚|追回|退款)|要求(?:退|赔)', sentence) and not wants_plan(sentence):
             put('goal', sentence, sentence)
-        if re.search(r'低成本|预算|不想打官司|不方便到场|时间有限|不想影响关系|费用.{0,5}(?:以内|以下|不超过)', sentence):
-            put('constraints', sentence, sentence)
+        if re.search(r'低成本|预算|不想打官司|不方便到场|无法到场|时间有限|不想影响关系|看不懂|不会操作|不会用|听不清|看不清|需要.{0,4}帮|费用.{0,5}(?:以内|以下|不超过)', sentence):
+            constraint_sentences.append(sentence)
         if re.search(r'已经(?:起诉|投诉|报案|申请|协商)|收到.{0,10}(?:传票|通知|决定)|尚未|还没(?:投诉|起诉|协商)', sentence):
-            put('procedure', sentence, sentence)
+            procedure_sentences.append(sentence)
+    if constraint_sentences:
+        value = '；'.join(dict.fromkeys(constraint_sentences))
+        put('constraints', value, value)
+    if procedure_sentences:
+        value = '；'.join(dict.fromkeys(procedure_sentences))
+        put('procedure', value, value)
+    if (
+        'procedure' not in extracted
+        and re.search(
+            r'(?:已经|此前|先后).{0,24}(?:协商|催款|催还|沟通|调解)'
+            r'.{0,36}(?:拒绝|不回复|不理|失败|不成)',
+            message,
+        )
+    ):
+        put('procedure', message, message)
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
     if amount_sentences:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))

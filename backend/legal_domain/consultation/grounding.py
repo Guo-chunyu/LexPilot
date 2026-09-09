@@ -51,6 +51,7 @@ def verify_claims(claims: list[dict], state, passages: list[dict]) -> dict:
 def audit_report(report: dict, dossier) -> dict:
     steps = report.get('action_plan', [])
     counterfactuals = report.get('evidence_counterfactuals', {}).get('cards', [])
+    bridge = report.get('support_bridge', {})
     required = ('when', 'channel', 'materials', 'instructions', 'completion', 'fallback')
     complete = sum(all(s.get(k) for k in required) for s in steps)
     return {'step_count': len(steps), 'complete_step_count': complete,
@@ -61,7 +62,13 @@ def audit_report(report: dict, dossier) -> dict:
         'counterfactual_probability_free': all(
             card.get('outcome_probability') is None for card in counterfactuals
         ),
+        'support_bridge_present': bool(bridge),
+        'support_bridge_traceable': bool(bridge.get('reasons')) and all(
+            item.get('signal_id') and item.get('explanation')
+            for item in bridge.get('reasons', [])
+        ),
+        'support_bridge_probability_free': bridge.get('outcome_probability') is None,
         'citation_issues': dossier.generation_audit.get('issues', []),
         'repair_attempts': dossier.generation_audit.get('repair_attempts', 0),
         'legal_correctness_verified': False,
-        'explanation': '检查步骤字段、事实引用、引文真实性和证据沙盘是否禁用胜率；不代表法律结论正确率或胜诉概率。'}
+        'explanation': '检查步骤字段、事实引用、引文真实性、证据沙盘是否禁用胜率，以及人工接力建议是否有可追踪信号；不代表法律结论正确率或胜诉概率。'}

@@ -192,10 +192,12 @@ def test_export_contains_chinese_steps_sources_and_never_serializes_secret_paths
     text = '\n'.join(p.text for p in Document(BytesIO(docx)).paragraphs)
     assert '具体行动步骤' in text and '何时' in text
     assert '证据反事实沙盘' in text and '如果材料冲突' in text
+    assert '自助—人工接力通行证' in text and '安全转交' in text
     with pymupdf.open(stream=pdf, filetype='pdf') as document:
         pdf_text = ''.join(p.get_text() for p in document)
         assert len(document) >= 2 and '办理' in pdf_text and '深圳' in pdf_text
         assert '证据反事实沙盘' in pdf_text and '如果材料支持' in pdf_text
+        assert '自助—人工接力通行证' in pdf_text and '完成标志' in pdf_text
         assert any(page.get_links() for page in document), 'Official source and service links must remain clickable in PDF'
     assert '.local_data' not in text and 'API_KEY' not in text
     with pytest.raises(ValueError):

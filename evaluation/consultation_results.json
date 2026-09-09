@@ -1,19 +1,23 @@
 {
   "case_count": 18,
   "corpus_size": 79,
-  "limitations": "人工编写的公开小型回归集；领域标签已知。仅测检索命中，不测法律判断正确率，不是盲测，也不证明优于其他系统。",
+  "limitations": "人工编写的公开小型回归集；检索指标使用已知领域标签，路由指标才从原始问题识别。仅测路由和检索命中，不测法律判断正确率，不是盲测，也不证明优于其他系统。",
+  "routing": {
+    "accuracy": 1.0,
+    "errors": []
+  },
   "metrics": {
     "single_query_bm25": {
       "hit_at_5": 1.0,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.8633
+      "latency_ms": 4.9511
     },
     "multi_query_rrf": {
       "hit_at_5": 1.0,
       "recall_at_5": 0.9722,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.9894
+      "latency_ms": 10.1167
     }
   },
   "cases": [
@@ -24,7 +28,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 2.6,
+      "latency_ms": 7.83,
       "retrieved": [
         "civil_676",
         "civil_667",
@@ -44,7 +48,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.38,
+      "latency_ms": 12.27,
       "retrieved": [
         "civil_676",
         "civil_667",
@@ -64,7 +68,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.72,
+      "latency_ms": 4.86,
       "retrieved": [
         "civil_679",
         "civil_667",
@@ -83,7 +87,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.7,
+      "latency_ms": 11.63,
       "retrieved": [
         "civil_679",
         "civil_667",
@@ -102,7 +106,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 2.05,
+      "latency_ms": 4.94,
       "retrieved": [
         "civil_733",
         "civil_710",
@@ -120,7 +124,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.42,
+      "latency_ms": 10.36,
       "retrieved": [
         "civil_733",
         "civil_710",
@@ -139,7 +143,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.72,
+      "latency_ms": 3.92,
       "retrieved": [
         "consumer_53",
         "consumer_26",
@@ -158,7 +162,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.14,
+      "latency_ms": 8.62,
       "retrieved": [
         "consumer_53",
         "consumer_44",
@@ -177,7 +181,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.89,
+      "latency_ms": 4.93,
       "retrieved": [
         "consumer_26",
         "civil_497",
@@ -197,7 +201,7 @@
       "hit_at_5": true,
       "recall_at_5": 0.5,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.4,
+      "latency_ms": 10.06,
       "retrieved": [
         "consumer_26",
         "consumer_53",
@@ -217,7 +221,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.88,
+      "latency_ms": 4.66,
       "retrieved": [
         "civil_577",
         "civil_584",
@@ -236,7 +240,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.35,
+      "latency_ms": 9.51,
       "retrieved": [
         "civil_577",
         "civil_584",
@@ -255,7 +259,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.92,
+      "latency_ms": 4.2,
       "retrieved": [
         "civil_1079",
         "civil_1077",
@@ -274,7 +278,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.89,
+      "latency_ms": 11.18,
       "retrieved": [
         "civil_1079",
         "civil_1077",
@@ -293,7 +297,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.54,
+      "latency_ms": 4.69,
       "retrieved": [
         "civil_1123",
         "civil_1133",
@@ -310,7 +314,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.37,
+      "latency_ms": 8.88,
       "retrieved": [
         "civil_1123",
         "civil_1133",
@@ -329,7 +333,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.68,
+      "latency_ms": 6.47,
       "retrieved": [
         "civil_1213",
         "civil_1208",
@@ -347,7 +351,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.92,
+      "latency_ms": 9.58,
       "retrieved": [
         "civil_1213",
         "civil_1208",
@@ -366,7 +370,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.58,
+      "latency_ms": 5.51,
       "retrieved": [
         "civil_1225",
         "civil_1222",
@@ -386,7 +390,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.48,
+      "latency_ms": 8.65,
       "retrieved": [
         "civil_1225",
         "civil_1222",
@@ -406,7 +410,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.53,
+      "latency_ms": 3.96,
       "retrieved": [
         "civil_1032"
       ],
@@ -421,7 +425,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.94,
+      "latency_ms": 11.47,
       "retrieved": [
         "civil_1032",
         "fees_13",
@@ -440,7 +444,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.52,
+      "latency_ms": 3.96,
       "retrieved": [
         "civil_1185",
         "fees_13",
@@ -457,7 +461,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.49,
+      "latency_ms": 9.24,
       "retrieved": [
         "civil_1185",
         "fees_13",
@@ -476,7 +480,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.53,
+      "latency_ms": 4.28,
       "retrieved": [
         "company_57",
         "company_54",
@@ -494,7 +498,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.2,
+      "latency_ms": 10.14,
       "retrieved": [
         "company_57",
         "company_54",
@@ -513,7 +517,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.87,
+      "latency_ms": 4.4,
       "retrieved": [
         "criminal_procedure_34",
         "criminal_procedure_39",
@@ -532,7 +536,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.6,
+      "latency_ms": 10.63,
       "retrieved": [
         "criminal_procedure_34",
         "criminal_procedure_39",
@@ -551,7 +555,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 2.09,
+      "latency_ms": 4.43,
       "retrieved": [
         "administrative_23",
         "administrative_27",
@@ -570,7 +574,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 6.48,
+      "latency_ms": 11.23,
       "retrieved": [
         "administrative_23",
         "administrative_27",
@@ -589,7 +593,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 2.52,
+      "latency_ms": 4.45,
       "retrieved": [
         "civil_procedure_250",
         "civil_procedure_235"
@@ -605,7 +609,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.37,
+      "latency_ms": 9.5,
       "retrieved": [
         "civil_procedure_250",
         "civil_procedure_235"
@@ -621,7 +625,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 2.15,
+      "latency_ms": 6.1,
       "retrieved": [
         "labor_procedure_21",
         "labor_procedure_53",
@@ -640,7 +644,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 5.4,
+      "latency_ms": 9.53,
       "retrieved": [
         "labor_procedure_21",
         "labor_procedure_53",
@@ -659,7 +663,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 1.75,
+      "latency_ms": 5.53,
       "retrieved": [
         "labor_procedure_27",
         "labor_procedure_2",
@@ -678,7 +682,7 @@
       "hit_at_5": true,
       "recall_at_5": 1.0,
       "reciprocal_rank": 1.0,
-      "latency_ms": 4.28,
+      "latency_ms": 9.62,
       "retrieved": [
         "labor_procedure_27",
         "labor_procedure_2",

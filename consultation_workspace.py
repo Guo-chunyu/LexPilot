@@ -78,6 +78,35 @@ def render_plan_sections(state) -> None:
                     st.write('何时停止等待：' + route['stop_condition'])
             for line in strategy['benefit_worksheet']:
                 st.markdown('- ' + line)
+    bridge = report.get('support_bridge', {})
+    if bridge:
+        st.markdown('#### 自助—人工接力通行证')
+        message = bridge['label'] + '。' + bridge['explanation']
+        renderer = st.warning if bridge.get('human_review_recommended') else st.info
+        renderer(message, icon=':material/support_agent:')
+        with st.expander('查看接力原因和可转交摘要', icon=':material/transfer_within_a_station:'):
+            for item in bridge.get('reasons', []):
+                st.markdown('- ' + item['explanation'])
+            st.write('建议联系：' + bridge['contact_target'])
+            st.write('联系时可直接说明：' + bridge['contact_script'])
+            if bridge.get('fact_snapshot'):
+                st.markdown('**已整理的事实快照**')
+                for item in bridge['fact_snapshot']:
+                    st.write(f'{item["name"]}：{item["value"]}')
+                    st.caption(item['status'])
+            if bridge.get('open_questions'):
+                st.markdown('**转交后优先核对**')
+                for item in bridge['open_questions']:
+                    st.write(item['question'])
+                    st.caption(item['status'])
+            ready = '、'.join(bridge['ready_materials']) or '暂未记录'
+            missing = '、'.join(bridge['missing_materials']) or '当前清单未显示缺口'
+            st.write('已有或自述持有材料：' + ready)
+            st.write('仍缺材料：' + missing)
+            st.markdown('**安全转交**')
+            for item in bridge.get('privacy_checklist', []):
+                st.markdown('- ' + item)
+            st.caption('完成标志：' + bridge['completion_signal'])
     guide = report.get('service_guide', {})
     if guide and guide.get('online_channels'):
         st.markdown('#### 办理入口与机构位置')

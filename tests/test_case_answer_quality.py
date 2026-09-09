@@ -41,6 +41,22 @@ def test_only_transfer_without_iou_keeps_positive_and_negative_evidence_separate
     assert not any('保存借条原件' in line for line in state.final_report['action_plan'][1]['instructions'])
 
 
+def test_rejected_debt_request_keeps_available_evidence_and_skips_repeat_negotiation():
+    result = LexPilotEngine().process(
+        '朋友借钱到期不还，我有转账记录，没有借条，已经催款三次，对方拒绝还钱，请给我具体方案。'
+    )
+    state = result['case_state']
+    tasks = {task.name: task for task in state.consultation.evidence_tasks}
+
+    assert state.case_type == 'debt'
+    assert tasks['借条'].status == '暂无法提供'
+    assert tasks['转账记录'].status == '用户称有，尚未上传'
+    assert tasks['催款记录'].status == '用户称有，尚未上传'
+    assert state.final_report['strategy_comparison']['recommended_route'] != 'negotiation'
+    assert '协商已经受阻' in result['reply']
+    assert '接下来最需要确认的是' in result['reply']
+
+
 def test_evidence_denial_after_material_name_is_not_treated_as_possession():
     state = LexPilotEngine().process(
         '朋友借钱不还，借条我没有，只有转账记录，请给我方案。'

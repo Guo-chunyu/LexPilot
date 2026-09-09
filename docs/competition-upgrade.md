@@ -29,12 +29,31 @@ LexPilot 因此增加面向普通咨询者的“证据反事实沙盘”。它�
 
 这一设计把“AI 给答案”改成“用户能看懂材料变化如何影响行动”，重点解决静态证据清单缺少策略反馈、普通用户容易把单份材料等同于胜诉、以及系统只展示有利路径而忽略冲突材料的问题。
 
+## 原创组合：自助—人工接力通行证
+
+英国法院数字支持服务 2026 年评估显示，受助用户的需求并不只是一种：85% 寻求数字操作支持，同时有 74% 寻求法律支持、69% 寻求程序支持；20% 的用户数字能力较低，服务结束后仍有 20% 不清楚下一步。英国司法部的法律支持综述也指出，数字自助虽然适合可扩展的早期支持，但效果受用户能力、数字包容和案件复杂度制约。英国在线程序规则委员会进一步把“保护和包容弱势用户、支持系统之间顺畅转移”列为数字司法标准方向。
+
+- [英国法院与司法部：National Digital Support Service 评估摘要](https://www.gov.uk/government/publications/evaluation-of-the-national-digital-support-service/national-digital-support-service-findings-accessible-version-of-infographic)
+- [英国司法部：法律支持服务有效性综述](https://www.gov.uk/government/publications/evidence-on-the-effectiveness-of-legal-support-literature-review)
+- [英国在线程序规则委员会：数字司法下一步](https://www.gov.uk/government/news/statement-on-future-priorities-and-next-steps)
+
+LexPilot 因此不把“留在聊天框里”设为默认成功标准，而是加入可逆的接力机制：
+
+1. 仅根据已经记录的紧急提示、正式程序、涉外因素、事实冲突、领域复杂度及用户明确表达的协助需要选择接力强度，不推断年龄、残障或经济状况。
+2. 每个建议保留触发信号和自然语言原因，可检查为什么是继续自助、协助自助、优先人工核对或立即接力。
+3. 自动形成事实快照、未决问题、已有与缺失材料、联系话术、前两项准备动作及完成标志，减少跨渠道重新叙述。
+4. 转交前提示最小披露、遮盖无关身份和账户信息，并强调系统不会自行把附件发送给任何外部机构。
+5. 同一结构进入网页、API、Markdown、Word 和 PDF；质量审计检查触发信号是否可追踪及概率字段是否为空。
+
+这不是对用户能力作隐性评分，也不是自动分配律师。它把“何时停止依赖 AI、怎样把已经做的工作安全交给人”变成产品的一等功能。
+
 ## 技术闭环
 
 ```mermaid
 flowchart TD
     U[咨询者描述与合法持有的材料] --> F[事实来源、身份、地区、程序与约束]
     F --> X[证据反事实沙盘：支持 / 冲突 / 拿不到]
+    F --> H[自助—人工接力：透明触发 / 最小摘要 / 隐私清单]
     F --> K[SQLite FTS5：中文 BM25 + 加权多查询 RRF]
     K --> V[领域与版本条件筛选，官方正文与哈希]
     V --> G[结构化个案分析与条件结论]
@@ -45,11 +64,12 @@ flowchart TD
     C -->|仍不足| B[保留实用基础清单并标明缺口]
     B --> P
     X --> P
+    H --> P
     P --> S[官方办理入口 + 可选真实机构查询]
     S --> D[同一报告生成页面、Word、PDF、Markdown]
 ```
 
-实现位置：`backend/legal_domain/consultation/knowledge.py`、`semantic.py`、`grounding.py`、`perspective.py`、`planning.py`、`counterfactual.py`、`services.py`、`exports.py`。Web、离线执行器和 LangGraph 使用同一咨询处理函数；API 导出读取当前案件的最终报告。
+实现位置：`backend/legal_domain/consultation/knowledge.py`、`semantic.py`、`grounding.py`、`perspective.py`、`planning.py`、`counterfactual.py`、`support_bridge.py`、`services.py`、`exports.py`。Web、离线执行器和 LangGraph 使用同一咨询处理函数；API 导出读取当前案件的最终报告。
 
 ## 研究方法与实现边界
 
@@ -95,7 +115,7 @@ SQLite 使用 FTS5 与中文双字切分，不需启动额外数据库服务。�
 .venv\Scripts\python.exe scripts/evaluate_consultation.py
 ```
 
-2026-09-08 的全量回归为 **136 项通过**。新增测试覆盖中文检索、版本筛选、索引替换、事实和原文引用错误、一次修复、身份方向、已协商失败的路径、无材料的替代取证、外部接口脱敏与降级、中文 Word/PDF 链接和 API 下载状态。
+2026-09-09 加入证据反事实、接力机制与原始问题路由回归后的全量测试为 **183 项通过**。新增测试覆盖普通自助、明确协助需要、正式程序、事实冲突、紧急接力、触发信号审计、禁止结果概率、网页和导出一致性，以及“有转账、没有借条、催款被拒”不会发生跨材料否定或重复协商。
 
 检索消融使用 `eval/consultation_benchmark.json` 的 18 个手写场景，覆盖 15 个专门领域。结果保存在 `evaluation/consultation_results.json`：
 
@@ -116,6 +136,7 @@ SQLite 使用 FTS5 与中文双字切分，不需启动额外数据库服务。�
 4. 在新案件中以“我是房东”咨询欠租，展示立场、话术和证据方向变化。
 5. 下载 Word 和 PDF，打开核对完整行动方案、官方链接和条文附录。
 6. 展开“证据反事实沙盘”，以转账记录或交房视频演示：材料支持时如何进入证据目录、发生冲突时为什么不能隐藏不利内容、拿不到时怎样切换替代取证；指出概率字段固定为空。
+7. 展开“自助—人工接力通行证”，先展示普通借贷案件可以继续自助；再输入“已经收到法院传票，我看不懂线上操作，需要人帮忙”，展示接力强度、触发原因、事实快照、未决问题、材料缺口和联系话术同步变化。
 
 API：先通过 `/chat` 在同一 `thread_id` 生成方案，再请求 `/cases/{thread_id}/report.docx` 或 `/cases/{thread_id}/report.pdf`。不存在案件返回 404，尚无报告返回 409，不支持的格式返回 400。
 

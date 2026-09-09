@@ -244,8 +244,23 @@ OUTSIDE_MAINLAND = ('香港', '澳门', '台湾', '美国', '加州', '纽约', 
 CORRECTION_MARKERS = ('而是', '其实是', '实际是', '准确说是', '应该是', '应当是', '更正为', '更正成', '说错了')
 
 
+DOMAIN_ROUTE_HINTS = {
+    'criminal': ('\u4fa6\u67e5\u673a\u5173', '\u8fa9\u62a4\u4eba', '\u5ba1\u67e5\u8d77\u8bc9'),
+    'intellectual_property': ('\u77e5\u8bc6\u4ea7\u6743', '\u4fb5\u5bb3\u77e5\u8bc6\u4ea7\u6743'),
+    'enforcement': ('\u7533\u8bf7\u6267\u884c', '\u6267\u884c\u7acb\u6848', '\u751f\u6548\u5224\u51b3', '\u6267\u884c\u6cd5\u9662'),
+}
+
+
 def identify_domains(text: str) -> list[str]:
-    scores = [(sum(len(word) for word in p.keywords if word in text), key) for key, p in PROFILES.items() if key != 'general']
+    scores = [
+        (
+            sum(len(word) for word in p.keywords if word in text)
+            + sum(len(word) for word in DOMAIN_ROUTE_HINTS.get(key, ()) if word in text),
+            key,
+        )
+        for key, p in PROFILES.items()
+        if key != 'general'
+    ]
     scores.sort(key=lambda pair: -pair[0])
     matches = [key for score, key in scores if score > 0]
     # A special procedure takes precedence over background words such as “合同”.

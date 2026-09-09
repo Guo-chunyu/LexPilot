@@ -12,6 +12,7 @@ from .services import service_guide
 from .grounding import audit_report
 from .perspective import case_profile
 from .counterfactual import build_evidence_counterfactuals
+from .support_bridge import build_support_bridge
 
 
 def _evidence_instruction(task) -> str:
@@ -135,10 +136,17 @@ def build_consultation_report(state) -> dict:
 def intelligence_sections(state, report) -> dict:
     dossier = state.consultation
     strategy = compare_routes(state)
+    guide = service_guide(state)
     sandbox = build_evidence_counterfactuals(state, strategy)
-    audit_input = {**report, 'evidence_counterfactuals': sandbox}
-    return {'strategy_comparison': strategy, 'service_guide': service_guide(state),
+    bridge = build_support_bridge(state, report, guide)
+    audit_input = {
+        **report,
         'evidence_counterfactuals': sandbox,
+        'support_bridge': bridge,
+    }
+    return {'strategy_comparison': strategy, 'service_guide': guide,
+        'evidence_counterfactuals': sandbox,
+        'support_bridge': bridge,
         'grounded_claims': dossier.grounded_claims, 'knowledge_passages': dossier.knowledge_passages,
         'retrieval_audit': dossier.retrieval_audit, 'quality_audit': audit_report(audit_input, dossier)}
 
@@ -156,6 +164,24 @@ def report_markdown(state) -> str:
             if route['eligible']:
                 lines += ['', f'### {route["name"]}' + (' 建议优先' if route['recommended'] else ''), '', route['reason'], '', f'成本：{route["cost"]}', '', f'何时转下一步：{route["stop_condition"]}']
         lines += ['', '## 到手金额与投入核对', '', *['- ' + s for s in strategy['benefit_worksheet']]]
+    bridge = report.get('support_bridge', {})
+    if bridge:
+        lines += ['', '## 自助—人工接力通行证', '', f'建议接力强度：{bridge["label"]}', '',
+            bridge['explanation'], '', '### 为什么这样建议', '',
+            *[f'- {item["explanation"]}' for item in bridge.get('reasons', [])],
+            '', f'建议联系：{bridge["contact_target"]}', '', '联系时可直接说明：', '',
+            bridge['contact_script']]
+        if bridge.get('fact_snapshot'):
+            lines += ['', '### 已整理的事实快照', '',
+                *[f'- {item["name"]}：{item["value"]}（{item["status"]}）' for item in bridge['fact_snapshot']]]
+        if bridge.get('open_questions'):
+            lines += ['', '### 转交时仍需核对', '',
+                *[f'- {item["question"]}（{item["status"]}）' for item in bridge['open_questions']]]
+        lines += ['', '### 材料接力', '',
+            '已有或自述持有：' + ('、'.join(bridge.get('ready_materials', [])) or '尚未记录'), '',
+            '仍缺：' + ('、'.join(bridge.get('missing_materials', [])) or '当前清单未显示缺口'), '',
+            '### 安全转交', '', *[f'- {item}' for item in bridge.get('privacy_checklist', [])],
+            '', f'完成标志：{bridge["completion_signal"]}', '', bridge['data_scope']]
     for title, values in [('主要问题', report.get('legal_issues', [])), ('对方可能怎么说及如何回应', report.get('opponent_arguments', [])), ('费用与投入', report.get('costs', []))]:
         if values:
             lines += ['', f'## {title}', '', *[f'- {v}' for v in values]]

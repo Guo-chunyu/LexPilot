@@ -37,6 +37,7 @@ class FinalLegalReport(BaseModel):
     retrieval_audit: dict = Field(default_factory=dict)
     quality_audit: dict = Field(default_factory=dict)
     evidence_counterfactuals: dict = Field(default_factory=dict)
+    support_bridge: dict = Field(default_factory=dict)
 
 
 def build_final_report(state: CaseState) -> FinalLegalReport:
