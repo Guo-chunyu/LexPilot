@@ -275,8 +275,15 @@ def _merge_extracted_text(state: CaseState, record: UploadedEvidenceFile, text: 
     if state.case_type != "labor_dispute":
         from backend.legal_domain.consultation.intake import ingest_text, LABELS
         before = dict(state.facts)
+        conflict_start = len(state.consultation.conflicts)
         ingest_text(text, state, source_type="uploaded_file", source_ref=record.original_name, contextual=False)
-        record.extracted_facts = [f"{LABELS.get(key, key)}：{value}" for key, value in state.facts.items() if before.get(key) != value]
+        changed = [f"{LABELS.get(key, key)}：{value}" for key, value in state.facts.items() if before.get(key) != value]
+        rejected = [
+            f"{item['fact']}：{item['current']}（与当前记录不一致，未自动覆盖）"
+            for item in state.consultation.conflicts[conflict_start:]
+            if item.get('source_ref') == record.original_name and '未自动覆盖' in item.get('status', '')
+        ]
+        record.extracted_facts = list(dict.fromkeys([*changed, *rejected]))
         return
     provenance_start = len(state.fact_provenance)
     if "劳动合同" in record.evidence_names:

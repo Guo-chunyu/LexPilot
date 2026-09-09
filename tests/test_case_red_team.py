@@ -221,4 +221,8 @@ def test_conflicting_uploaded_amount_does_not_silently_replace_user_fact(tmp_pat
         if item.fact_id == 'amount' and item.source_type == 'uploaded_file'
     )
     assert source.accepted is False
+    extracted = state.uploaded_files[0].extracted_facts
+    assert any('金额陈述' in item and '未自动覆盖' in item for item in extracted)
+    assert '从正文识别' in second.json()['reply']
+    assert '未自动覆盖' in second.json()['reply']
     assert '4万元' in second.json()['final_report']['case_summary']
