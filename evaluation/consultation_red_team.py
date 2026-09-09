@@ -211,6 +211,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_two_variants(),
         *generate_round_three_variants(),
         *generate_round_four_variants(),
+        *generate_round_five_variants(),
     ]
 
 

@@ -42,6 +42,8 @@ UNKNOWN_REPAYMENT_TERM = '期限仍无法确定'
 FAMILY_DOUBLE_NEGATIVE_SAFETY = '准备离婚，不是没有人身安全风险，请给我紧急方案。'
 LABOR_EMPLOYER_AMOUNT_START = '我是公司负责人，员工申请仲裁称欠薪5万元。'
 LABOR_EMPLOYER_AMOUNT_CORRECTION = '更正一下，员工请求金额实际是4万元，请按单位立场给我答辩方案。'
+CONSUMER_EXHAUSTED_START = '健身房关门不退款，我只有付款截图，没有其他材料，请先给我方案。'
+CONSUMER_EVIDENCE_CORRECTION = '更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。'
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
@@ -119,6 +121,46 @@ def test_employer_wage_arbitration_routes_through_labor_streamlit():
     at.chat_input[0].set_value(LABOR_EMPLOYER_AMOUNT_START).run(timeout=20)
     at.chat_input[0].set_value(LABOR_EMPLOYER_AMOUNT_CORRECTION).run(timeout=20)
     _assert_employer_wage_case_stays_in_labor_domain(at.session_state['case_state'])
+
+
+def _assert_new_consumer_evidence_reopens_collection(state, reply: str) -> None:
+    assert state.case_type == 'consumer'
+    assert state.evidence_collection_exhausted is False
+    statuses = {item.name: item.status for item in state.consultation.evidence_tasks}
+    assert statuses['订单与消费合同'] == '用户称有，尚未上传'
+    assert statuses['售后沟通记录'] == '用户称有，尚未上传'
+    assert '现有材料就按这些整理' not in reply
+
+
+def test_new_consumer_evidence_reopens_collection_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(CONSUMER_EXHAUSTED_START)
+    second = engine.process(CONSUMER_EVIDENCE_CORRECTION, first['case_state'])
+    _assert_new_consumer_evidence_reopens_collection(second['case_state'], second['reply'])
+
+
+def test_new_consumer_evidence_reopens_collection_in_api():
+    thread_id = 'red_team_consumer_evidence_reopened'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': CONSUMER_EXHAUSTED_START})
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': CONSUMER_EVIDENCE_CORRECTION,
+        })
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    _assert_new_consumer_evidence_reopens_collection(
+        api_module.CaseState.from_value(response.json()['case_state']), response.json()['reply']
+    )
+
+
+def test_new_consumer_evidence_reopens_collection_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(CONSUMER_EXHAUSTED_START).run(timeout=20)
+    at.chat_input[0].set_value(CONSUMER_EVIDENCE_CORRECTION).run(timeout=20)
+    _assert_new_consumer_evidence_reopens_collection(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
 
 
 def _assert_no_invented_action_dates(state, reply: str) -> None:

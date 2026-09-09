@@ -214,7 +214,7 @@
       "round_id": "round-005-state-reversals",
       "seed": 20260913,
       "generator": "generate_round_five_variants",
-      "status": "in_progress",
+      "status": "completed",
       "selected_case_ids": [
         "housing_tenant_unfiled",
         "labor_employer_amount_correction",
@@ -240,15 +240,28 @@
           "fix_files": ["backend/legal_domain/consultation/profiles.py"],
           "verification": "3 path tests and 261 full tests passed",
           "commit_subject": "Route wage arbitration language to labor"
+        },
+        {
+          "id": "new_consumer_evidence_not_mapped_to_canonical_tasks",
+          "before_fix": "engine, API and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "3 path tests, 9 related tests and 269 full tests passed",
+          "commit_subject": "Reopen collection for newly found evidence"
         }
       ],
-      "pending_root_causes": [
-        "材料耗尽状态在用户明确找到新材料后没有撤销"
+      "pending_root_causes": [],
+      "root_cause": "两个独立根因：劳动领域关键词漏识别欠薪/劳动仲裁；消费材料别名缺失使新增证据未触发耗尽状态恢复。",
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py",
+        "backend/legal_domain/consultation/intake.py"
       ],
-      "root_cause": "待逐项修复",
-      "fix_files": ["backend/legal_domain/consultation/profiles.py"],
-      "verification": {},
-      "commit_subject": ""
+      "verification": {
+        "before_fix": "2 failed, 3 passed",
+        "selected_cases_after_fix": "5 passed",
+        "related_suite": "9 passed",
+        "full_suite": "269 passed, 1 warning"
+      },
+      "commit_subject": "Reopen collection for newly found evidence"
     }
   ]
 }
