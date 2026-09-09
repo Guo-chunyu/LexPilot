@@ -206,7 +206,12 @@ def generate_red_team_cases() -> list[RedTeamCase]:
     ]
     variants = {case.case_id: case for case in generate_automatic_variants()}
     cases = [variants.get(case.case_id, case) for case in cases]
-    return [*cases, *generate_round_two_variants(), *generate_round_three_variants()]
+    return [
+        *cases,
+        *generate_round_two_variants(),
+        *generate_round_three_variants(),
+        *generate_round_four_variants(),
+    ]
 
 
 def generate_automatic_variants(seed: int = 20260909) -> list[RedTeamCase]:
@@ -329,6 +334,48 @@ def generate_round_three_variants(seed: int = 20260911) -> list[RedTeamCase]:
             ('朋友欠我4万元，不是尚未起诉，我已经起诉并拿到案号，请给我方案。',),
             'debt', 'creditor', expected_facts=(('procedure', '已经起诉'),),
             expected_route='formal', origin='auto_variant',
+        ),
+    ]
+
+
+def generate_round_four_variants(seed: int = 20260912) -> list[RedTeamCase]:
+    """Generate five unseen cross-domain correction and negation variants."""
+    randomizer = Random(seed)
+    medical_material = randomizer.choice(('病历复印件', '出院记录'))
+    return [
+        RedTeamCase(
+            'family_double_negative_safety', ('family', 'negation', 'urgent'),
+            ('准备离婚，不是没有人身安全风险，请给我紧急方案。',),
+            'family', expected_urgent=True, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'medical_nonexclusive_inventory', ('medical', 'negation', 'evidence_not_exhausted'),
+            (f'手术后出现后遗症，不是只有收费票据，我还有{medical_material}和影像，稍后上传，请给我方案。',),
+            'medical', expected_exhausted=False, origin='auto_variant',
+        ),
+        RedTeamCase(
+            'enforcement_filing_retraction', ('enforcement', 'procedure_progress', 'fact_correction'),
+            (
+                '生效判决履行期已过，我已经申请执行并拿到案号，请先给我方案。',
+                '更正一下，实际尚未申请执行，也没有案号，请按当前情况更新方案。',
+            ),
+            'enforcement', expected_facts=(('procedure', '尚未申请执行'),),
+            expected_route='formal', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'labor_employer_unfiled', ('labor_dispute', 'negation', 'opposing_role', 'procedure_progress'),
+            ('我不是员工，是公司负责人；员工称欠薪但还没有申请劳动仲裁，公司也没收到通知，请给答辩准备方案。',),
+            'labor_dispute', 'employer', expected_facts=(('procedure', '还没有申请'),),
+            expected_route='negotiation', origin='auto_variant',
+        ),
+        RedTeamCase(
+            'housing_landlord_amount_correction', ('housing', 'opposing_role', 'fact_correction'),
+            (
+                '我是房东，租客退房后的押金是6000元，房屋有损坏。',
+                '更正一下，押金实际是4500元，已经退了1000元，目前争议3500元，请给我方案。',
+            ),
+            'housing', 'landlord', expected_facts=(('amount', '3500元'),),
+            origin='auto_variant',
         ),
     ]
 

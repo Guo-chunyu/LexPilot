@@ -179,6 +179,36 @@
         "full_suite": "232 passed, 1 warning"
       },
       "commit_subject": "Respect negated exclusive evidence statements"
+    },
+    {
+      "round_id": "round-004-cross-domain-corrections",
+      "seed": 20260912,
+      "generator": "generate_round_four_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "family_double_negative_safety",
+        "medical_nonexclusive_inventory",
+        "enforcement_filing_retraction",
+        "labor_employer_unfiled",
+        "housing_landlord_amount_correction"
+      ],
+      "anonymous_cases": [
+        {"case_id": "family_double_negative_safety", "messages": ["准备离婚，不是没有人身安全风险，请给我紧急方案。"]},
+        {"case_id": "medical_nonexclusive_inventory", "messages": ["手术后出现后遗症，不是只有收费票据，我还有病历复印件和影像，稍后上传，请给我方案。"]},
+        {"case_id": "enforcement_filing_retraction", "messages": ["生效判决履行期已过，我已经申请执行并拿到案号，请先给我方案。", "更正一下，实际尚未申请执行，也没有案号，请按当前情况更新方案。"]},
+        {"case_id": "labor_employer_unfiled", "messages": ["我不是员工，是公司负责人；员工称欠薪但还没有申请劳动仲裁，公司也没收到通知，请给答辩准备方案。"]},
+        {"case_id": "housing_landlord_amount_correction", "messages": ["我是房东，租客退房后的押金是6000元，房屋有损坏。", "更正一下，押金实际是4500元，已经退了1000元，目前争议3500元，请给我方案。"]}
+      ],
+      "failures_before_fix": ["family_double_negative_safety"],
+      "root_cause": "紧急信号检测只识别离关键词最近的一层否定，把“不是没有人身安全风险”的双重否定误当成无风险。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "1 failed, 4 passed; engine, API and Streamlit regression: 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "related_suite": "9 passed",
+        "full_suite": "258 passed, 1 warning"
+      },
+      "commit_subject": "Handle double-negative urgent signals"
     }
   ]
 }

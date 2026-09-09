@@ -361,7 +361,12 @@ def _signal_states(message: str, pattern: str) -> list[bool]:
     for match in re.finditer(pattern, message):
         clause_start = max(message.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
         prefix = message[clause_start:match.start()]
-        negated = bool(re.search(
+        double_negative = bool(re.search(
+            r'(?:不是|并非|并不是|并不)\s*'
+            r'(?:没有|并未|不存在|无)\s*(?:被)?$',
+            prefix,
+        ))
+        negated = not double_negative and bool(re.search(
             r'(?:(?:没有|并未|未曾|不是|并非|并不|无需|不需|不存在|尚未|未被|无须)'
             r'[^，,。；;但]{0,6}|[不非无未])$',
             prefix,
