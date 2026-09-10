@@ -24,6 +24,7 @@ from evaluation.consultation_red_team import (
     generate_round_six_variants,
     generate_round_seven_variants,
     generate_round_eight_variants,
+    generate_round_nine_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -57,6 +58,8 @@ DEBT_GIFT_DEFENSE_FOLLOWUP = '补充一下，对方刚刚回复说这笔钱是�
 DEBT_FIRST_TURN_OPENING = '没有借条不等于可以直接下结论。先把每笔转账的时间、金额、收款人'
 CONSUMER_TRANSFER_START = '健身房停业，会员卡余额3000元，商家不退款，请先给我方案。'
 CONSUMER_TRANSFER_FOLLOWUP = '商家刚回复说只能把会员卡转给别人使用，不能退款，我应该怎么办？'
+CUSTOMER_SERVICE_START = '我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。'
+CUSTOMER_SERVICE_FOLLOWUP = '客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -320,6 +323,60 @@ def test_counterparty_update_is_grounded_in_streamlit():
     at.chat_input[0].set_value(CONSUMER_TRANSFER_FOLLOWUP).run(timeout=20)
     state = at.session_state['case_state']
     _assert_counterparty_update_is_grounded(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
+
+
+def _assert_counterparty_alias_update_is_grounded(state, reply: str, exported: str = '') -> None:
+    assert state.case_type == 'consumer'
+    assert '2800元' in state.facts.get('amount', '')
+    assert '只能补发代金券' in state.facts.get('details', '')
+    assert '**针对本轮追问**' in reply
+    assert '只能补发代金券' in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    if exported:
+        assert '只能补发代金券' in exported
+
+
+def test_counterparty_alias_update_is_grounded_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(CUSTOMER_SERVICE_START)
+    second = engine.process(CUSTOMER_SERVICE_FOLLOWUP, first['case_state'])
+    _assert_counterparty_alias_update_is_grounded(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_counterparty_alias_update_is_grounded_in_api_and_export():
+    thread_id = 'red_team_consumer_counterparty_alias'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': CUSTOMER_SERVICE_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': CUSTOMER_SERVICE_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_counterparty_alias_update_is_grounded(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_counterparty_alias_update_is_grounded_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(CUSTOMER_SERVICE_START).run(timeout=20)
+    at.chat_input[0].set_value(CUSTOMER_SERVICE_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_counterparty_alias_update_is_grounded(
         state,
         at.session_state['messages'][-1]['content'],
         report_markdown(state),
@@ -775,6 +832,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_six_variants': generate_round_six_variants,
         'generate_round_seven_variants': generate_round_seven_variants,
         'generate_round_eight_variants': generate_round_eight_variants,
+        'generate_round_nine_variants': generate_round_nine_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 

@@ -3,8 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "running",
-  "pause_reason": "",
+  "loop_status": "paused",
+  "pause_reason": "按用户要求仅完成第9轮后暂停",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -470,6 +470,57 @@
         "full_suite": "308 passed, 1 warning"
       },
       "commit_subject": "Ground later replies in counterparty updates"
+    },
+    {
+      "round_id": "round-009-counterparty-aliases",
+      "seed": 20260917,
+      "generator": "generate_round_nine_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "housing_agent_service_fee_followup",
+        "consumer_customer_service_voucher_followup",
+        "administrative_case_officer_basis_followup",
+        "traffic_adjuster_partial_repair_followup",
+        "ip_store_operator_supplier_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "housing_agent_service_fee_followup", "messages": ["我是租客，退租后还有5000元押金由中介代管，请先给我方案。", "中介刚回复说要先扣800元服务费才退余款，我该怎么回应？"]},
+        {"case_id": "consumer_customer_service_voucher_followup", "messages": ["我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。", "客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？"]},
+        {"case_id": "administrative_case_officer_basis_followup", "messages": ["我收到行政处罚决定，认为认定事实不完整，请先给我方案。", "承办人员刚回复说只能按原决定处理，也不提供进一步说明，我该怎么回应？"]},
+        {"case_id": "traffic_adjuster_partial_repair_followup", "messages": ["交通事故后车辆已经维修，我有事故认定书和维修票据，请先给我方案。", "保险理赔员刚回复说只认可一半修理费，其余不赔，我该怎么回应？"]},
+        {"case_id": "ip_store_operator_supplier_followup", "messages": ["我的摄影作品被网店擅自用于商品页面，我有原始文件，请先给我方案。", "店铺经营者刚回复说图片来自供货商，不同意删除或赔偿，我该怎么回应？"]}
+      ],
+      "failures_before_fix": [
+        "housing_agent_service_fee_followup",
+        "consumer_customer_service_voucher_followup",
+        "administrative_case_officer_basis_followup",
+        "traffic_adjuster_partial_repair_followup",
+        "ip_store_operator_supplier_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "counterparty_representative_aliases_not_recognized",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "verification": "5 generated cases, 3 delivery-path regressions, 9 related tests and 316 full tests passed",
+          "commit_subject": "Recognize counterparty representative aliases"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "通用对方更新提取仅覆盖房东、商家、医院、供应商等直接主体，遗漏中介、客服、承办人员、保险理赔员和店铺经营者等常见经办或代理称谓，导致新主张未进入 details；其中的新金额还可能覆盖原始请求金额。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "316 passed, 1 warning"
+      },
+      "commit_subject": "Recognize counterparty representative aliases"
     }
   ]
 }

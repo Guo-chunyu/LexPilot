@@ -218,6 +218,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_six_variants(),
         *generate_round_seven_variants(),
         *generate_round_eight_variants(),
+        *generate_round_nine_variants(),
     ]
 
 
@@ -575,6 +576,86 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
             forbidden_reply_fragments=(*common_forbidden, '先确定哪些财产确属被继承人'),
             origin='auto_variant',
             expected_reply_fragments=('**针对本轮追问**', '拒绝提供原件'),
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
+    """Generate five unseen counterparty-alias follow-up variants."""
+    randomizer = Random(seed)
+    reply_verb = randomizer.choice(('刚回复说', '刚表示'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    return [
+        RedTeamCase(
+            'housing_agent_service_fee_followup',
+            ('housing', 'multiturn', 'counterparty_alias'),
+            (
+                '我是租客，退租后还有5000元押金由中介代管，请先给我方案。',
+                f'中介{reply_verb}要先扣800元服务费才退余款，{question}？',
+            ),
+            'housing', 'tenant',
+            expected_facts=(('amount', '5000元押金'), ('details', '扣800元服务费')),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '扣800元服务费'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'consumer_customer_service_voucher_followup',
+            ('consumer', 'multiturn', 'counterparty_alias'),
+            (
+                '我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。',
+                f'客服{reply_verb}只能补发代金券，不能退还剩余费用，{question}？',
+            ),
+            'consumer',
+            expected_facts=(('amount', '2800元'), ('details', '只能补发代金券')),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '只能补发代金券'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'administrative_case_officer_basis_followup',
+            ('administrative', 'multiturn', 'counterparty_alias'),
+            (
+                '我收到行政处罚决定，认为认定事实不完整，请先给我方案。',
+                f'承办人员{reply_verb}只能按原决定处理，也不提供进一步说明，{question}？',
+            ),
+            'administrative',
+            expected_facts=(('details', '只能按原决定处理'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '只能按原决定处理'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_adjuster_partial_repair_followup',
+            ('traffic', 'multiturn', 'counterparty_alias'),
+            (
+                '交通事故后车辆已经维修，我有事故认定书和维修票据，请先给我方案。',
+                f'保险理赔员{reply_verb}只认可一半修理费，其余不赔，{question}？',
+            ),
+            'traffic',
+            expected_facts=(('details', '只认可一半修理费'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '只认可一半修理费'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'ip_store_operator_supplier_followup',
+            ('intellectual_property', 'multiturn', 'counterparty_alias'),
+            (
+                '我的摄影作品被网店擅自用于商品页面，我有原始文件，请先给我方案。',
+                f'店铺经营者{reply_verb}图片来自供货商，不同意删除或赔偿，{question}？',
+            ),
+            'intellectual_property',
+            expected_facts=(('details', '图片来自供货商'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '图片来自供货商'),
             max_followup_similarity=0.65,
         ),
     ]
