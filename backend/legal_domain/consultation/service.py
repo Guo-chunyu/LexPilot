@@ -57,6 +57,60 @@ def _case_opening(state, profile) -> str:
     return profile.focus
 
 
+def _follow_up_analysis(message: str, state, profile) -> str:
+    """Answer the current turn instead of replaying the first-turn opening."""
+    heading = '**针对本轮追问**' if re.search(r'[？?]|怎么|如何|什么|是否|能否', message) else '**针对本轮补充**'
+    if state.case_type == 'debt' and '赠与' in message:
+        return (
+            f'{heading}：对方现在提出的是“赠与抗辩”。重点不是重复证明转账发生，'
+            '而是证明双方当时存在借款合意：把转账前后的完整微信、款项用途、还款约定、'
+            '催款内容，以及对方曾承认欠款或讨论还款的原始上下文按时间对应。'
+            '不要只截取单句；如果没有直接写“借款”，转账备注、双方关系和催还后的回复'
+            '只能作为需要结合上下文核对的间接材料，不能据此保证结果。'
+        )
+    if re.search(r'更正|说错了|实际是|准确说', message):
+        return (
+            f'{heading}：这次更正已替换当前方案采用的对应事实，旧说法只保留在更正记录中。'
+            '下面只列更正造成的方案变化和当前最相关的一步。'
+        )
+    if re.search(r'对方.{0,20}(?:说|称|主张|回复|否认|拒绝|不承认)', message):
+        return (
+            f'{heading}：这次对方的新说法已作为待核实的争点记录。'
+            f'{profile.response} 先保留完整原文和上下文，再把对方说法与已有材料逐项对应。'
+        )
+    if re.search(r'材料|证据|准备什么|怎么准备', message):
+        available = [
+            task.name for task in state.consultation.evidence_tasks
+            if task.status in {'用户称有，尚未上传', '已上传，内容与真实性待核对'}
+        ]
+        named = '、'.join(available[:3]) or '本轮提到的原始材料'
+        return (
+            f'{heading}：先围绕当前争点整理{named}，保留完整内容、形成时间和来源；'
+            '材料能证明什么、不能证明什么要分开写，缺失部分使用报告中的合法替代方式。'
+        )
+    return (
+        f'{heading}：我已按这次消息重新核对当前事实、材料和路线。'
+        f'{profile.response} 下面只展示本轮变化与最相关的一步，完整更新保留在右侧报告。'
+    )
+
+
+def _most_relevant_follow_up_step(message: str, report: dict) -> dict:
+    """Pick one existing grounded action for a compact later-turn reply."""
+    steps = report.get('action_plan', [])
+    if not steps:
+        return {}
+    if re.search(r'材料|证据|准备什么|怎么准备', message) and len(steps) > 1:
+        return steps[1]
+    if re.search(r'起诉|仲裁|正式程序|下一步', message):
+        return next(
+            (step for step in steps if re.search(r'正式|提交|仲裁|起诉', step.get('title', ''))),
+            steps[min(2, len(steps) - 1)],
+        )
+    if re.search(r'对方|抗辩|回复|拒绝|否认|不承认', message):
+        return steps[-1]
+    return steps[0]
+
+
 def _next_evidence_task(tasks):
     """Prefer material the user says exists over repeating an unavailable request."""
     return next((task for task in tasks if task.source_refs),
@@ -129,19 +183,35 @@ def process_consultation(message: str, state: CaseState) -> dict:
         pieces.append(f'明白，“{label}”暂时记为待核实，不会反复追问同一个问题。')
     if state.evidence_collection_exhausted:
         pieces.append('现有材料就按这些整理，不会再重复让你补同样的材料；缺的部分会列出合法替代办法。')
-    current_analysis = dossier.analysis or _case_opening(state, profile)
+    if had_plan:
+        current_analysis = (
+            f'**针对本轮追问**：{dossier.analysis}'
+            if dossier.analysis
+            else _follow_up_analysis(message, state, profile)
+        )
+    else:
+        current_analysis = dossier.analysis or _case_opening(state, profile)
     dossier.analysis = current_analysis
     pieces.append(current_analysis)
     pieces.append('')
-    if rules:
+    if rules and not had_plan:
         rule = rules[0]
         pieces += [f'**可先核对的规则**：{rule["summary"]}（[{rule["law_name"]}{rule["article"]}]({rule["source_url"]})）；是否适用还要结合发生时间和具体事实。', '']
     produce = explicit_plan or had_plan or not missing or dossier.turns >= 6
     if produce:
         report = build_consultation_report(state)
         pieces += decision_delta_reply_lines(report.get('decision_delta', {}))
-        pieces += ['**建议先走的路线**：' + report['strategy_comparison']['decision_reason'],
-            '**按现有信息，先这样推进**', *[f'{i}. **{s["title"]}**（建议{s["suggested_date"]}开始）：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”，可下载 Word / PDF：包含办理入口、具体操作、材料、费用比较、期限核对和沟通草稿。日程是行动建议，不能替代法定期限。后续补充材料会更新方案。']
+        pieces.append('**建议先走的路线**：' + report['strategy_comparison']['decision_reason'])
+        if had_plan:
+            step = _most_relevant_follow_up_step(message, report)
+            if step:
+                pieces += [
+                    '**本轮最相关的下一步**',
+                    f'**{step["title"]}**（建议{step["suggested_date"]}开始）：{step["instructions"][0]}',
+                ]
+            pieces += ['', '右侧“报告”已按本轮消息更新，完整步骤和导出内容以当前版本为准。']
+        else:
+            pieces += ['**按现有信息，先这样推进**', *[f'{i}. **{s["title"]}**（建议{s["suggested_date"]}开始）：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”，可下载 Word / PDF：包含办理入口、具体操作、材料、费用比较、期限核对和沟通草稿。日程是行动建议，不能替代法定期限。后续补充材料会更新方案。']
         action = LegalAction.GENERATE_DOCUMENT
         reason = '先提供现有信息下可执行的阶段方案，保留事实和法源核验缺口。'
     else:
@@ -153,15 +223,20 @@ def process_consultation(message: str, state: CaseState) -> dict:
         slot = missing[0]
         # Keep canonical common slots; only the area-specific question can be rephrased.
         question = (dossier.follow_up or profile.question) if slot == 'details' else QUESTIONS[slot]
-        if question in dossier.question_history:
+        already_asked = question in dossier.question_history
+        if already_asked:
             question = profile.question if slot == 'details' else QUESTIONS[slot]
         state.pending_fact_ids = [slot]
         state.pending_questions = [question]
-        dossier.question_history.append(question)
+        if question not in dossier.question_history:
+            dossier.question_history.append(question)
         if slot == 'evidence_inventory' and not state.evidence_collection_exhausted:
             state.pending_evidence_requests = [t.name for t in dossier.evidence_tasks if not t.source_refs][:2]
             action = LegalAction.REQUEST_EVIDENCE if not produce else action
-        pieces += ['', '**接下来最需要确认的是**：' + question]
+        if had_plan and already_asked:
+            pieces += ['', f'**仍待确认**：{LABELS.get(slot, slot)}。这不影响先回答本轮问题，需要时再补充。']
+        else:
+            pieces += ['', '**接下来最需要确认的是**：' + question]
     else:
         pieces += ['', '可以继续告诉我对方的新回复、补充材料，或者说明希望先推进哪一步。']
     if not produce:

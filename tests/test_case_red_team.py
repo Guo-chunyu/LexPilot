@@ -51,6 +51,9 @@ CORPORATE_INSPECTION_REFUSAL = '我是公司股东，已经书面要求查账两
 HOUSING_FORMAL_ROLE_CORRECTION = '本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。'
 LABOR_INDIRECT_ARBITRATION_FILING = '我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。'
 IP_PLATFORM_COMPLAINT_REFUSED = '摄影作品被网店盗用，我已经向平台投诉两次，平台明确拒绝处理，请给我后续方案。'
+DEBT_GIFT_DEFENSE_START = '朋友欠我4万元，没有借条，有转账和完整微信，已经催款三次且对方拒绝，请给我方案。'
+DEBT_GIFT_DEFENSE_FOLLOWUP = '补充一下，对方刚刚回复说这笔钱是赠与，不承认借款，我应该重点准备什么？'
+DEBT_FIRST_TURN_OPENING = '没有借条不等于可以直接下结论。先把每笔转账的时间、金额、收款人'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -211,6 +214,61 @@ def test_platform_complaint_refusal_advances_streamlit():
     at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
     at.chat_input[0].set_value(IP_PLATFORM_COMPLAINT_REFUSED).run(timeout=20)
     _assert_platform_complaint_refusal_advances(at.session_state['case_state'])
+
+
+def _assert_debt_followup_answers_current_question(state, reply: str, exported: str = '') -> None:
+    assert '对方刚刚回复说这笔钱是赠与' in state.facts.get('details', '')
+    assert '**针对本轮追问**' in reply
+    assert '赠与抗辩' in reply
+    assert '借款合意' in reply
+    assert DEBT_FIRST_TURN_OPENING not in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    assert state.final_report['decision_delta']['status'] == 'changed'
+    if exported:
+        assert '对方刚刚回复说这笔钱是赠与' in exported
+
+
+def test_debt_followup_answers_current_question_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(DEBT_GIFT_DEFENSE_START)
+    second = engine.process(DEBT_GIFT_DEFENSE_FOLLOWUP, first['case_state'])
+    _assert_debt_followup_answers_current_question(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_debt_followup_answers_current_question_in_api_and_export():
+    thread_id = 'red_team_debt_gift_defense_followup'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': DEBT_GIFT_DEFENSE_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': DEBT_GIFT_DEFENSE_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_debt_followup_answers_current_question(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_debt_followup_answers_current_question_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(DEBT_GIFT_DEFENSE_START).run(timeout=20)
+    at.chat_input[0].set_value(DEBT_GIFT_DEFENSE_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_debt_followup_answers_current_question(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
 
 
 def _assert_debt_correction_is_respected(state, reply: str) -> None:

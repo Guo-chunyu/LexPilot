@@ -3,8 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "paused_by_user",
-  "pause_reason": "用户要求第 7 轮完成后暂停，等待人工补充案例或明确恢复。",
+  "loop_status": "running",
+  "pause_reason": "",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -13,7 +13,8 @@
   "human_failure_cases": [
     "debt_complete_progress",
     "labor_evidence_self_report_upload_verification",
-    "debt_litigation_followup_quality"
+    "debt_litigation_followup_quality",
+    "multi_turn_followup_repetition"
   ],
   "priority_incidents": [
     {
@@ -74,6 +75,32 @@
         }
       ],
       "pending_root_causes": []
+    },
+    {
+      "case_id": "multi_turn_followup_repetition",
+      "source": "human_web_report",
+      "status": "completed",
+      "anonymous_reproduction": [
+        "朋友欠我4万元，没有借条，有转账和完整微信，已经催款三次且对方拒绝，请给我方案。",
+        "补充一下，对方刚刚回复说这笔钱是赠与，不承认借款，我应该重点准备什么？"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "later_turn_reused_first_opening_and_full_plan",
+          "before_fix": "engine, API/export and Streamlit: 3 failed; first/second reply similarity 0.943",
+          "fix_files": ["backend/legal_domain/consultation/service.py"],
+          "verification": "3 path tests, 114 red-team tests and 300 full tests passed; similarity reduced to 0.213",
+          "commit_subject": "Focus later consultation replies"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "事实和报告已更新，但已有方案后的聊天渲染仍调用首轮静态开场并再次输出完整五步方案；离线兜底分析没有使用本轮消息。",
+      "verification": {
+        "before_fix": "3 failed",
+        "after_fix": "3 passed",
+        "red_team_suite": "114 passed",
+        "full_suite": "300 passed, 1 warning"
+      }
     }
   ],
   "rounds": [
