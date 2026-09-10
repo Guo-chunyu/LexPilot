@@ -276,6 +276,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         )
     ):
         put('procedure', message, message)
+    counterparty_update = None
     if state.case_type == 'debt':
         # The area-specific debt question asks about repayment terms, partial
         # performance and competing explanations for the transfer. Persist
@@ -294,8 +295,24 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if debt_details:
             value = '；'.join(dict.fromkeys(debt_details))
             put('details', value, value)
+    if state.case_type != 'debt':
+        # Later-turn positions from the other party are part of the dispute,
+        # not conversational noise.  Persist them so every delivery path can
+        # ground the focused reply and the exported report in the new fact.
+        # Capture across commas because the condition attached to a position
+        # often follows in the next clause ("涨价，除非加价否则不发货").
+        counterparty_update = re.search(
+            r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人)'
+            r'.{0,8}(?:刚|又|最新|现(?:在)?)'
+            r'.{0,120}(?:回复|表示|称|说|主张|否认|不承认|拒绝|要求|提出|发来)'
+            r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
+            message,
+        )
+        if counterparty_update:
+            value = counterparty_update.group(1).strip('，,。；; ')
+            put('details', value, value)
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
-    if amount_sentences:
+    if amount_sentences and not counterparty_update:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))
     if contextual and pending and not unknown and not wants_plan(message) and not says_evidence_exhausted(message):
         # A short answer belongs to the previous question only when it is not

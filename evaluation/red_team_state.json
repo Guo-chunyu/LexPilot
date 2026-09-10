@@ -90,7 +90,8 @@
           "before_fix": "engine, API/export and Streamlit: 3 failed; first/second reply similarity 0.943",
           "fix_files": ["backend/legal_domain/consultation/service.py"],
           "verification": "3 path tests, 114 red-team tests and 300 full tests passed; similarity reduced to 0.213",
-          "commit_subject": "Focus later consultation replies"
+          "commit_subject": "Focus later consultation replies",
+          "commit_hash": "c56eca29a21a0bf263180440b30ac7736d57cfbe"
         }
       ],
       "pending_root_causes": [],
@@ -416,6 +417,59 @@
         "full_suite": "297 passed, 1 warning"
       },
       "commit_subject": "Advance routes after platform refusal"
+    },
+    {
+      "round_id": "round-008-cross-domain-followups",
+      "seed": 20260916,
+      "generator": "generate_round_eight_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "housing_damage_reason_followup",
+        "consumer_transfer_only_followup",
+        "medical_normal_risk_followup",
+        "contract_price_increase_followup",
+        "inheritance_will_copy_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "housing_damage_reason_followup", "messages": ["我是租客，退租后房东扣着4000元押金，请先给我方案。", "房东刚回复说要扣1200元墙面修复费，但没有提供维修票据，我应该怎么办？"]},
+        {"case_id": "consumer_transfer_only_followup", "messages": ["健身房停业，会员卡余额3000元，商家不退款，请先给我方案。", "商家刚回复说只能把会员卡转给别人使用，不能退款，我应该怎么办？"]},
+        {"case_id": "medical_normal_risk_followup", "messages": ["医院手术后出现后遗症，我有完整病历和收费票据，请先给我方案。", "医院刚回复说这是正常手术风险，不承认诊疗有问题，我应该怎么办？"]},
+        {"case_id": "contract_price_increase_followup", "messages": ["供应商收款后不交货，我已经催过一次，请先给我方案。", "供应商刚回复说原材料涨价，除非再加2万元否则不发货，我应该怎么办？"]},
+        {"case_id": "inheritance_will_copy_followup", "messages": ["父亲去世后留有遗嘱，家人称可能还有另一份，请先给我方案。", "家人刚发来另一份遗嘱的照片但拒绝提供原件，我应该怎么办？"]}
+      ],
+      "failures_before_fix": [
+        "housing_damage_reason_followup",
+        "consumer_transfer_only_followup",
+        "medical_normal_risk_followup",
+        "contract_price_increase_followup",
+        "inheritance_will_copy_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "cross_domain_counterparty_updates_not_persisted",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py",
+            "backend/legal_domain/consultation/service.py"
+          ],
+          "verification": "5 generated cases, 3 delivery-path regressions, 9 related tests and 308 full tests passed",
+          "commit_subject": "Ground later replies in counterparty updates"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "跨领域的对方最新回复未进入 details，兜底续答也只识别“对方”字样，导致事实、导出和当前回答无法落到新增争点；逗号后的附加条件还会被截断，其中的金额可能覆盖原始请求金额。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py",
+        "backend/legal_domain/consultation/service.py"
+      ],
+      "verification": {
+        "before_fix": "5 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "308 passed, 1 warning"
+      },
+      "commit_subject": "Ground later replies in counterparty updates"
     }
   ]
 }

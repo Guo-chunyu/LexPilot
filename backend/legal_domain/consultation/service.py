@@ -68,6 +68,14 @@ def _follow_up_analysis(message: str, state, profile) -> str:
             '不要只截取单句；如果没有直接写“借款”，转账备注、双方关系和催还后的回复'
             '只能作为需要结合上下文核对的间接材料，不能据此保证结果。'
         )
+    current_details = str(state.facts.get('details', '')).strip()
+    if current_details and current_details in message:
+        return (
+            f'{heading}：你本轮补充的争点是“{current_details}”。'
+            f'{profile.response} 先保存这次回复的完整原文、时间和上下文，'
+            '再将对方的新说法与合同、付款、履行及其他已有材料逐项对应；'
+            '目前先按争议主张核对，不能只凭对方单方表述直接下结论。'
+        )
     if re.search(r'更正|说错了|实际是|准确说', message):
         return (
             f'{heading}：这次更正已替换当前方案采用的对应事实，旧说法只保留在更正记录中。'

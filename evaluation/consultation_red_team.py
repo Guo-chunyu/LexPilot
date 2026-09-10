@@ -7,6 +7,7 @@ are behavioral probes rather than legal-answer ground truth.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 from io import BytesIO
 from random import Random
 import re
@@ -27,6 +28,8 @@ class RedTeamCase:
     expected_exhausted: bool | None = None
     expected_route: str = ''
     origin: str = 'fixed'
+    expected_reply_fragments: tuple[str, ...] = ()
+    max_followup_similarity: float | None = None
 
 
 @dataclass(frozen=True)
@@ -214,6 +217,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_five_variants(),
         *generate_round_six_variants(),
         *generate_round_seven_variants(),
+        *generate_round_eight_variants(),
     ]
 
 
@@ -505,6 +509,77 @@ def generate_round_seven_variants(seed: int = 20260915) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
+    """Generate five unseen cross-domain follow-up grounding variants."""
+    randomizer = Random(seed)
+    reply_verb = randomizer.choice(('刚回复说', '刚表示'))
+    question = randomizer.choice(('我该怎么回应', '我应该怎么办'))
+    will_copy = randomizer.choice(('另一份遗嘱的照片', '一张新遗嘱照片'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    return [
+        RedTeamCase(
+            'housing_damage_reason_followup', ('housing', 'multiturn', 'opponent_update'),
+            (
+                '我是租客，退租后房东扣着4000元押金，请先给我方案。',
+                f'房东{reply_verb}要扣1200元墙面修复费，但没有提供维修票据，{question}？',
+            ),
+            'housing', 'tenant', expected_facts=(('details', '1200元墙面修复费'),),
+            forbidden_reply_fragments=(*common_forbidden, '房东只说“有损坏”'),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '墙面修复费'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'consumer_transfer_only_followup', ('consumer', 'multiturn', 'opponent_update'),
+            (
+                '健身房停业，会员卡余额3000元，商家不退款，请先给我方案。',
+                f'商家{reply_verb}只能把会员卡转给别人使用，不能退款，{question}？',
+            ),
+            'consumer', expected_facts=(('details', '只能把会员卡转给别人使用'),),
+            forbidden_reply_fragments=(*common_forbidden, '先确认是门店停业'),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '转给别人使用'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'medical_normal_risk_followup', ('medical', 'multiturn', 'opponent_update'),
+            (
+                '医院手术后出现后遗症，我有完整病历和收费票据，请先给我方案。',
+                f'医院{reply_verb}这是正常手术风险，不承认诊疗有问题，{question}？',
+            ),
+            'medical', expected_facts=(('details', '正常手术风险'),),
+            forbidden_reply_fragments=(*common_forbidden, '先保证后续治疗'),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '正常手术风险'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'contract_price_increase_followup', ('contract', 'multiturn', 'opponent_update'),
+            (
+                '供应商收款后不交货，我已经催过一次，请先给我方案。',
+                f'供应商{reply_verb}原材料涨价，除非再加2万元否则不发货，{question}？',
+            ),
+            'contract', expected_facts=(('details', '除非再加2万元'),),
+            forbidden_reply_fragments=(*common_forbidden, '先把合同约定'),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '除非再加2万元'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'inheritance_will_copy_followup', ('inheritance', 'multiturn', 'opponent_update'),
+            (
+                '父亲去世后留有遗嘱，家人称可能还有另一份，请先给我方案。',
+                f'家人刚发来{will_copy}但拒绝提供原件，{question}？',
+            ),
+            'inheritance', expected_facts=(('details', '拒绝提供原件'),),
+            forbidden_reply_fragments=(*common_forbidden, '先确定哪些财产确属被继承人'),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '拒绝提供原件'),
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document
@@ -569,9 +644,19 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
         value = str(state.facts.get(key, ''))
         if fragment not in value:
             failures.append(f'fact {key} missing {fragment!r}: {value!r}')
+    for fragment in case.expected_reply_fragments:
+        if fragment not in replies[-1]:
+            failures.append(f'current-turn reply missing {fragment!r}')
     for fragment in case.forbidden_reply_fragments:
         if fragment in replies[-1]:
             failures.append(f'repeated answered question: {fragment}')
+    if case.max_followup_similarity is not None and len(replies) > 1:
+        similarity = SequenceMatcher(None, replies[0], replies[-1]).ratio()
+        if similarity > case.max_followup_similarity:
+            failures.append(
+                f'follow-up similarity={similarity:.3f}, '
+                f'max={case.max_followup_similarity:.3f}'
+            )
     if not report:
         failures.append('final report missing')
         return failures
