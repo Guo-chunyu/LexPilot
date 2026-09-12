@@ -3,8 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "paused",
-  "pause_reason": "按用户要求完成第11至第15轮后统一暂停",
+  "loop_status": "active",
+  "pause_reason": "第16至第20轮红队批次进行中，全部达标后统一暂停并推送",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -792,6 +792,53 @@
         "full_suite": "363 passed, 1 warning"
       },
       "commit_subject": "Persist natural handling constraints"
+    },
+    {
+      "round_id": "round-016-authority-reply-aliases",
+      "seed": 20260924,
+      "generator": "generate_round_sixteen_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "criminal_investigator_reply_followup",
+        "traffic_police_reply_followup",
+        "administrative_counter_window_reply_followup",
+        "medical_office_reply_followup",
+        "enforcement_judge_reply_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "criminal_investigator_reply_followup", "messages": ["家人被刑事拘留，我收到了拘留通知书，请给我方案。", "办案人员刚刚回复说不能告知案件情况，也不提供文书，我应该怎么办？"]},
+        {"case_id": "traffic_police_reply_followup", "messages": ["发生交通事故后车辆受损，我有事故认定书，请给我方案。", "交警回复说要等责任认定才能办理，也不给其他说明，我应该怎么办？"]},
+        {"case_id": "administrative_counter_window_reply_followup", "messages": ["我收到行政处罚决定，认为事实认定不完整，请先给我方案。", "窗口工作人员回复说只能口头答复，不给书面说明，我应该怎么办？"]},
+        {"case_id": "medical_office_reply_followup", "messages": ["手术后出现持续疼痛，我有病历和复查记录，请先给我方案。", "医务科回复说只能走鉴定程序，不提供其他说明，我应该怎么办？"]},
+        {"case_id": "enforcement_judge_reply_followup", "messages": ["生效判决履行期已过，对方仍未付款，请先给我执行方案。", "执行法官回复说查不到对方财产，只能先终结本次执行，我应该怎么办？"]}
+      ],
+      "failures_before_fix": [
+        "criminal_investigator_reply_followup",
+        "traffic_police_reply_followup",
+        "administrative_counter_window_reply_followup",
+        "medical_office_reply_followup",
+        "enforcement_judge_reply_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "authority_handler_aliases_missing_from_counterparty_update",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "5 generated cases, 3 delivery-path regressions, 257 related tests and 371 full tests passed",
+          "commit_subject": "Recognize authority handler reply aliases"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "后续轮次的对方主张提取只覆盖对方、房东、商家、中介、客服、承办人员等称谓，遗漏办案人员、交警、窗口工作人员、医务科和执行法官等刑事、交通、行政、医疗与执行场景中的自然经办或机关称谓，导致新主张未进入 details，当前回复仍只给通用说明。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "related_suite": "257 passed",
+        "full_suite": "371 passed, 1 warning"
+      },
+      "commit_subject": "Recognize authority handler reply aliases"
     }
   ]
 }

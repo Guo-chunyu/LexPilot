@@ -226,6 +226,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirteen_variants(),
         *generate_round_fourteen_variants(),
         *generate_round_fifteen_variants(),
+        *generate_round_sixteen_variants(),
     ]
 
 
@@ -988,6 +989,60 @@ def generate_round_fifteen_variants(seed: int = 20260923) -> list[RedTeamCase]:
             max_followup_similarity=0.65,
         )
         for case_id, domain, first, followup, constraint in specs
+    ]
+
+
+def generate_round_sixteen_variants(seed: int = 20260924) -> list[RedTeamCase]:
+    """Generate five unseen authority and case-handler reply aliases."""
+    randomizer = Random(seed)
+    reply_verb = randomizer.choice(('回复说', '表示'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    specs = (
+        (
+            'criminal_investigator_reply_followup', 'criminal',
+            '家人被刑事拘留，我收到了拘留通知书，请给我方案。',
+            f'办案人员刚刚{reply_verb}不能告知案件情况，也不提供文书，{question}？',
+            '不能告知案件情况',
+        ),
+        (
+            'traffic_police_reply_followup', 'traffic',
+            '发生交通事故后车辆受损，我有事故认定书，请给我方案。',
+            f'交警{reply_verb}要等责任认定才能办理，也不给其他说明，{question}？',
+            '要等责任认定才能办理',
+        ),
+        (
+            'administrative_counter_window_reply_followup', 'administrative',
+            '我收到行政处罚决定，认为事实认定不完整，请先给我方案。',
+            f'窗口工作人员{reply_verb}只能口头答复，不给书面说明，{question}？',
+            '只能口头答复',
+        ),
+        (
+            'medical_office_reply_followup', 'medical',
+            '手术后出现持续疼痛，我有病历和复查记录，请先给我方案。',
+            f'医务科{reply_verb}只能走鉴定程序，不提供其他说明，{question}？',
+            '只能走鉴定程序',
+        ),
+        (
+            'enforcement_judge_reply_followup', 'enforcement',
+            '生效判决履行期已过，对方仍未付款，请先给我执行方案。',
+            f'执行法官{reply_verb}查不到对方财产，只能先终结本次执行，{question}？',
+            '查不到对方财产',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'authority_alias'),
+            (first, followup),
+            domain,
+            expected_facts=(('details', detail),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', detail),
+            max_followup_similarity=0.65,
+        )
+        for case_id, domain, first, followup, detail in specs
     ]
 
 

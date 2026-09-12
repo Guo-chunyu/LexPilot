@@ -31,6 +31,7 @@ from evaluation.consultation_red_team import (
     generate_round_thirteen_variants,
     generate_round_fourteen_variants,
     generate_round_fifteen_variants,
+    generate_round_sixteen_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -78,6 +79,8 @@ MEDICAL_EVIDENCE_START = '手术后出现持续不适，我正在整理诊疗材
 MEDICAL_EVIDENCE_FOLLOWUP = '我补充找到了手术同意书和护理记录，请更新材料清单。'
 REMOTE_CONSTRAINT_START = '我是租客，退租后押金没有退，请先给我方案。'
 REMOTE_CONSTRAINT_FOLLOWUP = '我还要补充：我人在外地，不能去现场办理，请据此更新方案。'
+CRIMINAL_INVESTIGATOR_START = '家人被刑事拘留，我收到了拘留通知书，请给我方案。'
+CRIMINAL_INVESTIGATOR_FOLLOWUP = '办案人员刚刚回复说不能告知案件情况，也不提供文书，我应该怎么办？'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -716,6 +719,62 @@ def test_remote_constraint_is_persisted_in_streamlit():
     assert not at.exception
 
 
+def _assert_authority_alias_update_is_grounded(
+    state, reply: str, exported: str = ''
+) -> None:
+    assert state.case_type == 'criminal'
+    assert '不能告知案件情况' in state.facts.get('details', '')
+    assert '**先处理紧急事项**' in reply
+    assert '**针对本轮追问**' in reply
+    assert '不能告知案件情况' in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    if exported:
+        assert '不能告知案件情况' in exported
+
+
+def test_authority_alias_update_is_grounded_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(CRIMINAL_INVESTIGATOR_START)
+    second = engine.process(CRIMINAL_INVESTIGATOR_FOLLOWUP, first['case_state'])
+    _assert_authority_alias_update_is_grounded(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_authority_alias_update_is_grounded_in_api_and_export():
+    thread_id = 'red_team_authority_alias_update'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': CRIMINAL_INVESTIGATOR_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': CRIMINAL_INVESTIGATOR_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_authority_alias_update_is_grounded(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_authority_alias_update_is_grounded_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(CRIMINAL_INVESTIGATOR_START).run(timeout=20)
+    at.chat_input[0].set_value(CRIMINAL_INVESTIGATOR_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_authority_alias_update_is_grounded(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
+
+
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
     assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])
@@ -1171,6 +1230,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_thirteen_variants': generate_round_thirteen_variants,
         'generate_round_fourteen_variants': generate_round_fourteen_variants,
         'generate_round_fifteen_variants': generate_round_fifteen_variants,
+        'generate_round_sixteen_variants': generate_round_sixteen_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
