@@ -57,6 +57,10 @@ def uses_general_consultation(state, message='') -> bool:
         return True
     if client_perspective(state, message)['id'] == 'employer':
         return True
+    if state.pending_fact_ids:
+        from backend.legal_domain.labor.facts import answers_pending_labor_fact
+        if answers_pending_labor_fact(message, state):
+            return False
     # A later labour turn that reports a counterparty position, a correction or a
     # scoped next-step request is an update to an existing case, not an answer to
     # the specialist interview. It needs the shared later-turn intake and the

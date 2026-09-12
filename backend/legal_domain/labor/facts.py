@@ -119,6 +119,18 @@ def extract_labor_facts(
     if any(marker in text for marker in ("没有赔偿", "没有补偿", "没拿到赔偿", "未支付补偿")):
         facts["compensation_received"] = False
 
+    corrected_date = _single_date(text)
+    if corrected_date and re.search(r'更正|说错了|其实是|实际是|准确说', text):
+        existing_date_ids = [
+            fact_id for fact_id in (
+                'employment_start_date', 'employment_end_date',
+                'contract_start_date', 'contract_end_date',
+            )
+            if case.facts.get(fact_id)
+        ]
+        if len(existing_date_ids) == 1:
+            facts[existing_date_ids[0]] = corrected_date
+
     arrears = re.search(r"拖欠\s*(\d+(?:\.\d+)?)\s*个?月", text)
     if arrears:
         facts["arrears_months"] = float(arrears.group(1))
@@ -317,6 +329,24 @@ def _extract_contextual_facts(
     return contextual
 
 
+def answers_pending_labor_fact(text: str, state: CaseState) -> bool:
+    """Whether a later update also contains an answer to the active interview slot."""
+    if not state.pending_questions and not state.pending_fact_ids:
+        return False
+    if _is_explicit_unknown_answer(text):
+        return True
+    model = get_labor_model()
+    extracted = _extract_contextual_facts(
+        text,
+        state,
+        list(state.pending_questions),
+        list(state.pending_fact_ids),
+        {},
+        model,
+    )
+    return bool(extracted)
+
+
 def _single_date(text: str) -> str | None:
     match = re.search(
         r'(?<!\d)(\d{4})\s*(?:年|[./-])\s*(\d{1,2})\s*'
@@ -465,7 +495,13 @@ def _normalize_text(text: str) -> str:
 
 
 def _bare_duration_months(text: str) -> float | None:
-    match = re.search(rf"({NUMBER_PATTERN})\s*(年|个?月)", text)
+    without_dates = re.sub(
+        r'(?<!\d)\d{4}\s*(?:年|[./-])\s*\d{1,2}\s*'
+        r'(?:月|[./-])\s*\d{1,2}\s*日?(?!\d)',
+        ' ',
+        text,
+    )
+    match = re.search(rf"({NUMBER_PATTERN})\s*(年|个?月)", without_dates)
     if not match:
         return None
     value = _parse_number(match.group(1))
