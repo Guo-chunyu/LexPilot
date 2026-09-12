@@ -3,7 +3,7 @@
 import re
 
 from backend.legal_rl.state import CaseState, EvidenceGap, EvidenceStatus
-from .models import EvidenceTask, TimelineEntry
+from .models import CounterpartyClaim, EvidenceTask, SlotAssertion, TimelineEntry
 from .profiles import OUTSIDE_MAINLAND, PROFILES
 from .perspective import client_perspective
 from ._spans import (
@@ -17,6 +17,38 @@ from ._spans import (
     has_negated,
     is_correction,
     is_correction as _is_correction,
+)
+
+
+# Slots that record the user's own statement. A counterparty or authority
+# assertion for these keys is recorded in ``counterparty_claims`` instead of
+# overwriting the user's value.
+_USER_OWNED_SLOTS = frozenset({'amount', 'parties', 'event_time', 'goal', 'location', 'procedure', 'constraints'})
+
+
+# Slots that are explicitly built to absorb counterparty / authority updates.
+# A claim at these slots is the legitimate write target.
+_COUNTERPARTY_OPEN_SLOTS = frozenset({'details'})
+
+
+# Withdrawal marker for ``constraints``. The user retracts an earlier handling
+# preference so the prior active assertion must be marked ``withdrawn`` and
+# dropped from ``facts['constraints']``. Only the *most recent* active user
+# constraint is withdrawn — earlier ones stay active unless the message
+# explicitly retracts them. Generic "我改变主意了" alone is too broad
+# (round-19 probe 4) and would drop unrelated constraints like 人在外地.
+_NEGATE_NO_CONTACT_PATTERN = re.compile(
+    r'愿意再.{0,6}(?:协商|沟通|联系|谈|主动)|'
+    r'愿意重新.{0,4}(?:协商|谈|联系)|'
+    r'不再拒绝.{0,4}(?:协商|联系)|'
+    r'撤(?:销|回).{0,6}(?:不要再|不要.{0,4}联系|不要.{0,4}协商)|'
+    r'重新.{0,4}(?:协商|联系)'
+)
+_GENERIC_RETRACTION_PATTERN = re.compile(
+    r'改变主意|不再限制|不坚持.{0,6}(?:那个|前述)|撤(?:销|回).{0,4}(?:限制|要求|那个)'
+)
+_REAFFIRM_TAIL_PATTERN = re.compile(
+    r'愿意|可以.{0,4}了|还是想.{0,6}(?:试试|再|重新)|还是.{0,4}(?:可以|愿意|想)'
 )
 
 
@@ -64,7 +96,7 @@ EVIDENCE_ALIASES = {
         '事故认定及现场记录', '事故认定书', '行车记录仪', '现场照片', '现场视频',
     ),
     '完整病历': (
-        '完整病历', '手术同意书', '护理记录', '出院记录', '病历复印件', '检查报告',
+        '完整病历', '手术同意书', '护理记录', '出院记录', '病历复印件', '检查报告', '病历',
     ),
     '履行记录': (
         '履行记录', '物流签收单', '签收单', '验收记录', '物流记录', '交货记录',
@@ -182,7 +214,126 @@ def _later_clause_reports_unavailability(clauses: list[str], sibling_terms: tupl
     return False
 
 
-def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='', correction_context=False) -> None:
+def _record_slot_assertion(
+    state: CaseState,
+    *,
+    key: str,
+    value: str,
+    quote: str,
+    assertor: str,
+    source_ref: str,
+    source_type: str,
+    extraction_method: str,
+    lifecycle: str = 'active',
+) -> SlotAssertion:
+    """Append a structured SlotAssertion to ``state.slot_assertions``."""
+    snippet = ' '.join(str(quote).split())[:240]
+    src_ref = source_ref or f'对话第{state.consultation.turns}轮'
+    entry = SlotAssertion(
+        key=key,
+        value=value,
+        assertor=assertor,
+        turn=state.consultation.turns,
+        source_ref=src_ref,
+        quote=snippet,
+        lifecycle=lifecycle,
+        extraction_method=extraction_method,
+        asserted_at=src_ref,
+    )
+    state.slot_assertions.setdefault(key, []).append(entry)
+    return entry
+
+
+def _supersede_user_assertion(
+    state: CaseState, key: str, new_assertion: SlotAssertion
+) -> None:
+    """Mark prior user assertions for ``key`` as ``superseded`` by the new one.
+
+    Only a user-asserted ``new_assertion`` is allowed to supersede a previous
+    user assertion. Counterparty / authority assertions can never supersede a
+    user-held slot.
+    """
+    if new_assertion.assertor != 'user':
+        return
+    for prior in state.slot_assertions.get(key, []):
+        if prior.lifecycle != 'active' or prior.assertor != 'user':
+            continue
+        prior.lifecycle = 'superseded'
+        prior.superseded_by = new_assertion.source_ref
+
+
+def _withdraw_active_constraints(state: CaseState, message: str, source_ref: str) -> None:
+    """Mark active user-asserted constraints as ``withdrawn`` if the
+    withdrawal message retracts them.
+
+    Targeted withdrawal: only clauses whose text matches the *subject* of the
+    retraction are marked withdrawn. Unrelated clauses (e.g. "人在外地
+    不能到场") stay active. A bare "我改变主意了" without a re-affirmation
+    does nothing — round-19 probe 4.
+    """
+    subject = _withdrawal_subject(message)
+    if subject is None:
+        return
+    for prior in state.slot_assertions.get('constraints', []):
+        if prior.lifecycle != 'active' or prior.assertor != 'user':
+            continue
+        if not subject.search(prior.value):
+            continue
+        prior.lifecycle = 'withdrawn'
+        prior.superseded_by = source_ref
+
+
+def _withdrawal_subject(message: str):
+    """Return a regex whose matches are the subject of the withdrawal, or
+    ``None`` if the message does not specifically target a constraint."""
+    if _NEGATE_NO_CONTACT_PATTERN.search(message):
+        return re.compile(r'不要再.{0,6}(?:联系|沟通|协商|见面)|不要(?:见面|联系|协商)')
+    if _GENERIC_RETRACTION_PATTERN.search(message) and _REAFFIRM_TAIL_PATTERN.search(message):
+        # ``我改变主意了`` plus a re-affirmation. Target only the most recent
+        # constraint; downstream code (recompute) already drops the slot if
+        # it was the only one.
+        return re.compile(r'.*')
+    return None
+
+
+def _recompute_constraints_after_withdrawal(state: CaseState) -> None:
+    """Drop withdrawn constraint sentences from ``facts['constraints']`` so the
+    routing layer no longer sees them.
+    """
+    active_values = [
+        a.value for a in state.slot_assertions.get('constraints', [])
+        if a.lifecycle == 'active' and a.assertor == 'user'
+    ]
+    new_value = '；'.join(active_values)
+    if new_value:
+        state.apply_facts({'constraints': new_value})
+    else:
+        # ``apply_facts`` ignores empty values; drop the slot entirely so the
+        # routing layer no longer sees the prior constraint.
+        state.facts.pop('constraints', None)
+        if 'constraints' in state.missing_facts:
+            state.missing_facts.remove('constraints')
+
+
+def is_constraint_withdrawal(message: str) -> bool:
+    """True iff the message retracts an active user constraint.
+
+    Two patterns qualify:
+
+    1. The message explicitly re-affirms contact (愿意再协商 / 重新协商 /
+       撤销不要再联系). Round-17 probe 1.
+    2. The message is a generic retraction ("改变主意", "不再限制",
+       "不坚持那个") followed by a re-affirmation ("愿意", "可以…了",
+       "还是想…"). Round-19 probe 4 shows this exact shape.
+    """
+    if _NEGATE_NO_CONTACT_PATTERN.search(message):
+        return True
+    if _GENERIC_RETRACTION_PATTERN.search(message) and _REAFFIRM_TAIL_PATTERN.search(message):
+        return True
+    return False
+
+
+def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='', correction_context=False, assertor='user', extraction_method='consultation_intake') -> None:
     value = str(value).strip()[:1200]
     if not value:
         return
@@ -218,10 +369,61 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
                 'source_ref': source_ref, 'status': '存在不同陈述，请核对'}
             if change not in state.consultation.conflicts:
                 state.consultation.conflicts.append(change)
+    # Counterparty / authority assertions must not overwrite a user-owned
+    # slot. ``details`` is the legitimate channel for them; anything else is
+    # routed to ``counterparty_claims`` and we do not touch ``facts``.
+    if assertor != 'user' and key in _USER_OWNED_SLOTS and old and str(old) != value:
+        accepted = False
+        claim = CounterpartyClaim(
+            slot=key,
+            value=value,
+            assertor=assertor,
+            turn=state.consultation.turns,
+            source_ref=source_ref or f'对话第{state.consultation.turns}轮',
+            quote=' '.join(str(quote).split())[:240],
+        )
+        already_recorded = any(
+            c.slot == claim.slot
+            and c.value == claim.value
+            and c.assertor == claim.assertor
+            and c.source_ref == claim.source_ref
+            for c in state.consultation.counterparty_claims
+        )
+        if not already_recorded:
+            state.consultation.counterparty_claims.append(claim)
+        # Still record the assertion so the audit trail is complete.
+        _record_slot_assertion(
+            state,
+            key=key,
+            value=value,
+            quote=quote,
+            assertor=assertor,
+            source_ref=source_ref,
+            source_type=source_type,
+            extraction_method=extraction_method,
+        )
+        state.add_fact_provenance(key, source_type=source_type, source_ref=source_ref, quote=quote,
+            extraction_method=extraction_method, accepted=False)
+        return
     if accepted:
         state.apply_facts({key: value})
+    new_assertion = _record_slot_assertion(
+        state,
+        key=key,
+        value=value,
+        quote=quote,
+        assertor=assertor,
+        source_ref=source_ref,
+        source_type=source_type,
+        extraction_method=extraction_method,
+    )
+    # User corrections supersede prior user assertions; counterparty / authority
+    # assertions cannot supersede user-held slots (already blocked above for
+    # user-owned slots).
+    if correction_context and source_type == 'user_message':
+        _supersede_user_assertion(state, key, new_assertion)
     state.add_fact_provenance(key, source_type=source_type, source_ref=source_ref, quote=quote,
-        extraction_method='consultation_intake', accepted=accepted)
+        extraction_method=extraction_method, accepted=accepted)
     if key in state.consultation.declined_slots:
         state.consultation.declined_slots.remove(key)
 
@@ -244,9 +446,9 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     procedure_sentences: list[str] = []
     correction_context = source_type == 'user_message' and is_correction(message)
 
-    def put(key, value, quote):
+    def put(key, value, quote, *, assertor='user'):
         save_fact(state, key, value, quote, source_type=source_type, source_ref=source_ref,
-            correction_context=correction_context)
+            correction_context=correction_context, assertor=assertor)
         extracted.add(key)
 
     if source_type == 'user_message':
@@ -280,7 +482,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'不会用|听不清|看不清|需要.{0,4}帮|费用.{0,5}(?:以内|以下|不超过)|'
             r'(?:请)?不要再.{0,8}(?:联系|接触|沟通|协商)|人在外地|'
             r'不能.{0,6}(?:去)?(?:现场|到场)|费用.{0,5}(?:很少|有限)|'
-            r'优先免费渠道|只接受书面沟通|不进行电话交涉|'
+            r'优先免费渠道|只接受书面沟通|书面沟通优先|不进行电话交涉|'
             r'(?:必须|希望).{0,4}尽快|不能长期拖延',
             sentence,
         ):
@@ -323,8 +525,29 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         ):
             procedure_sentences.append(sentence)
     if constraint_sentences:
-        value = '；'.join(dict.fromkeys(constraint_sentences))
-        put('constraints', value, value)
+        # If the user is withdrawing prior handling constraints, the prior
+        # active assertions must be marked ``withdrawn`` *before* the new
+        # value is composed; otherwise the new sentences would simply append
+        # to the existing constraint string and keep old restrictions active.
+        if source_type == 'user_message' and is_constraint_withdrawal(message):
+            _withdraw_active_constraints(state, message, source_ref or f'对话第{dossier.turns}轮')
+        new_constraint_sentences = list(constraint_sentences)
+        # Each clause is recorded as its own SlotAssertion so per-clause
+        # withdrawal can drop the negated clause without disturbing unrelated
+        # ones (e.g. ``人在外地不能到场`` must survive a withdrawal of
+        # ``不要再联系对方``). The visible fact string is the join of those
+        # active clauses; recomputing it from the slot_assertions keeps the
+        # string consistent with the lifecycle.
+        for clause in dict.fromkeys(new_constraint_sentences):
+            save_fact(state, 'constraints', clause, clause, source_type=source_type, source_ref=source_ref,
+                correction_context=correction_context, assertor='user',
+                extraction_method='constraint_clause')
+        _recompute_constraints_after_withdrawal(state)
+    elif source_type == 'user_message' and is_constraint_withdrawal(message):
+        # Withdrawal without any new constraint sentences: still mark the
+        # targeted subject as withdrawn so it stops influencing routing.
+        _withdraw_active_constraints(state, message, source_ref or f'对话第{dossier.turns}轮')
+        _recompute_constraints_after_withdrawal(state)
     procedure_retraction = correction_context and any(
         action in {CRIMINAL_URGENT_ACTION, DEADLINE_URGENT_ACTION}
         for action in retracted_urgent_actions(message)
@@ -418,7 +641,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         )
     if counterparty_update:
         value = counterparty_update.group(1).strip('，,。；; ')
-        put('details', value, value)
+        put('details', value, value, assertor='counterparty')
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
     if amount_sentences and not counterparty_update:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))

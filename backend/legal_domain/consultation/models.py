@@ -42,6 +42,44 @@ class ResearchSource(BaseModel):
     retrieved_at: str = ''
 
 
+class SlotAssertion(BaseModel):
+    """One stated value for a fact slot, attributable to a specific actor.
+
+    ``key`` is the fact name (``amount`` / ``procedure`` / ``constraints`` …).
+    ``assertor`` distinguishes the user's own assertions from those of the
+    counterparty or an authority: this lets the engine guarantee that a
+    counterparty claim never silently overwrites a user-owned slot, while the
+    user's corrections or withdrawals update the lifecycle.
+    """
+
+    key: str
+    value: str
+    assertor: str = 'user'  # user / counterparty / authority / system
+    turn: int = 0
+    source_ref: str = ''
+    quote: str = ''
+    lifecycle: str = 'active'  # active / superseded / withdrawn
+    superseded_by: str = ''  # the source_ref of the newer active assertion
+    extraction_method: str = 'rules'
+    asserted_at: str = ''
+
+
+class CounterpartyClaim(BaseModel):
+    """A claim attributed to the counterparty or an authority that was
+    deliberately not promoted into a user-owned slot.
+
+    Stored separately so the downstream report can ground its dispute analysis
+    in the claim without allowing it to overwrite the user's own assertion.
+    """
+
+    slot: str
+    value: str
+    assertor: str = 'counterparty'
+    turn: int = 0
+    source_ref: str = ''
+    quote: str = ''
+
+
 class ConsultationDossier(BaseModel):
     domain_ids: list[str] = Field(default_factory=list)
     jurisdiction_status: str = 'UNCONFIRMED'
@@ -70,3 +108,6 @@ class ConsultationDossier(BaseModel):
     service_guide: dict = Field(default_factory=dict)
     service_key: str = ''
     decision_snapshot: dict = Field(default_factory=dict)
+    # Side-channel for counterparty / authority assertions that must not
+    # silently overwrite a user-owned slot.
+    counterparty_claims: list[CounterpartyClaim] = Field(default_factory=list)

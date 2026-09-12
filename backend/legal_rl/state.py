@@ -10,7 +10,10 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from backend.legal_rl.actions import LegalAction
-from backend.legal_domain.consultation.models import ConsultationDossier
+from backend.legal_domain.consultation.models import (
+    ConsultationDossier,
+    SlotAssertion,
+)
 
 
 class EvidenceStatus(str, Enum):
@@ -209,6 +212,11 @@ class CaseState(BaseModel):
 
     facts: dict[str, Any] = Field(default_factory=dict)
     fact_provenance: list[FactProvenance] = Field(default_factory=list)
+    # Per-actor history of every fact-slot assertion. Multiple assertions for
+    # the same slot coexist so a counterparty claim never silently overwrites
+    # the user's own statement and a user withdrawal can drop an active
+    # assertion without erasing its history.
+    slot_assertions: dict[str, list[SlotAssertion]] = Field(default_factory=dict)
     key_facts: list[str] = Field(default_factory=list)
     missing_facts: list[str] = Field(default_factory=list)
 
