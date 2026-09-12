@@ -379,3 +379,15 @@
 - 全量回归 896 passed（4 项新增）；可量测：46 项 alias probe + 9 项 scope probe 全部 0 缺口。
 - 提交 `ab359b1` 并推送 origin/main。
 
+### Stage 6 — 约束抽取 + 撤回的枚举覆盖（已完成）
+
+- 新增 `evaluation/consultation_constraint_coverage.py`：按 6 类约束（预算 / 联系方式 / 到场 / 优先级 / 关系 / 回避动作）+ 3 类撤回模式枚举 23 项 phrasing probe + 8 项 withdrawal probe。
+- `scripts/report_consultation_constraint_coverage.py` 报告缺口数。
+- `tests/test_consultation_constraint_coverage.py`（4 项）锁定不变量：所有 phrasing probe 必须通过、所有 withdrawal probe 必须通过、不相关句不应进 constraints、contact_method 类约束必须持久化。
+- 矩阵第一时间发现两个真实缺口：
+  - `费用希望在2000元以内` — `费用.{0,5}(?:以内|...)` 的间隙太窄，扩到 `.{0,12}` 即可捕获"希望在…"位于 费用 与 以内 之间。
+  - `请不要再给我打电话` — `(?:请)?不要再.{0,8}(?:联系|沟通|协商)` 漏了"打电话"，正则加 `打电话`。
+- 矩阵可证伪：手动注入一个"请别给我打电话"的假 probe，矩阵会立即报缺。
+- 全量回归 900 passed（4 项新增 constraint coverage 测试）。
+- 提交 `6bdb713` 并推送 origin/main。
+
