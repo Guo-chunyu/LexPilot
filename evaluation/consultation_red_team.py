@@ -221,6 +221,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_nine_variants(),
         *generate_round_ten_variants(),
         *generate_round_eleven_variants(),
+        *generate_round_twelve_variants(),
     ]
 
 
@@ -795,6 +796,60 @@ def generate_round_eleven_variants(seed: int = 20260919) -> list[RedTeamCase]:
             max_followup_similarity=0.65,
         )
         for case_id, domain, role, first, followup, detail in specs
+    ]
+
+
+def generate_round_twelve_variants(seed: int = 20260920) -> list[RedTeamCase]:
+    """Generate five unseen actorless reply-framing follow-ups."""
+    randomizer = Random(seed)
+    reply_frame = randomizer.choice(('回复里写着', '收到回复说'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    specs = (
+        (
+            'family_actorless_custody_followup', 'family',
+            '准备离婚，双方对孩子抚养安排有争议，请先给我方案。',
+            f'{reply_frame}孩子只能由对方抚养，不接受其他安排，{question}？',
+            '孩子只能由对方抚养',
+        ),
+        (
+            'corporate_actorless_inspection_scope_followup', 'corporate',
+            '我是公司股东，已经要求查阅账簿但被拒绝，请先给我方案。',
+            f'{reply_frame}只能看年度报表，不能查会计账簿，{question}？',
+            '只能看年度报表',
+        ),
+        (
+            'enforcement_actorless_installment_followup', 'enforcement',
+            '生效判决履行期已过，对方仍未付款，请先给我执行方案。',
+            f'{reply_frame}只能分期支付，但没有提供具体计划，{question}？',
+            '只能分期支付',
+        ),
+        (
+            'administrative_actorless_basis_followup', 'administrative',
+            '我收到行政处罚决定，认为事实认定不完整，请先给我方案。',
+            f'{reply_frame}处理依据不能另行提供，只能看决定书，{question}？',
+            '处理依据不能另行提供',
+        ),
+        (
+            'traffic_actorless_insurer_scope_followup', 'traffic',
+            '发生交通事故后车辆受损，我有事故认定书和维修票据，请先给我方案。',
+            f'{reply_frame}只处理车辆损失，不认可其他合理费用，{question}？',
+            '只处理车辆损失',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'actorless_reply_update'),
+            (first, followup),
+            domain,
+            expected_facts=(('details', detail),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', detail),
+            max_followup_similarity=0.65,
+        )
+        for case_id, domain, first, followup, detail in specs
     ]
 
 

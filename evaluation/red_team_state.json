@@ -619,6 +619,53 @@
         "full_suite": "332 passed, 1 warning"
       },
       "commit_subject": "Recognize pronoun opponent updates"
+    },
+    {
+      "round_id": "round-012-actorless-reply-updates",
+      "seed": 20260920,
+      "generator": "generate_round_twelve_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "family_actorless_custody_followup",
+        "corporate_actorless_inspection_scope_followup",
+        "enforcement_actorless_installment_followup",
+        "administrative_actorless_basis_followup",
+        "traffic_actorless_insurer_scope_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "family_actorless_custody_followup", "messages": ["准备离婚，双方对孩子抚养安排有争议，请先给我方案。", "收到回复说孩子只能由对方抚养，不接受其他安排，我应该怎么办？"]},
+        {"case_id": "corporate_actorless_inspection_scope_followup", "messages": ["我是公司股东，已经要求查阅账簿但被拒绝，请先给我方案。", "收到回复说只能看年度报表，不能查会计账簿，我应该怎么办？"]},
+        {"case_id": "enforcement_actorless_installment_followup", "messages": ["生效判决履行期已过，对方仍未付款，请先给我执行方案。", "收到回复说只能分期支付，但没有提供具体计划，我应该怎么办？"]},
+        {"case_id": "administrative_actorless_basis_followup", "messages": ["我收到行政处罚决定，认为事实认定不完整，请先给我方案。", "收到回复说处理依据不能另行提供，只能看决定书，我应该怎么办？"]},
+        {"case_id": "traffic_actorless_insurer_scope_followup", "messages": ["发生交通事故后车辆受损，我有事故认定书和维修票据，请先给我方案。", "收到回复说只处理车辆损失，不认可其他合理费用，我应该怎么办？"]}
+      ],
+      "failures_before_fix": [
+        "family_actorless_custody_followup",
+        "corporate_actorless_inspection_scope_followup",
+        "enforcement_actorless_installment_followup",
+        "administrative_actorless_basis_followup",
+        "traffic_actorless_insurer_scope_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "actorless_reply_frames_not_recognized",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "5 generated cases and 3 delivery-path regressions passed",
+          "commit_subject": "Recognize actorless reply updates"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "后续消息用“收到回复说／回复里写着”直接转述时没有明确主体，现有主体匹配无法提取该新主张。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "340 passed, 1 warning"
+      },
+      "commit_subject": "Recognize actorless reply updates"
     }
   ]
 }

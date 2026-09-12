@@ -315,6 +315,14 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
             message,
         )
+        if not counterparty_update and dossier.turns > 1:
+            counterparty_update = re.search(
+                r'((?:收到(?:的)?回复(?:说|称|表示|写明)?|'
+                r'回复(?:里|中)(?:说|称|表示|写着|写明))'
+                r'.{0,180}?)(?=[，,](?:我|现在我)?'
+                r'(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
+                message,
+            )
         if counterparty_update:
             value = counterparty_update.group(1).strip('，,。；; ')
             put('details', value, value)

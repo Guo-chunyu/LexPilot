@@ -27,6 +27,7 @@ from evaluation.consultation_red_team import (
     generate_round_nine_variants,
     generate_round_ten_variants,
     generate_round_eleven_variants,
+    generate_round_twelve_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -66,6 +67,8 @@ UNMARKED_MERCHANT_START = '我预付了摄影套餐，但门店一直无法安�
 UNMARKED_MERCHANT_FOLLOWUP = '商家表示只能延期半年使用，不接受退款，我应该怎么办？'
 PRONOUN_MERCHANT_START = '商家取消了我预订的服务，但没有退款，请先给我方案。'
 PRONOUN_MERCHANT_FOLLOWUP = '他们回复说只能换成店内余额，不能原路退款，我该怎么回应？'
+ACTORLESS_CORPORATE_START = '我是公司股东，已经要求查阅账簿但被拒绝，请先给我方案。'
+ACTORLESS_CORPORATE_FOLLOWUP = '收到回复说只能看年度报表，不能查会计账簿，我应该怎么办？'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -493,6 +496,61 @@ def test_pronoun_counterparty_update_is_grounded_in_streamlit():
     at.chat_input[0].set_value(PRONOUN_MERCHANT_FOLLOWUP).run(timeout=20)
     state = at.session_state['case_state']
     _assert_pronoun_counterparty_update_is_grounded(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
+
+
+def _assert_actorless_reply_update_is_grounded(
+    state, reply: str, exported: str = ''
+) -> None:
+    assert state.case_type == 'corporate'
+    assert '只能看年度报表' in state.facts.get('details', '')
+    assert '**针对本轮追问**' in reply
+    assert '只能看年度报表' in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    if exported:
+        assert '只能看年度报表' in exported
+
+
+def test_actorless_reply_update_is_grounded_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(ACTORLESS_CORPORATE_START)
+    second = engine.process(ACTORLESS_CORPORATE_FOLLOWUP, first['case_state'])
+    _assert_actorless_reply_update_is_grounded(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_actorless_reply_update_is_grounded_in_api_and_export():
+    thread_id = 'red_team_actorless_reply_update'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': ACTORLESS_CORPORATE_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': ACTORLESS_CORPORATE_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_actorless_reply_update_is_grounded(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_actorless_reply_update_is_grounded_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(ACTORLESS_CORPORATE_START).run(timeout=20)
+    at.chat_input[0].set_value(ACTORLESS_CORPORATE_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_actorless_reply_update_is_grounded(
         state,
         at.session_state['messages'][-1]['content'],
         report_markdown(state),
@@ -951,6 +1009,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_nine_variants': generate_round_nine_variants,
         'generate_round_ten_variants': generate_round_ten_variants,
         'generate_round_eleven_variants': generate_round_eleven_variants,
+        'generate_round_twelve_variants': generate_round_twelve_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
