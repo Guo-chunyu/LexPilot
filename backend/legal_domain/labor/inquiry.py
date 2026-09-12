@@ -14,7 +14,10 @@ def select_questions(state: CaseState, limit: int = 2) -> list[str]:
     candidates: list[InquiryCandidate] = []
     for spec in model.question_specs(state.dispute_type):
         fact_id = spec["id"]
-        if fact_id not in state.missing_facts:
+        if (
+            fact_id not in state.missing_facts
+            or fact_id in state.consultation.declined_slots
+        ):
             continue
         related = [
             element

@@ -106,6 +106,11 @@ DEBT_DETAILED_PLAN_REQUEST = (
     '请按现有事实和材料给我一份详细的实施方案，写清具体步骤、证据、'
     '办理渠道和不顺利时怎么办。'
 )
+LABOR_DATE_INTAKE_START = (
+    '公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、'
+    '工作群聊天和考勤截图。公司已经明确拒绝支付，请先给我方案。'
+)
+LABOR_DATE_INTAKE_CONTINUE = '接下来还需要我补充什么？'
 CUSTOMER_SERVICE_START = '我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。'
 CUSTOMER_SERVICE_FOLLOWUP = '客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？'
 UNMARKED_MERCHANT_START = '我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。'
@@ -586,6 +591,51 @@ def test_explicit_detailed_plan_after_followups_in_streamlit():
     _assert_explicit_detailed_plan_is_rendered(
         at.session_state['case_state'], at.session_state['messages'][-1]['content']
     )
+    assert not at.exception
+
+
+def _assert_labor_start_date_was_consumed(state, reply: str, expected: str) -> None:
+    assert state.facts.get('employment_start_date') == expected
+    assert 'employment_start_date' not in state.pending_fact_ids
+    assert '你实际是哪一天入职的' not in reply
+
+
+@pytest.mark.parametrize('answer', ['2026.8.11', '2026/8/11', '2026年8月11日'])
+def test_labor_pending_start_date_accepts_common_formats(answer: str):
+    engine = LexPilotEngine()
+    first = engine.process(LABOR_DATE_INTAKE_START)
+    question = engine.process(LABOR_DATE_INTAKE_CONTINUE, first['case_state'])
+    assert question['case_state'].pending_fact_ids == ['employment_start_date']
+    result = engine.process(answer, question['case_state'])
+    _assert_labor_start_date_was_consumed(result['case_state'], result['reply'], '2026-08-11')
+
+
+def test_labor_pending_start_date_accepts_common_format_in_api():
+    thread_id = 'red_team_labor_pending_start_date'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': LABOR_DATE_INTAKE_START})
+        client.post('/chat', json={'thread_id': thread_id, 'query': LABOR_DATE_INTAKE_CONTINUE})
+        response = client.post('/chat', json={'thread_id': thread_id, 'query': '2026.8.11'})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == 200
+    _assert_labor_start_date_was_consumed(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        '2026-08-11',
+    )
+
+
+def test_labor_pending_start_date_unknown_moves_to_next_question_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    for message in (LABOR_DATE_INTAKE_START, LABOR_DATE_INTAKE_CONTINUE, '不知道'):
+        at.chat_input[0].set_value(message).run(timeout=20)
+    state = at.session_state['case_state']
+    reply = at.session_state['messages'][-1]['content']
+    assert 'employment_start_date' in state.consultation.declined_slots
+    assert 'employment_start_date' not in state.pending_fact_ids
+    assert '你实际是哪一天入职的' not in reply
     assert not at.exception
 
 

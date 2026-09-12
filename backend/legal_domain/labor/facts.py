@@ -127,6 +127,16 @@ def extract_labor_facts(
         facts["overtime_hours"] = float(overtime.group(1))
 
     if interpret_pending_answer:
+        resolved_pending_ids = _resolve_pending_fact_ids(
+            pending_questions,
+            pending_fact_ids,
+            model.question_specs(case.dispute_type),
+        )
+        if _is_explicit_unknown_answer(text):
+            case.consultation.declined_slots = list(dict.fromkeys([
+                *case.consultation.declined_slots,
+                *resolved_pending_ids,
+            ]))
         facts.update(
             _extract_contextual_facts(
                 text,
@@ -138,6 +148,11 @@ def extract_labor_facts(
             )
         )
     case.apply_facts(facts)
+    if facts:
+        case.consultation.declined_slots = [
+            fact_id for fact_id in case.consultation.declined_slots
+            if fact_id not in facts
+        ]
     if facts:
         for fact_id in facts:
             case.add_fact_provenance(
@@ -285,6 +300,10 @@ def _extract_contextual_facts(
             value = _bare_duration_months(text)
             if value is not None:
                 contextual[fact_id] = value
+        elif fact_id.endswith("_date"):
+            value = _single_date(text)
+            if value is not None:
+                contextual[fact_id] = value
         elif fact_id in {"termination_reason", "termination_type", "work_schedule", "overtime_period"}:
             answer = text.strip(" ，。；;\n\t")
             if answer and _yes_no_answer(answer) is None:
@@ -296,6 +315,27 @@ def _extract_contextual_facts(
         if term and "contract_term_months" not in explicit_facts:
             contextual["contract_term_months"] = _parse_number(term.group(1)) * 12
     return contextual
+
+
+def _single_date(text: str) -> str | None:
+    match = re.search(
+        r'(?<!\d)(\d{4})\s*(?:年|[./-])\s*(\d{1,2})\s*'
+        r'(?:月|[./-])\s*(\d{1,2})\s*日?(?!\d)',
+        text,
+    )
+    if not match:
+        return None
+    try:
+        return date(*(int(value) for value in match.groups())).isoformat()
+    except ValueError:
+        return None
+
+
+def _is_explicit_unknown_answer(text: str) -> bool:
+    normalized = _normalize_text(text)
+    return normalized in {
+        '不清楚', '不知道', '不确定', '记不清', '想不起来', '忘记了', '忘了',
+    }
 
 
 def _resolve_pending_fact_ids(
