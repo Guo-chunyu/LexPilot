@@ -91,7 +91,23 @@ def action_plan(state) -> list[dict]:
             fallback='协商、投诉或调解未解决时重新比较正式救济成本；文书生效后仍不履行的，核对是否可依法申请执行及其条件。',
         ),
     ])
-    return enhance_steps(state, [step.model_dump() for step in first_steps])
+    return _drop_unavailable_materials(dossier, enhance_steps(state, [step.model_dump() for step in first_steps]))
+
+
+def _drop_unavailable_materials(dossier, steps: list[dict]) -> list[dict]:
+    """Never ask the user to bring a material the case already marks unobtainable.
+
+    Steps that are not built from the evidence list (for example the closing
+    "准备对方抗辩" step) carry fixed wording that can collide with a material
+    name, so the filter runs over every step rather than only the derived ones.
+    """
+    unavailable = {task.name for task in dossier.evidence_tasks if task.status == '暂无法提供'}
+    if not unavailable:
+        return steps
+    for step in steps:
+        remaining = [name for name in step.get('materials', []) if name not in unavailable]
+        step['materials'] = remaining or ['现有材料与替代线索']
+    return steps
 
 
 def plan_documents(state) -> list[dict]:

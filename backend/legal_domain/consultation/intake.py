@@ -221,7 +221,7 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
         state.consultation.declined_slots.remove(key)
 
 
-def ingest_text(text: str, state: CaseState, *, source_type='user_message', source_ref='', contextual=True) -> None:
+def ingest_text(text: str, state: CaseState, *, source_type='user_message', source_ref='', contextual=True, scoped_inventory=False) -> None:
     dossier = state.consultation
     message = text.strip()
     if not message:
@@ -438,7 +438,11 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         profile_evidence = PROFILES.get(state.case_type, PROFILES['general']).evidence
         siblings = tuple(item[0] for item in profile_evidence)
         only = asserted_exclusive_inventory(message)
-        if only and re.search(r'转账|聊天|截图|合同|通知|材料|证据|视频|借条', only.group(1)):
+        if (
+            only
+            and not scoped_inventory
+            and re.search(r'转账|聊天|截图|合同|通知|材料|证据|视频|借条', only.group(1))
+        ):
             # Explicitly exclusive inventory, not an assertion that missing
             # documents never existed or that supplied evidence proves the case.
             unavailable = []

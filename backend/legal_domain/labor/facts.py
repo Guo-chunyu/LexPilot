@@ -515,11 +515,36 @@ def _declines_remaining_evidence(text: str) -> bool:
 
 
 def _affirmed_mention(text: str, keyword: str) -> bool:
-    """Do not turn '没有考核记录' into evidence merely by keyword match."""
+    """Do not turn '没有考核记录' or '工资流水我这边拿不到' into held evidence.
 
-    for match in re.finditer(re.escape(keyword), text):
-        prefix = text[max(0, match.start() - 5):match.start()]
-        if not any(marker in prefix for marker in ("没有", "没", "无", "未", "不存在")):
+    Both the leading negation and the postposed “I cannot get it” wording are
+    read with the shared scope helper, so the specialist path cannot disagree
+    with the cross-domain intake about whether a material is available.
+    """
+    from backend.legal_domain.consultation.intake import POSTPOSED_UNAVAILABLE
+
+    clauses = re.split(r'[，,。；;\n]', text)
+    other_keywords = [
+        word
+        for name, words in EVIDENCE_KEYWORDS.items()
+        for word in words
+        if word != keyword
+    ]
+    for index, clause in enumerate(clauses):
+        if keyword not in clause:
+            continue
+        for match in re.finditer(re.escape(keyword), clause):
+            prefix = clause[max(0, match.start() - 5):match.start()]
+            if any(marker in prefix for marker in ("没有", "没", "无", "未", "不存在")):
+                continue
+            if POSTPOSED_UNAVAILABLE.search(clause[match.end():].strip()):
+                continue
+            # A bare “我这边拿不到” may also arrive in the next clause, but only
+            # while that clause does not name a different material.
+            following = clauses[index + 1:index + 2]
+            if following and not any(word in following[0] for word in other_keywords):
+                if POSTPOSED_UNAVAILABLE.search(following[0]):
+                    continue
             return True
     return False
 

@@ -160,16 +160,15 @@ def prepare_labor_turn(message: str, state: CaseState) -> CaseState:
     # first turns by the shared extractors and by fact provenance labels.
     state.consultation.turns += 1
     case = extract_labor_facts(message, state)
-    # Keep the labor interview's own evidence and pending-answer semantics.
-    # Only procedure-bearing turns need the cross-domain procedure extractor.
-    if re.search(
-        r'(?:已经|已).{0,36}(?:起诉|投诉|报案|申请|协商|仲裁|提交)|'
-        r'收到.{0,12}(?:传票|受理通知|开庭通知|裁决|判决)|'
-        r'(?:没有|尚未|还没).{0,12}(?:起诉|立案|投诉|报案|申请|协商|仲裁)',
-        message,
-    ):
-        from backend.legal_domain.consultation.intake import ingest_text
-        ingest_text(message, case, contextual=False)
+    # The shared intake owns material availability, later-turn counterparty
+    # positions, constraints and the procedural record for every domain. Running
+    # it unconditionally keeps the labour specialist path from silently dropping
+    # those, while `contextual=False` leaves the interview's own pending-answer
+    # semantics to `extract_labor_facts`. While the interview is still waiting
+    # for an answer, the turn is a scoped answer and must not be read as a global
+    # "these are all my materials" statement.
+    from backend.legal_domain.consultation.intake import ingest_text
+    ingest_text(message, case, contextual=False, scoped_inventory=bool(case.pending_questions))
     detect_evidence_gaps(case)
     return case
 

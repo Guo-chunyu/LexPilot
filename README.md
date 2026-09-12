@@ -169,6 +169,20 @@ pytest -q
 
 持续红队进度保存在 `evaluation/red_team_state.json`。案例池同时保留人工失败样本、固定手写矩阵和固定种子自动变体；每轮选择 5 个未覆盖案例，修复前后结果与全量回归数量一并落盘。
 
+测试分为三层，各自回答不同的问题：
+
+- **示例层**（`tests/test_case_red_team.py` 等）：某个具体情形是否给出正确回答。
+- **枚举覆盖层**（`evaluation/consultation_coverage.py`、`tests/test_consultation_coverage.py`）：把每个领域的每项证据槽位与固定的一组自然表述（自述持有、明确没有、拿不到、经办方拒绝提供）以及"对方主张不得替换用户数字"的探针做交叉组合，共 149 个探针，并保证覆盖面不会悄悄缩小。
+- **不变量层**（`tests/test_consultation_invariants.py`）：对所有案例和探针统一断言，用户自己的槽位不被对方陈述替换、同材料不同时处于"已有"与"拿不到"、拿不到的材料不出现在上传动作、每个记录的事实都有来源可追溯、引擎与 API／导出发布同一份状态。
+
+需要人工查看剩余缺口时：
+
+```powershell
+python scripts\report_consultation_coverage.py
+```
+
+脚本打印各族的探针数与缺口数，退出码非零表示仍有缺口；加 `--json 路径` 可把缺口清单落盘。
+
 ## 配置
 
 ```text
