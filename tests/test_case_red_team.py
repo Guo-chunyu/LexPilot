@@ -73,6 +73,22 @@ REALISTIC_CONSUMER_START = '我在健身房办了 3000 元的会员卡，上周�
 REALISTIC_CONSUMER_LOCATION = '上海市'
 REALISTIC_CONSUMER_DATE = '2026.8.11'
 CONSUMER_FIRST_TURN_OPENING = '先确认是门店停业、迁址，还是经营主体已经异常'
+CONSUMER_IDENTITY_START = (
+    '我在上海市的健身房办了3000元会员卡，2026.8.11停业，'
+    '商家拒绝退款，我想拿回剩余费用，请给我方案。'
+)
+CONSUMER_IDENTITY_QUESTION = (
+    '我是学生，暂时还不知道它具体是啥身份，没有可以确定对方主体的材料，'
+    '他应该姓张。我应该怎么查询真正的经营主体？'
+)
+CONSUMER_MULTI_FACT_QUESTION = (
+    '事情发生在上海市，停业日期是2026.8.11，我想拿回剩余的3000元。'
+    '我是学生，对方经营主体暂时不清楚。我应该先投诉还是先起诉？'
+)
+EXPECTED_CONSUMER_PARTIES = (
+    '本人：学生；对方经营主体：暂不清楚（暂无确认主体的材料）；'
+    '对方联系人：可能姓张'
+)
 CUSTOMER_SERVICE_START = '我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。'
 CUSTOMER_SERVICE_FOLLOWUP = '客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？'
 UNMARKED_MERCHANT_START = '我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。'
@@ -428,6 +444,71 @@ def test_realistic_consumer_conversation_without_prior_plan_in_streamlit():
         at.session_state['messages'][-1]['content'],
     )
     assert not at.exception
+
+
+def _assert_identity_question_is_answered(state, reply: str, exported: str = '') -> None:
+    assert state.facts.get('parties') == EXPECTED_CONSUMER_PARTIES
+    assert '怎么查询' not in state.facts['parties']
+    assert '**针对本轮追问**' in reply
+    assert '国家企业信用信息公示系统' in reply
+    assert '支付记录' in reply
+    assert not reply.startswith('**已记录本轮补充**')
+    if exported:
+        assert EXPECTED_CONSUMER_PARTIES in exported
+        assert '我应该怎么查询真正的经营主体' not in exported
+
+
+def test_compound_party_answer_and_identity_question_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(CONSUMER_IDENTITY_START)
+    second = engine.process(CONSUMER_IDENTITY_QUESTION, first['case_state'])
+    _assert_identity_question_is_answered(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_compound_party_answer_and_identity_question_in_api_and_export():
+    thread_id = 'red_team_compound_party_identity_question'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': CONSUMER_IDENTITY_START})
+        second = client.post('/chat', json={'thread_id': thread_id, 'query': CONSUMER_IDENTITY_QUESTION})
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert second.status_code == exported.status_code == 200
+    _assert_identity_question_is_answered(
+        api_module.CaseState.from_value(second.json()['case_state']),
+        second.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_compound_party_answer_and_identity_question_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(CONSUMER_IDENTITY_START).run(timeout=20)
+    at.chat_input[0].set_value(CONSUMER_IDENTITY_QUESTION).run(timeout=20)
+    _assert_identity_question_is_answered(
+        at.session_state['case_state'],
+        at.session_state['messages'][-1]['content'],
+        report_markdown(at.session_state['case_state']),
+    )
+    assert not at.exception
+
+
+def test_one_message_updates_multiple_slots_and_answers_new_question():
+    engine = LexPilotEngine()
+    first = engine.process(REALISTIC_CONSUMER_START)
+    second = engine.process(CONSUMER_MULTI_FACT_QUESTION, first['case_state'])
+    state = second['case_state']
+    assert state.facts.get('location') == '上海市'
+    assert state.facts.get('event_time') == '2026.8.11'
+    assert '拿回剩余的3000元' in state.facts.get('goal', '')
+    assert state.facts.get('parties') == '本人：学生；对方经营主体：暂不清楚'
+    assert '**针对本轮追问**' in second['reply']
+    assert '先投诉' in second['reply']
+    assert '起诉' in second['reply']
+    assert not second['reply'].startswith('**已记录本轮补充**')
 
 
 def _assert_counterparty_alias_update_is_grounded(state, reply: str, exported: str = '') -> None:

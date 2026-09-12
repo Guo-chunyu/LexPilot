@@ -128,6 +128,77 @@ def asserted_exclusive_inventory(text: str):
     return first_asserted(text, r'(?:只有|仅有)([^，。；\n]{1,80})', policy=EXCLUSIVE_INVENTORY)
 
 
+def has_explicit_question(text: str) -> bool:
+    """Distinguish a new user question from a bare answer to the interview."""
+    return bool(
+        re.search(r'[？?]', text)
+        or re.search(
+            r'(?:我|那我|现在我)(?:应该|该|能否|能不能|可不可以|要不要|怎么|如何)',
+            text,
+        )
+    )
+
+
+def _party_answer_summary(message: str) -> str:
+    """Extract party assertions without storing uncertainty or questions verbatim."""
+    parts: list[str] = []
+    self_match = re.search(
+        r'(?:^|[，,。；;\n])\s*(?:我|本人)(?:是|作为)\s*'
+        r'([^，,。；;？?\n]{1,20})',
+        message,
+    )
+    if self_match:
+        description = self_match.group(1).strip()
+        if not re.search(r'不知道|不清楚|怎么|如何|什么|是否', description):
+            parts.append(f'本人：{description}')
+
+    counterpart_unknown = bool(
+        re.search(r'(?:不知道|不清楚|无法确认).{0,20}(?:身份|主体)', message)
+        or re.search(
+            r'(?:对方|商家).{0,12}(?:身份|经营主体|主体)'
+            r'.{0,10}(?:不知道|不清楚|无法确认)',
+            message,
+        )
+    )
+    no_identity_material = bool(
+        re.search(
+            r'(?:没有|暂无|拿不到).{0,18}(?:确认|确定|核实)'
+            r'.{0,10}(?:对方|商家).{0,8}(?:主体|身份).{0,8}(?:材料|资料|证据)',
+            message,
+        )
+    )
+    if counterpart_unknown:
+        value = '对方经营主体：暂不清楚'
+        if no_identity_material:
+            value += '（暂无确认主体的材料）'
+        parts.append(value)
+    else:
+        counterpart = re.search(
+            r'(?:对方|商家)(?:的)?(?:经营主体)?(?:是|为)'
+            r'(个人|公司|企业|个体工商户|门店|平台)',
+            message,
+        )
+        if counterpart:
+            parts.append(f'对方经营主体：{counterpart.group(1)}')
+
+    surname = re.search(
+        r'(?:他|她|对方|联系人)(?:应该|可能|大概|好像)?姓([\u4e00-\u9fff])',
+        message,
+    )
+    if surname:
+        parts.append(f'对方联系人：可能姓{surname.group(1)}')
+    return '；'.join(dict.fromkeys(parts))
+
+
+def _pending_answer_value(slot: str, message: str) -> str:
+    """Return only the asserted value for a pending slot, never an embedded question."""
+    if slot == 'parties':
+        return _party_answer_summary(message)
+    if has_explicit_question(message):
+        return ''
+    return message.strip(' ，,。；;')
+
+
 def _plausible_pending_answer(slot: str, message: str) -> bool:
     """Prevent unrelated free text from becoming a structured fact."""
     if slot == 'location':
@@ -456,6 +527,10 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if role['id'] != 'unconfirmed' and role['basis'].removeprefix('对话陈述：') in message:
             quote = role['basis'].removeprefix('对话陈述：')
             put('parties', quote, quote)
+        if 'parties' not in extracted:
+            party_summary = _party_answer_summary(message)
+            if party_summary:
+                put('parties', party_summary, party_summary)
 
     # Keep a location phrase small. Never infer a particular court from a city.
     location = re.search(r'(?:我在|发生在|位于|地点[是：:]?)([^，。；\n]{2,35})', message)
@@ -644,12 +719,14 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     if contextual and pending and not unknown and not wants_plan(message) and not says_evidence_exhausted(message):
         # A short answer belongs to the previous question only when it is not
         # demonstrably a different slot (e.g. an amount supplied to a date question).
+        pending_value = _pending_answer_value(pending, message)
         if (
             pending in QUESTIONS
-            and (pending in extracted or not extracted)
+            and pending not in extracted
+            and pending_value
             and _plausible_pending_answer(pending, message)
         ):
-            put(pending, state.facts.get(pending, message) if pending in extracted else message, message)
+            put(pending, pending_value, pending_value)
     if contextual and says_evidence_exhausted(message):
         state.mark_evidence_unavailable(list(state.pending_evidence_requests), exhausted=True)
         if 'evidence_inventory' not in dossier.declined_slots:

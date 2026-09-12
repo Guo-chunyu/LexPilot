@@ -5,7 +5,7 @@ import re
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
 from .intake import (
-    LABELS, QUESTIONS, UNKNOWN_PATTERN, ingest_text, refresh_evidence,
+    LABELS, QUESTIONS, UNKNOWN_PATTERN, has_explicit_question, ingest_text, refresh_evidence,
     retracted_urgent_actions, says_evidence_exhausted, urgent_actions, wants_plan,
 )
 from .profiles import PROFILES, domain_label, identify_domains, route_case
@@ -79,6 +79,31 @@ def _follow_up_analysis(message: str, state, profile) -> str:
             '并把3000元付款、当前余额、剩余服务以及门店停业信息对应起来；'
             '如果你不接受转卡，应在书面退款请求中明确写明不接受该替代方案，'
             '要求商家说明经营主体、未履行金额和拒绝退款的依据。'
+        )
+    if state.case_type == 'consumer' and re.search(
+        r'(?:怎么|如何|哪里|怎样).{0,8}(?:查询|查找|确认|核实)?.{0,8}(?:经营主体|商家主体|对方主体)'
+        r'|(?:查询|查找|确认|核实).{0,8}(?:经营主体|商家主体|对方主体)',
+        message,
+    ):
+        return (
+            f'{heading}：先不要用“可能姓张”直接确定退款义务主体，姓名只能作为联系人线索。'
+            '按这个顺序核对：先查看支付记录中的商户全称和商户订单号，再看会员协议、'
+            '发票、收据、平台订单、门店公示的营业执照或公众号认证信息；取得名称或统一社会信用代码后，'
+            '到国家企业信用信息公示系统核对登记主体和当前登记状态。'
+            '如果仍只有门店简称，可在投诉材料中同时提交门店地址、付款记录和聊天账号，'
+            '明确说明主体待核实，请平台或属地市场监管部门根据交易线索协助确认。'
+        )
+    if (
+        state.case_type == 'consumer'
+        and '投诉' in message
+        and '起诉' in message
+    ):
+        return (
+            f'{heading}：按目前3000元预付消费争议，建议先投诉：这一步成本较低，也便于取得处理回执，'
+            '同时把诉讼材料作为后备，不必把两条路线理解成只能二选一。'
+            '先确认实际收款和经营主体，整理付款、余额、停业及拒绝退款记录后提交平台或12315投诉；'
+            '投诉不能自动带来退款，也不能替代对期限和管辖的核对。若投诉未解决，再根据主体状态、'
+            '送达线索和投入评估是否起诉；发现主体注销、失联或财产异常时，应尽早人工核对正式救济。'
         )
     current_details = str(state.facts.get('details', '')).strip()
     if current_details and current_details in message:
@@ -222,7 +247,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
         and narrative_domains
         and narrative_domains[0] not in {'general', state.case_type}
     )
-    if answered_previous_slot:
+    if answered_previous_slot and not has_explicit_question(message):
         current_analysis = _answered_slot_acknowledgement(
             previous_slot, str(state.facts[previous_slot])
         )
