@@ -2,7 +2,7 @@
   "schema_version": 1,
   "base_seed": 20260909,
   "round_size": 5,
-  "consecutive_clean_rounds": 1,
+  "consecutive_clean_rounds": 0,
   "loop_status": "running",
   "pause_reason": "",
   "case_pool_sources": {
@@ -698,6 +698,53 @@
         "full_suite": "347 passed, 1 warning"
       },
       "commit_subject": "Add next-step-only red-team coverage"
+    },
+    {
+      "round_id": "round-014-cross-domain-evidence-supplements",
+      "seed": 20260922,
+      "generator": "generate_round_fourteen_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "corporate_new_registry_materials",
+        "ip_new_creation_source_materials",
+        "traffic_new_dashcam_materials",
+        "medical_new_consent_materials",
+        "contract_new_delivery_materials"
+      ],
+      "anonymous_cases": [
+        {"case_id": "corporate_new_registry_materials", "messages": ["我是公司股东，想核对出资和股东权利，请先给我方案。", "我补充找到了股东名册和公司章程，请更新材料清单。"]},
+        {"case_id": "ip_new_creation_source_materials", "messages": ["我的摄影作品被网店使用，我正在整理权属材料，请先给我方案。", "我补充找到了创作源文件和首次发表页面，请更新材料清单。"]},
+        {"case_id": "traffic_new_dashcam_materials", "messages": ["发生交通事故，我有事故认定书但还在整理现场资料，请先给我方案。", "我补充找到了行车记录仪原视频和现场照片，请更新材料清单。"]},
+        {"case_id": "medical_new_consent_materials", "messages": ["手术后出现持续不适，我正在整理诊疗材料，请先给我方案。", "我补充找到了手术同意书和护理记录，请更新材料清单。"]},
+        {"case_id": "contract_new_delivery_materials", "messages": ["供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。", "我补充找到了物流签收单和验收记录，请更新材料清单。"]}
+      ],
+      "failures_before_fix": [
+        "corporate_new_registry_materials",
+        "ip_new_creation_source_materials",
+        "traffic_new_dashcam_materials",
+        "medical_new_consent_materials",
+        "contract_new_delivery_materials"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "specialist_evidence_aliases_missing",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "5 generated cases and 3 delivery-path regressions passed",
+          "commit_subject": "Map specialist evidence aliases"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "证据别名只覆盖借贷、住房和消费的常见自然说法；公司、知识产权、交通、医疗和合同领域的新材料无法映射到规范证据任务，导致状态与导出没有更新。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "355 passed, 1 warning"
+      },
+      "commit_subject": "Map specialist evidence aliases"
     }
   ]
 }

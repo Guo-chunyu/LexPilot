@@ -30,6 +30,7 @@ class RedTeamCase:
     origin: str = 'fixed'
     expected_reply_fragments: tuple[str, ...] = ()
     max_followup_similarity: float | None = None
+    expected_evidence_names: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -223,6 +224,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_eleven_variants(),
         *generate_round_twelve_variants(),
         *generate_round_thirteen_variants(),
+        *generate_round_fourteen_variants(),
     ]
 
 
@@ -882,6 +884,59 @@ def generate_round_thirteen_variants(seed: int = 20260921) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_fourteen_variants(seed: int = 20260922) -> list[RedTeamCase]:
+    """Generate five unseen cross-domain evidence-supplement follow-ups."""
+    randomizer = Random(seed)
+    found = randomizer.choice(('我又找到了', '我补充找到了'))
+    request = randomizer.choice(('请更新材料清单', '请按这些材料更新方案'))
+    specs = (
+        (
+            'corporate_new_registry_materials', 'corporate',
+            '我是公司股东，想核对出资和股东权利，请先给我方案。',
+            f'{found}股东名册和公司章程，{request}。',
+            ('股东与章程材料',),
+        ),
+        (
+            'ip_new_creation_source_materials', 'intellectual_property',
+            '我的摄影作品被网店使用，我正在整理权属材料，请先给我方案。',
+            f'{found}创作源文件和首次发表页面，{request}。',
+            ('权利来源材料',),
+        ),
+        (
+            'traffic_new_dashcam_materials', 'traffic',
+            '发生交通事故，我有事故认定书但还在整理现场资料，请先给我方案。',
+            f'{found}行车记录仪原视频和现场照片，{request}。',
+            ('事故认定及现场记录',),
+        ),
+        (
+            'medical_new_consent_materials', 'medical',
+            '手术后出现持续不适，我正在整理诊疗材料，请先给我方案。',
+            f'{found}手术同意书和护理记录，{request}。',
+            ('完整病历',),
+        ),
+        (
+            'contract_new_delivery_materials', 'contract',
+            '供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。',
+            f'{found}物流签收单和验收记录，{request}。',
+            ('履行记录',),
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'new_evidence'),
+            (first, followup),
+            domain,
+            forbidden_reply_fragments=('**按现有信息，先这样推进**',),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮补充**',),
+            max_followup_similarity=0.65,
+            expected_evidence_names=evidence_names,
+        )
+        for case_id, domain, first, followup, evidence_names in specs
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document
@@ -949,6 +1004,10 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
     for fragment in case.expected_reply_fragments:
         if fragment not in replies[-1]:
             failures.append(f'current-turn reply missing {fragment!r}')
+    evidence_names = {item.name for item in state.evidence}
+    for name in case.expected_evidence_names:
+        if name not in evidence_names:
+            failures.append(f'evidence inventory missing {name!r}')
     for fragment in case.forbidden_reply_fragments:
         if fragment in replies[-1]:
             failures.append(f'repeated answered question: {fragment}')

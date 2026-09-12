@@ -29,6 +29,7 @@ from evaluation.consultation_red_team import (
     generate_round_eleven_variants,
     generate_round_twelve_variants,
     generate_round_thirteen_variants,
+    generate_round_fourteen_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -72,6 +73,8 @@ ACTORLESS_CORPORATE_START = '我是公司股东，已经要求查阅账簿但被
 ACTORLESS_CORPORATE_FOLLOWUP = '收到回复说只能看年度报表，不能查会计账簿，我应该怎么办？'
 NEXT_STEP_ONLY_START = '健身房停止营业，预付余额没有退，请先给我方案。'
 NEXT_STEP_ONLY_FOLLOWUP = '那我现在最先做哪一步？请只说当前一步。'
+MEDICAL_EVIDENCE_START = '手术后出现持续不适，我正在整理诊疗材料，请先给我方案。'
+MEDICAL_EVIDENCE_FOLLOWUP = '我补充找到了手术同意书和护理记录，请更新材料清单。'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -596,6 +599,66 @@ def test_next_step_only_followup_is_scoped_in_streamlit():
     assert not at.exception
 
 
+def _assert_new_medical_evidence_is_mapped(
+    state, reply: str, exported: str = ''
+) -> None:
+    evidence = {item.name: item for item in state.evidence}
+    assert '完整病历' in evidence
+    task = next(
+        item for item in state.consultation.evidence_tasks
+        if item.name == '完整病历'
+    )
+    assert task.status == '用户称有，尚未上传'
+    assert '**针对本轮补充**' in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    if exported:
+        assert '完整病历' in exported
+        assert '用户称有，尚未上传' in exported
+
+
+def test_new_medical_evidence_is_mapped_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(MEDICAL_EVIDENCE_START)
+    second = engine.process(MEDICAL_EVIDENCE_FOLLOWUP, first['case_state'])
+    _assert_new_medical_evidence_is_mapped(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_new_medical_evidence_is_mapped_in_api_and_export():
+    thread_id = 'red_team_new_medical_evidence'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': MEDICAL_EVIDENCE_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': MEDICAL_EVIDENCE_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_new_medical_evidence_is_mapped(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_new_medical_evidence_is_mapped_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(MEDICAL_EVIDENCE_START).run(timeout=20)
+    at.chat_input[0].set_value(MEDICAL_EVIDENCE_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_new_medical_evidence_is_mapped(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
+
+
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
     assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])
@@ -1049,6 +1112,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_eleven_variants': generate_round_eleven_variants,
         'generate_round_twelve_variants': generate_round_twelve_variants,
         'generate_round_thirteen_variants': generate_round_thirteen_variants,
+        'generate_round_fourteen_variants': generate_round_fourteen_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
