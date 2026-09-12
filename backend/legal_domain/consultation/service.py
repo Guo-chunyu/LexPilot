@@ -167,6 +167,35 @@ def _most_relevant_follow_up_step(message: str, report: dict) -> dict:
     return steps[0]
 
 
+def _wants_detailed_plan(message: str) -> bool:
+    return bool(
+        wants_plan(message)
+        and re.search(
+            r'详细(?:的)?(?:实施)?方案|完整(?:的)?(?:实施)?方案|实施方案|'
+            r'写清.{0,24}(?:步骤|证据|材料|渠道|不顺利)|'
+            r'(?:方案|步骤).{0,10}(?:详细|完整)',
+            message,
+        )
+    )
+
+
+def _detailed_plan_lines(report: dict) -> list[str]:
+    lines = ['**按现有事实，详细实施方案**']
+    for index, step in enumerate(report.get('action_plan', []), 1):
+        instructions = '；'.join(step.get('instructions', []))
+        materials = '、'.join(step.get('materials', [])) or '按受理渠道要求核对'
+        lines += [
+            f'{index}. **{step["title"]}**',
+            f'   - **何时办理**：{step.get("suggested_date", "")}；{step.get("when", "")}',
+            f'   - **办理渠道**：{step.get("channel", "")}',
+            f'   - **证据与材料**：{materials}',
+            f'   - **具体操作**：{instructions}',
+            f'   - **完成标志**：{step.get("completion", "")}',
+            f'   - **不顺利时**：{step.get("fallback", "")}',
+        ]
+    return lines
+
+
 def _next_evidence_task(tasks):
     """Prefer material the user says exists over repeating an unavailable request."""
     return next((task for task in tasks if task.source_refs),
@@ -194,6 +223,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
         dossier.domain_ids = list(dict.fromkeys([state.case_type, *dossier.domain_ids, *related]))[:3]
     exhausted_statement = says_evidence_exhausted(message)
     explicit_plan = wants_plan(message) or exhausted_statement
+    detailed_plan_request = _wants_detailed_plan(message)
     # The generation call must see this turn's retrieval, not last turn's status.
     retrieve_for_case(state)
     if dossier.jurisdiction_status != 'OUTSIDE_MAINLAND':
@@ -247,7 +277,12 @@ def process_consultation(message: str, state: CaseState) -> dict:
         and narrative_domains
         and narrative_domains[0] not in {'general', state.case_type}
     )
-    if answered_previous_slot and not has_explicit_question(message):
+    if detailed_plan_request:
+        current_analysis = (
+            '**针对本轮请求**：下面按当前已记录的事实与材料直接展开完整实施方案；'
+            '尚未确认的地区、主体或期限会明确保留为核对项，不用单步摘要代替方案。'
+        )
+    elif answered_previous_slot and not has_explicit_question(message):
         current_analysis = _answered_slot_acknowledgement(
             previous_slot, str(state.facts[previous_slot])
         )
@@ -268,9 +303,16 @@ def process_consultation(message: str, state: CaseState) -> dict:
     produce = explicit_plan or had_plan or not missing or dossier.turns >= 6
     if produce:
         report = build_consultation_report(state)
-        pieces += decision_delta_reply_lines(report.get('decision_delta', {}))
+        if not detailed_plan_request:
+            pieces += decision_delta_reply_lines(report.get('decision_delta', {}))
         pieces.append('**建议先走的路线**：' + report['strategy_comparison']['decision_reason'])
-        if had_plan:
+        if detailed_plan_request:
+            pieces += _detailed_plan_lines(report)
+            pieces += [
+                '',
+                '右侧“报告”已同步更新，可继续下载 Word / PDF；聊天中的步骤与当前报告使用同一份事实状态。',
+            ]
+        elif had_plan:
             step = _most_relevant_follow_up_step(message, report)
             if step:
                 pieces += [

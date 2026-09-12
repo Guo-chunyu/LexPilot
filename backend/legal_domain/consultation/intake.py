@@ -710,6 +710,13 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
             message,
         )
+    if not counterparty_update and dossier.turns > 1:
+        counterparty_update = re.search(
+            r'((?:我.{0,12}(?:找到|看到|保存).{0,8})?'
+            r'(?:他|她|对方).{0,8}(?:之前|曾经)?(?:说|表示|回复)'
+            r'[：:]?[“\"]([^”\"]{1,120})[”\"])',
+            message,
+        )
     if counterparty_update:
         value = counterparty_update.group(1).strip('，,。；; ')
         put('details', value, value, assertor='counterparty')

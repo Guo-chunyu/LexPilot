@@ -89,6 +89,23 @@ EXPECTED_CONSUMER_PARTIES = (
     '本人：学生；对方经营主体：暂不清楚（暂无确认主体的材料）；'
     '对方联系人：可能姓张'
 )
+DEBT_DETAILED_PLAN_START = (
+    '朋友欠我4万元，没有借条，但我有银行转账记录和完整微信聊天。'
+    '约定今年6月30日前还款，我已经催过三次，对方明确拒绝还款。'
+    '不要再建议我继续联系或调解，我只接受书面方式处理。请先给我方案。'
+)
+DEBT_DETAILED_PLAN_DEFENSE = (
+    '对方刚刚回复说这4万元是赠与，不承认是借款。'
+    '我现在最先准备什么？请只回答当前最重要的一步，不要重复前面的完整方案。'
+)
+DEBT_DETAILED_PLAN_EVIDENCE = (
+    '我找到了他之前说“月底先还你一万元，剩下的下个月还”的聊天，'
+    '但没有写“借款”两个字。这份聊天有什么用？只回答这个新问题。'
+)
+DEBT_DETAILED_PLAN_REQUEST = (
+    '请按现有事实和材料给我一份详细的实施方案，写清具体步骤、证据、'
+    '办理渠道和不顺利时怎么办。'
+)
 CUSTOMER_SERVICE_START = '我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。'
 CUSTOMER_SERVICE_FOLLOWUP = '客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？'
 UNMARKED_MERCHANT_START = '我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。'
@@ -509,6 +526,67 @@ def test_one_message_updates_multiple_slots_and_answers_new_question():
     assert '先投诉' in second['reply']
     assert '起诉' in second['reply']
     assert not second['reply'].startswith('**已记录本轮补充**')
+
+
+def _assert_explicit_detailed_plan_is_rendered(state, reply: str) -> None:
+    assert '朋友欠我4万元' in state.facts.get('amount', '')
+    assert '月底先还你一万元' in state.facts.get('details', '')
+    assert '**按现有事实，详细实施方案**' in reply
+    assert '**办理渠道**' in reply
+    assert '**证据与材料**' in reply
+    assert '**具体操作**' in reply
+    assert '**不顺利时**' in reply
+    assert '人民法院在线服务' in reply
+    assert '**本轮最相关的下一步**' not in reply
+
+
+def _run_debt_detailed_plan_conversation(engine: LexPilotEngine):
+    result = engine.process(DEBT_DETAILED_PLAN_START)
+    for message in (DEBT_DETAILED_PLAN_DEFENSE, DEBT_DETAILED_PLAN_EVIDENCE):
+        result = engine.process(message, result['case_state'])
+    return engine.process(DEBT_DETAILED_PLAN_REQUEST, result['case_state'])
+
+
+def test_explicit_detailed_plan_after_followups_in_engine():
+    result = _run_debt_detailed_plan_conversation(LexPilotEngine())
+    _assert_explicit_detailed_plan_is_rendered(result['case_state'], result['reply'])
+
+
+def test_explicit_detailed_plan_after_followups_in_api():
+    thread_id = 'red_team_explicit_detailed_plan_after_followups'
+    client = TestClient(api_module.api_app)
+    try:
+        for message in (
+            DEBT_DETAILED_PLAN_START,
+            DEBT_DETAILED_PLAN_DEFENSE,
+            DEBT_DETAILED_PLAN_EVIDENCE,
+        ):
+            client.post('/chat', json={'thread_id': thread_id, 'query': message})
+        response = client.post(
+            '/chat', json={'thread_id': thread_id, 'query': DEBT_DETAILED_PLAN_REQUEST}
+        )
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == 200
+    _assert_explicit_detailed_plan_is_rendered(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+    )
+
+
+def test_explicit_detailed_plan_after_followups_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    for message in (
+        DEBT_DETAILED_PLAN_START,
+        DEBT_DETAILED_PLAN_DEFENSE,
+        DEBT_DETAILED_PLAN_EVIDENCE,
+        DEBT_DETAILED_PLAN_REQUEST,
+    ):
+        at.chat_input[0].set_value(message).run(timeout=20)
+    _assert_explicit_detailed_plan_is_rendered(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
+    assert not at.exception
 
 
 def _assert_counterparty_alias_update_is_grounded(state, reply: str, exported: str = '') -> None:
