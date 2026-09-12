@@ -4,9 +4,11 @@ import re
 
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
+from ._spans import SENTENCE_BROAD, has_asserted
 from .intake import (
     LABELS, QUESTIONS, UNKNOWN_PATTERN, has_explicit_question, ingest_text, refresh_evidence,
-    retracted_urgent_actions, says_evidence_exhausted, urgent_actions, wants_plan,
+    retracted_urgent_actions, says_evidence_exhausted, urgent_actions, wants_next_step_only,
+    wants_plan,
 )
 from .profiles import PROFILES, domain_label, identify_domains, route_case
 from .wording import WordingComposer
@@ -193,16 +195,23 @@ def _most_relevant_follow_up_step(message: str, report: dict) -> dict:
     return steps[0]
 
 
+_DETAILED_PLAN_PATTERN = (
+    r'详细(?:的)?(?:实施)?方案|完整(?:的)?(?:实施)?方案|实施方案|'
+    r'写清.{0,24}(?:步骤|证据|材料|渠道|不顺利)|'
+    r'(?:方案|步骤).{0,10}(?:详细|完整)'
+)
+
+
 def _wants_detailed_plan(message: str) -> bool:
-    return bool(
-        wants_plan(message)
-        and re.search(
-            r'详细(?:的)?(?:实施)?方案|完整(?:的)?(?:实施)?方案|实施方案|'
-            r'写清.{0,24}(?:步骤|证据|材料|渠道|不顺利)|'
-            r'(?:方案|步骤).{0,10}(?:详细|完整)',
-            message,
-        )
-    )
+    """A detailed-plan request, but not a refusal of one.
+
+    "不用重复完整方案" contains the same keywords as a real request, so the
+    match has to go through the shared negation/scope policy instead of a bare
+    search. Otherwise asking for a single step hands back the whole plan.
+    """
+    if not wants_plan(message):
+        return False
+    return has_asserted(message, _DETAILED_PLAN_PATTERN, policy=SENTENCE_BROAD)
 
 
 def _detailed_plan_lines(report: dict) -> list[str]:
@@ -250,6 +259,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
     exhausted_statement = says_evidence_exhausted(message)
     explicit_plan = wants_plan(message) or exhausted_statement
     detailed_plan_request = _wants_detailed_plan(message)
+    next_step_only = wants_next_step_only(message)
     # The generation call must see this turn's retrieval, not last turn's status.
     retrieve_for_case(state)
     if dossier.jurisdiction_status != 'OUTSIDE_MAINLAND':
@@ -341,7 +351,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
                 '',
                 '右侧“报告”已同步更新，可继续下载 Word / PDF；聊天中的步骤与当前报告使用同一份事实状态。',
             ]
-        elif had_plan:
+        elif next_step_only or had_plan:
             dossier.reply_granularity = 'single_step'
             step = _most_relevant_follow_up_step(message, report)
             if step:

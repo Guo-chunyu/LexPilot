@@ -36,6 +36,7 @@ from evaluation.consultation_red_team import (
     generate_round_eighteen_variants,
     generate_round_nineteen_variants,
     generate_round_twenty_variants,
+    generate_round_twentyone_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -593,6 +594,62 @@ def test_explicit_detailed_plan_after_followups_in_streamlit():
         at.session_state['case_state'], at.session_state['messages'][-1]['content']
     )
     assert not at.exception
+
+
+SCOPED_LABOR_TURNS = (
+    '我是员工，公司拖欠我工资，我想维权。',
+    '我在武汉市，入职是2025年9月1日。',
+)
+SCOPED_NEXT_STEP_ONLY = '只告诉我现在最先做哪一步就行，不用重复完整方案。'
+
+
+def _run_scoped_next_step_only(engine: LexPilotEngine):
+    result = engine.process(SCOPED_LABOR_TURNS[0])
+    for message in SCOPED_LABOR_TURNS[1:]:
+        result = engine.process(message, result['case_state'])
+    return engine.process(SCOPED_NEXT_STEP_ONLY, result['case_state'])
+
+
+def _assert_scoped_request_is_not_expanded(state, reply: str) -> None:
+    """A negated plan request must not be read as "give me the full plan"."""
+    assert state.consultation.reply_granularity != 'detailed_plan'
+    assert '**按现有事实，详细实施方案**' not in reply
+
+
+def test_negated_detailed_plan_request_is_not_expanded_in_engine():
+    result = _run_scoped_next_step_only(LexPilotEngine())
+    _assert_scoped_request_is_not_expanded(result['case_state'], result['reply'])
+
+
+def test_negated_detailed_plan_request_is_not_expanded_in_api():
+    thread_id = 'red_team_negated_detailed_plan'
+    client = TestClient(api_module.api_app)
+    try:
+        for message in (*SCOPED_LABOR_TURNS, SCOPED_NEXT_STEP_ONLY):
+            response = client.post('/chat', json={'thread_id': thread_id, 'query': message})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == 200
+    _assert_scoped_request_is_not_expanded(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+    )
+
+
+def test_negated_detailed_plan_request_is_not_expanded_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    for message in (*SCOPED_LABOR_TURNS, SCOPED_NEXT_STEP_ONLY):
+        at.chat_input[0].set_value(message).run(timeout=20)
+    _assert_scoped_request_is_not_expanded(
+        at.session_state['case_state'], at.session_state['messages'][-1]['content']
+    )
+    assert not at.exception
+
+
+def test_plain_detailed_plan_request_is_still_expanded():
+    """Positive control: an unnegated request must still produce the full plan."""
+    result = _run_debt_detailed_plan_conversation(LexPilotEngine())
+    assert result['case_state'].consultation.reply_granularity == 'detailed_plan'
 
 
 def _assert_labor_start_date_was_consumed(state, reply: str, expected: str) -> None:
@@ -1812,6 +1869,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_eighteen_variants': generate_round_eighteen_variants,
         'generate_round_nineteen_variants': generate_round_nineteen_variants,
         'generate_round_twenty_variants': generate_round_twenty_variants,
+        'generate_round_twentyone_variants': generate_round_twentyone_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
@@ -1838,7 +1896,10 @@ def test_generated_red_team_case_passes_real_multiturn_engine(case):
         result = engine.process(message, state)
         state = result['case_state']
         replies.append(result['reply'])
-        if not {'fact_conflict', 'fact_correction'} & set(case.tags):
+        # 'constraint_withdrawal' and 'compound_turn' legitimately rewrite an
+        # earlier slot: the first drops a withdrawn limit, the second completes a
+        # partially inferred value. Both assert the outcome explicitly.
+        if not {'fact_conflict', 'fact_correction', 'constraint_withdrawal', 'compound_turn'} & set(case.tags):
             # The procedural record accumulates by design: a later procedural
             # outcome advances the case rather than contradicting the earlier
             # statement, and each case asserts its own expected outcome via

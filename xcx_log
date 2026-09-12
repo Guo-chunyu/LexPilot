@@ -543,4 +543,48 @@ decision_delta 可审计链路。只改表达层。
 
 验证：无需 Torch/Gymnasium 的核心全量测试 926 项通过（914 → 926，新增 P0 回归 4 项 + 措辞层 8 项）。
 
+## 2026-09-13 — 红队第 21 轮：限制撤回、作用域误判与金额覆盖（seed 20260947）
+
+本轮起案例由 2 轮改为 **4–6 轮**，新增 `generate_round_twentyone_variants`。5 个匿名案例：
+租赁限制撤回、医疗裸称"病历"、借贷一条消息六项信息、消费对方金额不得覆盖 + 用户更正、
+劳动"不用重复完整方案"。
+
+### 修复一：否定作用域 —— "不用重复完整方案"被当成索要完整方案
+
+- 复现：劳动对话中用户说"只告诉我现在最先做哪一步就行，不用重复完整方案。"，
+  系统判定为**索要**详细方案，`reply_granularity=detailed_plan`，直接违反用户约束。
+- 根因：`_wants_detailed_plan` 用的是裸 `re.search`，命中 `完整(?:的)?(?:实施)?方案` 就返回真。
+  而 `perspective.LATER_TURN_UPDATE` 本来就认得"不用重复完整方案"——**两处判定不一致**。
+- 修复：详细方案判定改走项目统一的否定作用域工具 `has_asserted(..., policy=SENTENCE_BROAD)`。
+- 新增引擎 / API / Streamlit 三项回归，另加一项**正向对照**（未否定的"请给我一份详细实施方案"仍必须展开），
+  避免修过头。
+
+### 修复二：回复粒度未收窄 —— "只说当前一步"仍输出方案摘要
+
+- 修掉否定误判后，该请求回落到 `plan_summary`，仍然是用户明确不要的完整列举。
+- 新增 `intake.wants_next_step_only()`，`process_consultation` 改为
+  `next_step_only or had_plan` → `single_step`。
+
+### 配套：RedTeamCase 新增 forbidden_facts
+
+用于断言某事实"不得包含"某片段（撤回后的限制、对方的金额）。
+⚠️ **必须放在字段最后**：既有案例存在按位置传参，插在 `forbidden_reply_fragments` 之前
+会让字符串元组落进 `forbidden_facts`，报 `ValueError: too many values to unpack`。
+
+### 关闭两个历史遗留根因（均由本轮案例验证已修复）
+
+- `bare_medical_record_alias_missing`：本轮验证"病历还在医院，我现在拿不到"已能映射为
+  「完整病历 · 暂无法提供」，关闭。
+- `handling_constraints_cannot_be_withdrawn`：本轮验证用户撤回后 `constraints` 已不再保留原限制，关闭。
+
+### 遗留（低严重度，记为 pending）
+
+- `party_record_holds_inference_signal`：角色词表含"欠我""公司拖欠我"等动词短语，
+  推断立场后该片段被原样写入 `parties`，导出报告的"双方身份"会出现"欠我"。
+  **不能直接不写**——`client_perspective` 依赖 `parties` 在后续轮次重新推导角色。
+  本轮曾尝试只写"真正的身份陈述"，导致 `debt_complete_progress` 角色退化为 unconfirmed，已回退，
+  待单独处理。
+
+验证：5/5 本轮案例通过；红队 248 项通过；无需 Torch/Gymnasium 的核心全量测试 940 项通过。
+
 

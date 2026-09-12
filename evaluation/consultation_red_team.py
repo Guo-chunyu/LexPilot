@@ -33,6 +33,10 @@ class RedTeamCase:
     expected_evidence_names: tuple[str, ...] = ()
     forbidden_evidence_names: tuple[str, ...] = ()
     expected_unavailable_evidence: tuple[str, ...] = ()
+    # Facts that must NOT contain a fragment. Used for withdrawal and for
+    # "the counterparty's number must not overwrite the user's" invariants.
+    # Kept last: earlier fields are still supplied positionally by some cases.
+    forbidden_facts: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -233,6 +237,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_eighteen_variants(),
         *generate_round_nineteen_variants(),
         *generate_round_twenty_variants(),
+        *generate_round_twentyone_variants(),
     ]
 
 
@@ -1269,6 +1274,108 @@ def generate_round_twenty_variants(seed: int = 20260928) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_twentyone_variants(seed: int = 20260947) -> list[RedTeamCase]:
+    """Five unseen multi-turn variants over constraints, scope and overwrite rules.
+
+    Round 21 deliberately uses 4-6 turns per case so a change has to survive
+    later turns instead of only the turn that introduced it.
+    """
+    randomizer = Random(seed)
+    question = randomizer.choice(('我应该怎么回应', '我应该怎么办'))
+    common_forbidden = ('@granularity:plan_summary',)
+    return [
+        RedTeamCase(
+            'housing_constraint_then_withdrawn',
+            ('housing', 'multiturn', 'constraint_withdrawal'),
+            (
+                '我是租客，退租后房东扣着5000元押金不退，说墙面有损坏，请先给我方案。',
+                '另外补充一个限制：请不要再让我联系对方，我只接受书面方式处理，请按这个条件调整。',
+                '房屋在杭州市西湖区，退租是2026年6月30日。',
+                '我改变主意了，还是愿意再和房东协商一次，请更新方案。',
+            ),
+            'housing', 'tenant',
+            expected_facts=(('location', '杭州'),),
+            # The withdrawn limit must not keep constraining the later plan.
+            forbidden_facts=(('constraints', '不要再让我联系对方'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('@mode:follow_up',),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'medical_bare_record_unobtainable',
+            ('medical', 'multiturn', 'unobtainable_material'),
+            (
+                '我在医院做完手术后一直疼痛，怀疑和手术有关，请先给我方案。',
+                '病历还在医院，我现在拿不到。',
+                '手术是在广州市，2026年3月12日做的。',
+                f'医院说这属于正常手术风险，不承担责任，{question}？',
+            ),
+            'medical',
+            expected_facts=(('details', '正常手术风险'), ('location', '广州')),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('@mode:follow_up', '正常手术风险'),
+            max_followup_similarity=0.65,
+            forbidden_evidence_names=('完整病历',),
+            expected_unavailable_evidence=('完整病历',),
+        ),
+        RedTeamCase(
+            'debt_all_in_one_message',
+            ('debt', 'multiturn', 'compound_turn'),
+            (
+                '有一笔借款对方一直拖着不还，请先给我方案。',
+                '事情发生在成都市，2026年1月8日借的钱，我是出借人，对方是个人，金额是3万5千元，我已经起诉并且立案了。',
+                f'对方说只借了1万元，其余是利息，{question}？',
+            ),
+            'debt', 'creditor',
+            expected_facts=(
+                ('location', '成都市'),
+                ('event_time', '2026年1月8日'),
+                ('procedure', '已经起诉'),
+                ('amount', '3万5千元'),
+                ('details', '只借了1万元'),
+            ),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('@mode:follow_up', '只借了1万元'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'consumer_counterparty_amount_vs_correction',
+            ('consumer', 'multiturn', 'fact_correction', 'amount_correction'),
+            (
+                '我在理发店办卡充了2000元，现在店关门了要退款。',
+                '商家说“只能退你500元”，我不同意，请更新方案。',
+                '更正一下，我实际充的是2600元，前面说错了。',
+                '我在深圳市南山区，事情是2026年5月10日。',
+            ),
+            'consumer',
+            expected_facts=(('amount', '2600元'), ('details', '只能退你500元')),
+            # The counterparty's offer must never become the user's amount.
+            forbidden_facts=(('amount', '500元'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_negated_detailed_plan_scope',
+            ('labor_dispute', 'multiturn', 'negated_plan_request'),
+            (
+                '我是员工，公司拖欠我工资，我想维权。',
+                '我在武汉市，入职是2025年9月1日。',
+                '只告诉我现在最先做哪一步就行，不用重复完整方案。',
+            ),
+            'labor_dispute', 'employee',
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            # A refusal of the full plan must not be answered with the full plan.
+            forbidden_facts=(('constraints', '不用重复完整方案'),),
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document
@@ -1351,6 +1458,10 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
         value = str(state.facts.get(key, ''))
         if fragment not in value:
             failures.append(f'fact {key} missing {fragment!r}: {value!r}')
+    for key, fragment in case.forbidden_facts:
+        value = str(state.facts.get(key, ''))
+        if fragment in value:
+            failures.append(f'fact {key} must not contain {fragment!r}: {value!r}')
     for fragment in case.expected_reply_fragments:
         if not reply_satisfies(fragment, replies[-1], state):
             failures.append(f'current-turn reply missing {fragment!r}')

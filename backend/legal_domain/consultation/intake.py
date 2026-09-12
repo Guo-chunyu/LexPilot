@@ -112,6 +112,25 @@ def wants_plan(text: str) -> bool:
     return bool(re.search(PLAN_PATTERN, text))
 
 
+NEXT_STEP_ONLY_PATTERN = (
+    r'只(?:说|告诉|给|讲|要).{0,8}(?:当前|现在|这一步|一步|最先)'
+    r'|不用重复完整?(?:方案|全部)'
+    r'|(?:不用|不要|别).{0,6}(?:重复|再说|列举).{0,6}(?:完整|全部|方案|步骤)'
+    r'|(?:现在|目前|眼下).{0,4}(?:最先|先|只).{0,4}(?:做|走).{0,4}哪一步'
+    r'|先(?:告诉|说|给).{0,4}(?:我)?(?:现在)?(?:做|走)?哪一步'
+)
+
+
+def wants_next_step_only(text: str) -> bool:
+    """Whether the user asked for one step instead of the whole plan.
+
+    Distinct from `wants_plan`: the user still wants guidance, but explicitly
+    refuses the full listing. Answering with the plan summary here repeats
+    exactly what they said not to repeat.
+    """
+    return bool(re.search(NEXT_STEP_ONLY_PATTERN, text))
+
+
 def says_evidence_exhausted(text: str) -> bool:
     """Accept an exhaustion statement only when its scope is asserted.
 
@@ -526,6 +545,11 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         role = client_perspective(state, message)
         if role['id'] != 'unconfirmed' and role['basis'].removeprefix('对话陈述：') in message:
             quote = role['basis'].removeprefix('对话陈述：')
+            # A role can be inferred from a bare verb phrase ("欠我"), which is a
+            # reliable *signal* but not a description of who the user is. The
+            # party record still holds it because `client_perspective` reads this
+            # slot back to re-derive the role on later turns; see the pending
+            # root cause `party_record_holds_inference_signal` in red_team_state.
             put('parties', quote, quote)
         if 'parties' not in extracted:
             party_summary = _party_answer_summary(message)

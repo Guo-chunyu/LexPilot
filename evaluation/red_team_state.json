@@ -4,18 +4,12 @@
   "round_size": 5,
   "consecutive_clean_rounds": 0,
   "loop_status": "paused",
-  "pause_reason": "按用户要求完成第16至第20轮后统一暂停并推送",
+  "pause_reason": "按用户要求完成第21轮后统一推送",
   "pending_root_causes": [
     {
-      "id": "handling_constraints_cannot_be_withdrawn",
-      "found_in": "round-017 and round-019 probes, not yet assigned to a round",
-      "evidence": "用户先说明“不要再让我联系对方”“只接受书面沟通”“人在外地不能去现场办理”，随后明确撤销该限制（例如“我改变主意了，还是愿意再和对方协商一次”），constraints 仍保留原限制并继续参与后续方案。",
-      "status": "pending"
-    },
-    {
-      "id": "bare_medical_record_alias_missing",
-      "found_in": "round-017 probe, not yet assigned to a round",
-      "evidence": "医疗材料用裸称“病历”时不在证据别名内，“病历还在医院，我现在拿不到”无法映射到规范取证任务，材料既未被登记也未被标记为暂无法提供。",
+      "id": "party_record_holds_inference_signal",
+      "found_in": "round-021 probe",
+      "evidence": "角色词表含“欠我”“公司拖欠我”等动词短语，client_perspective 用它们推断立场后，intake 会把该片段原样写入 parties，导出报告的“双方身份”因此出现“欠我”。不能直接不写：client_perspective 又依赖 parties 在后续轮次重新推导角色，曾尝试只写“真正的身份陈述”导致 debt_complete_progress 角色退化为 unconfirmed，已回退。",
       "status": "pending"
     }
   ],
@@ -39,14 +33,18 @@
         {
           "id": "invented_absolute_action_dates",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/planning.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/planning.py"
+          ],
           "verification": "3 path tests, 75 related tests and 235 full tests passed",
           "commit_subject": "Use relative consultation action schedules"
         },
         {
           "id": "known_repayment_term_generic_summary",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/authorities.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/authorities.py"
+          ],
           "verification": "3 path tests and 238 full tests passed",
           "commit_subject": "Contextualize known repayment terms"
         },
@@ -83,7 +81,9 @@
         {
           "id": "pending_fact_acknowledgement_lost_slot_label",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/service.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/service.py"
+          ],
           "verification": "3 path tests and 250 full tests passed",
           "commit_subject": "Name deferred facts in acknowledgements"
         }
@@ -102,7 +102,9 @@
         {
           "id": "later_turn_reused_first_opening_and_full_plan",
           "before_fix": "engine, API/export and Streamlit: 3 failed; first/second reply similarity 0.943",
-          "fix_files": ["backend/legal_domain/consultation/service.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/service.py"
+          ],
           "verification": "3 path tests, 114 red-team tests and 300 full tests passed; similarity reduced to 0.213",
           "commit_subject": "Focus later consultation replies",
           "commit_hash": "c56eca29a21a0bf263180440b30ac7736d57cfbe"
@@ -132,11 +134,39 @@
         "family_safety_correction"
       ],
       "anonymous_cases": [
-        {"case_id": "administrative_negated_deadline", "messages": ["我收到行政复议补正通知，但通知没有要求3日内补正，也没有写明截止日期，请给我一般方案。"]},
-        {"case_id": "contract_deadline_correction", "messages": ["合同纠纷已经起诉，我收到法院通知，后天开庭，请先给我方案。", "更正一下，我看错了，通知不是后天开庭，也没有写明开庭日期，请更新方案。"]},
-        {"case_id": "criminal_negated_detention", "messages": ["家人没有被刑事拘留，也没有被抓，只是收到普通询问通知，请给我一般方案。"]},
-        {"case_id": "criminal_detention_correction", "messages": ["家人收到刑事拘留通知书，请先给我方案。", "更正一下，我看错了，家人没有被拘留，收到的只是普通询问通知，请更新方案。"]},
-        {"case_id": "family_safety_correction", "messages": ["准备离婚，对方正在威胁我，我担心人身安全，请先给我方案。", "更正一下，刚才表述不准确，对方没有家暴，也没有人身安全问题，请更新一般方案。"]}
+        {
+          "case_id": "administrative_negated_deadline",
+          "messages": [
+            "我收到行政复议补正通知，但通知没有要求3日内补正，也没有写明截止日期，请给我一般方案。"
+          ]
+        },
+        {
+          "case_id": "contract_deadline_correction",
+          "messages": [
+            "合同纠纷已经起诉，我收到法院通知，后天开庭，请先给我方案。",
+            "更正一下，我看错了，通知不是后天开庭，也没有写明开庭日期，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "criminal_negated_detention",
+          "messages": [
+            "家人没有被刑事拘留，也没有被抓，只是收到普通询问通知，请给我一般方案。"
+          ]
+        },
+        {
+          "case_id": "criminal_detention_correction",
+          "messages": [
+            "家人收到刑事拘留通知书，请先给我方案。",
+            "更正一下，我看错了，家人没有被拘留，收到的只是普通询问通知，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "family_safety_correction",
+          "messages": [
+            "准备离婚，对方正在威胁我，我担心人身安全，请先给我方案。",
+            "更正一下，刚才表述不准确，对方没有家暴，也没有人身安全问题，请更新一般方案。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "criminal_negated_detention",
@@ -170,11 +200,37 @@
         "contract_amount_correction"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_negated_landlord_role", "messages": ["我不是房东，是租客；退租后房东不退押金，请给我方案。"]},
-        {"case_id": "labor_negated_employee_role", "messages": ["我不是员工，我是用人单位负责人；员工申请劳动仲裁称拖欠工资，我需要答辩方案。"]},
-        {"case_id": "debt_negated_filing", "messages": ["朋友欠我4万元，我没有起诉，也没有立案，只发过一次催款，请给我方案。"]},
-        {"case_id": "consumer_evidence_not_exhausted", "messages": ["健身房关门不退款，不是没有更多证据，我还有订单和聊天，稍后上传，请给我方案。"]},
-        {"case_id": "contract_amount_correction", "messages": ["采购合同争议金额5万元，对方没有交货。", "更正一下，实际争议金额是4万元，请按新金额给我方案。"]}
+        {
+          "case_id": "housing_negated_landlord_role",
+          "messages": [
+            "我不是房东，是租客；退租后房东不退押金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_negated_employee_role",
+          "messages": [
+            "我不是员工，我是用人单位负责人；员工申请劳动仲裁称拖欠工资，我需要答辩方案。"
+          ]
+        },
+        {
+          "case_id": "debt_negated_filing",
+          "messages": [
+            "朋友欠我4万元，我没有起诉，也没有立案，只发过一次催款，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "consumer_evidence_not_exhausted",
+          "messages": [
+            "健身房关门不退款，不是没有更多证据，我还有订单和聊天，稍后上传，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "contract_amount_correction",
+          "messages": [
+            "采购合同争议金额5万元，对方没有交货。",
+            "更正一下，实际争议金额是4万元，请按新金额给我方案。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "debt_negated_filing",
@@ -206,16 +262,48 @@
         "debt_double_negative_filing"
       ],
       "anonymous_cases": [
-        {"case_id": "debt_negated_creditor_role", "messages": ["我不是出借人，是借款人；借了4万元，已经还了1万元，请给我应对方案。"]},
-        {"case_id": "housing_role_correction_multiturn", "messages": ["我是租客，退租押金有争议。", "说错了，我不是租客，是房东；争议是房屋损坏扣押金，请给我方案。"]},
-        {"case_id": "consumer_nonexclusive_inventory", "messages": ["健身房关门不退款，不是只有支付截图，我还有订单和聊天，稍后上传，请给我方案。"]},
-        {"case_id": "administrative_historical_deadline", "messages": ["去年收到行政复议补正通知，文书要求3日内补正，但该期限早已过去，请给我当前方案。"]},
-        {"case_id": "debt_double_negative_filing", "messages": ["朋友欠我4万元，不是尚未起诉，我已经起诉并拿到案号，请给我方案。"]}
+        {
+          "case_id": "debt_negated_creditor_role",
+          "messages": [
+            "我不是出借人，是借款人；借了4万元，已经还了1万元，请给我应对方案。"
+          ]
+        },
+        {
+          "case_id": "housing_role_correction_multiturn",
+          "messages": [
+            "我是租客，退租押金有争议。",
+            "说错了，我不是租客，是房东；争议是房屋损坏扣押金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "consumer_nonexclusive_inventory",
+          "messages": [
+            "健身房关门不退款，不是只有支付截图，我还有订单和聊天，稍后上传，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "administrative_historical_deadline",
+          "messages": [
+            "去年收到行政复议补正通知，文书要求3日内补正，但该期限早已过去，请给我当前方案。"
+          ]
+        },
+        {
+          "case_id": "debt_double_negative_filing",
+          "messages": [
+            "朋友欠我4万元，不是尚未起诉，我已经起诉并拿到案号，请给我方案。"
+          ]
+        }
       ],
-      "failures_before_fix": ["consumer_nonexclusive_inventory"],
-      "case_adjustments": ["administrative_historical_deadline 补充行政复议语境，期限断言不变"],
+      "failures_before_fix": [
+        "consumer_nonexclusive_inventory"
+      ],
+      "case_adjustments": [
+        "administrative_historical_deadline 补充行政复议语境，期限断言不变"
+      ],
       "root_cause": "排他材料提取直接搜索只有或仅有，没有判断短语是否处于不是或并非的否定范围。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "1 product failure, 3 passed, 1 fixture corrected",
         "selected_cases_after_fix": "5 passed",
@@ -237,15 +325,46 @@
         "housing_landlord_amount_correction"
       ],
       "anonymous_cases": [
-        {"case_id": "family_double_negative_safety", "messages": ["准备离婚，不是没有人身安全风险，请给我紧急方案。"]},
-        {"case_id": "medical_nonexclusive_inventory", "messages": ["手术后出现后遗症，不是只有收费票据，我还有病历复印件和影像，稍后上传，请给我方案。"]},
-        {"case_id": "enforcement_filing_retraction", "messages": ["生效判决履行期已过，我已经申请执行并拿到案号，请先给我方案。", "更正一下，实际尚未申请执行，也没有案号，请按当前情况更新方案。"]},
-        {"case_id": "labor_employer_unfiled", "messages": ["我不是员工，是公司负责人；员工称欠薪但还没有申请劳动仲裁，公司也没收到通知，请给答辩准备方案。"]},
-        {"case_id": "housing_landlord_amount_correction", "messages": ["我是房东，租客退房后的押金是6000元，房屋有损坏。", "更正一下，押金实际是4500元，已经退了1000元，目前争议3500元，请给我方案。"]}
+        {
+          "case_id": "family_double_negative_safety",
+          "messages": [
+            "准备离婚，不是没有人身安全风险，请给我紧急方案。"
+          ]
+        },
+        {
+          "case_id": "medical_nonexclusive_inventory",
+          "messages": [
+            "手术后出现后遗症，不是只有收费票据，我还有病历复印件和影像，稍后上传，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "enforcement_filing_retraction",
+          "messages": [
+            "生效判决履行期已过，我已经申请执行并拿到案号，请先给我方案。",
+            "更正一下，实际尚未申请执行，也没有案号，请按当前情况更新方案。"
+          ]
+        },
+        {
+          "case_id": "labor_employer_unfiled",
+          "messages": [
+            "我不是员工，是公司负责人；员工称欠薪但还没有申请劳动仲裁，公司也没收到通知，请给答辩准备方案。"
+          ]
+        },
+        {
+          "case_id": "housing_landlord_amount_correction",
+          "messages": [
+            "我是房东，租客退房后的押金是6000元，房屋有损坏。",
+            "更正一下，押金实际是4500元，已经退了1000元，目前争议3500元，请给我方案。"
+          ]
+        }
       ],
-      "failures_before_fix": ["family_double_negative_safety"],
+      "failures_before_fix": [
+        "family_double_negative_safety"
+      ],
       "root_cause": "紧急信号检测只识别离关键词最近的一层否定，把“不是没有人身安全风险”的双重否定误当成无风险。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "1 failed, 4 passed; engine, API and Streamlit regression: 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -267,11 +386,38 @@
         "criminal_double_negative_detention"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_tenant_unfiled", "messages": ["我不是房东，是租客；房东扣着押金，我还没有起诉，也没有立案，请给我方案。"]},
-        {"case_id": "labor_employer_amount_correction", "messages": ["我是公司负责人，员工申请仲裁称欠薪5万元。", "更正一下，员工请求金额实际是4万元，请按单位立场给我答辩方案。"]},
-        {"case_id": "administrative_double_negative_filing", "messages": ["不是尚未申请行政复议，我已经申请并拿到受理号，请给我下一步方案。"]},
-        {"case_id": "consumer_exhaustion_correction", "messages": ["健身房关门不退款，我只有付款截图，没有其他材料，请先给我方案。", "更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。"]},
-        {"case_id": "criminal_double_negative_detention", "messages": ["家人并不是没有被拘留，我收到了拘留通知书，请给我紧急方案。"]}
+        {
+          "case_id": "housing_tenant_unfiled",
+          "messages": [
+            "我不是房东，是租客；房东扣着押金，我还没有起诉，也没有立案，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_employer_amount_correction",
+          "messages": [
+            "我是公司负责人，员工申请仲裁称欠薪5万元。",
+            "更正一下，员工请求金额实际是4万元，请按单位立场给我答辩方案。"
+          ]
+        },
+        {
+          "case_id": "administrative_double_negative_filing",
+          "messages": [
+            "不是尚未申请行政复议，我已经申请并拿到受理号，请给我下一步方案。"
+          ]
+        },
+        {
+          "case_id": "consumer_exhaustion_correction",
+          "messages": [
+            "健身房关门不退款，我只有付款截图，没有其他材料，请先给我方案。",
+            "更正一下，我后来找到了订单和完整聊天，不是只有截图，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "criminal_double_negative_detention",
+          "messages": [
+            "家人并不是没有被拘留，我收到了拘留通知书，请给我紧急方案。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "labor_employer_amount_correction",
@@ -281,14 +427,18 @@
         {
           "id": "employer_wage_terms_missing_from_domain_router",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/profiles.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py"
+          ],
           "verification": "3 path tests and 261 full tests passed",
           "commit_subject": "Route wage arbitration language to labor"
         },
         {
           "id": "new_consumer_evidence_not_mapped_to_canonical_tasks",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "3 path tests, 9 related tests and 269 full tests passed",
           "commit_subject": "Reopen collection for newly found evidence"
         }
@@ -320,25 +470,58 @@
         "outside_mainland_location_correction"
       ],
       "anonymous_cases": [
-        {"case_id": "ip_nonexclusive_source_materials", "messages": ["摄影作品被网店盗用，不是只有网页截图，我还有原始工程文件和首次发布时间记录，请给我方案。"]},
-        {"case_id": "medical_records_not_absent", "messages": ["手术后出现后遗症，并不是没有诊疗材料，我有出院记录和收费票据，请给我方案。"]},
-        {"case_id": "traffic_insurer_refusal_negated", "messages": ["交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。"]},
-        {"case_id": "corporate_repeated_inspection_refusal", "messages": ["我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。"]},
-        {"case_id": "outside_mainland_location_correction", "messages": ["事情发生在香港，是合同退款争议，请先给我方案。", "更正一下，实际发生在深圳，不涉及香港或其他境外地区，请更新方案。"]}
+        {
+          "case_id": "ip_nonexclusive_source_materials",
+          "messages": [
+            "摄影作品被网店盗用，不是只有网页截图，我还有原始工程文件和首次发布时间记录，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "medical_records_not_absent",
+          "messages": [
+            "手术后出现后遗症，并不是没有诊疗材料，我有出院记录和收费票据，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "traffic_insurer_refusal_negated",
+          "messages": [
+            "交通事故仍在治疗，保险公司没有拒赔，只是要求补充病历和票据，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "corporate_repeated_inspection_refusal",
+          "messages": [
+            "我是公司股东，已经书面要求查账两次，公司明确拒绝，请给我后续方案。"
+          ]
+        },
+        {
+          "case_id": "outside_mainland_location_correction",
+          "messages": [
+            "事情发生在香港，是合同退款争议，请先给我方案。",
+            "更正一下，实际发生在深圳，不涉及香港或其他境外地区，请更新方案。"
+          ]
+        }
       ],
-      "failures_before_fix": ["traffic_insurer_refusal_negated", "corporate_repeated_inspection_refusal"],
+      "failures_before_fix": [
+        "traffic_insurer_refusal_negated",
+        "corporate_repeated_inspection_refusal"
+      ],
       "completed_root_causes": [
         {
           "id": "traffic_event_outweighed_by_material_terms",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/profiles.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py"
+          ],
           "verification": "3 path tests, 8 related tests and 272 full tests passed",
           "commit_subject": "Prioritize traffic events over material terms"
         },
         {
           "id": "corporate_inspection_refusal_not_persisted_as_procedure",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "3 path tests, 9 selected tests and 280 full tests passed",
           "commit_subject": "Advance routes after inspection refusal"
         }
@@ -370,11 +553,37 @@
         "medical_exhaustion_scope_negated"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_formal_role_synonyms", "messages": ["本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。"]},
-        {"case_id": "labor_indirect_arbitration_filing", "messages": ["我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。"]},
-        {"case_id": "ip_platform_complaint_refused", "messages": ["摄影作品被网店盗用，我已经向平台投诉两次，平台明确拒绝处理，请给我后续方案。"]},
-        {"case_id": "inheritance_mainland_to_hong_kong_correction", "messages": ["父亲去世后留下遗产房屋，房屋在深圳，请先给我方案。", "更正一下，房屋实际位于香港，不在深圳，请更新方案。"]},
-        {"case_id": "medical_exhaustion_scope_negated", "messages": ["医院手术后出现后遗症，不能说没有其他证据，我还有病历复印件和影像，请给我方案。"]}
+        {
+          "case_id": "housing_formal_role_synonyms",
+          "messages": [
+            "本人并非出租人，而是承租人；退租后的押金被对方扣留，请按承租人立场给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_indirect_arbitration_filing",
+          "messages": [
+            "我是员工，公司拖欠工资；我已经向劳动人事争议仲裁委员会提交申请并收到受理通知，请给我下一步方案。"
+          ]
+        },
+        {
+          "case_id": "ip_platform_complaint_refused",
+          "messages": [
+            "摄影作品被网店盗用，我已经向平台投诉两次，平台明确拒绝处理，请给我后续方案。"
+          ]
+        },
+        {
+          "case_id": "inheritance_mainland_to_hong_kong_correction",
+          "messages": [
+            "父亲去世后留下遗产房屋，房屋在深圳，请先给我方案。",
+            "更正一下，房屋实际位于香港，不在深圳，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "medical_exhaustion_scope_negated",
+          "messages": [
+            "医院手术后出现后遗症，不能说没有其他证据，我还有病历复印件和影像，请给我方案。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "housing_formal_role_synonyms",
@@ -385,7 +594,9 @@
         {
           "id": "formal_synonym_role_correction_not_recognized",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/perspective.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/perspective.py"
+          ],
           "verification": "3 path tests, 17 related tests and 283 full tests passed",
           "commit_subject": "Recognize formal role corrections"
         },
@@ -402,14 +613,18 @@
         {
           "id": "accepted_arbitration_word_order_not_treated_as_filed",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/planning.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/planning.py"
+          ],
           "verification": "3 path tests, 21 related tests and 289 full tests passed",
           "commit_subject": "Route accepted arbitration to formal procedure"
         },
         {
           "id": "platform_complaint_refusal_not_recorded_as_procedure",
           "before_fix": "engine, API and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "3 path tests, 9 selected tests and 297 full tests passed",
           "commit_subject": "Advance routes after platform refusal"
         }
@@ -445,11 +660,41 @@
         "inheritance_will_copy_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_damage_reason_followup", "messages": ["我是租客，退租后房东扣着4000元押金，请先给我方案。", "房东刚回复说要扣1200元墙面修复费，但没有提供维修票据，我应该怎么办？"]},
-        {"case_id": "consumer_transfer_only_followup", "messages": ["健身房停业，会员卡余额3000元，商家不退款，请先给我方案。", "商家刚回复说只能把会员卡转给别人使用，不能退款，我应该怎么办？"]},
-        {"case_id": "medical_normal_risk_followup", "messages": ["医院手术后出现后遗症，我有完整病历和收费票据，请先给我方案。", "医院刚回复说这是正常手术风险，不承认诊疗有问题，我应该怎么办？"]},
-        {"case_id": "contract_price_increase_followup", "messages": ["供应商收款后不交货，我已经催过一次，请先给我方案。", "供应商刚回复说原材料涨价，除非再加2万元否则不发货，我应该怎么办？"]},
-        {"case_id": "inheritance_will_copy_followup", "messages": ["父亲去世后留有遗嘱，家人称可能还有另一份，请先给我方案。", "家人刚发来另一份遗嘱的照片但拒绝提供原件，我应该怎么办？"]}
+        {
+          "case_id": "housing_damage_reason_followup",
+          "messages": [
+            "我是租客，退租后房东扣着4000元押金，请先给我方案。",
+            "房东刚回复说要扣1200元墙面修复费，但没有提供维修票据，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "consumer_transfer_only_followup",
+          "messages": [
+            "健身房停业，会员卡余额3000元，商家不退款，请先给我方案。",
+            "商家刚回复说只能把会员卡转给别人使用，不能退款，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "medical_normal_risk_followup",
+          "messages": [
+            "医院手术后出现后遗症，我有完整病历和收费票据，请先给我方案。",
+            "医院刚回复说这是正常手术风险，不承认诊疗有问题，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "contract_price_increase_followup",
+          "messages": [
+            "供应商收款后不交货，我已经催过一次，请先给我方案。",
+            "供应商刚回复说原材料涨价，除非再加2万元否则不发货，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "inheritance_will_copy_followup",
+          "messages": [
+            "父亲去世后留有遗嘱，家人称可能还有另一份，请先给我方案。",
+            "家人刚发来另一份遗嘱的照片但拒绝提供原件，我应该怎么办？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "housing_damage_reason_followup",
@@ -498,11 +743,41 @@
         "ip_store_operator_supplier_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_agent_service_fee_followup", "messages": ["我是租客，退租后还有5000元押金由中介代管，请先给我方案。", "中介刚回复说要先扣800元服务费才退余款，我该怎么回应？"]},
-        {"case_id": "consumer_customer_service_voucher_followup", "messages": ["我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。", "客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？"]},
-        {"case_id": "administrative_case_officer_basis_followup", "messages": ["我收到行政处罚决定，认为认定事实不完整，请先给我方案。", "承办人员刚回复说只能按原决定处理，也不提供进一步说明，我该怎么回应？"]},
-        {"case_id": "traffic_adjuster_partial_repair_followup", "messages": ["交通事故后车辆已经维修，我有事故认定书和维修票据，请先给我方案。", "保险理赔员刚回复说只认可一半修理费，其余不赔，我该怎么回应？"]},
-        {"case_id": "ip_store_operator_supplier_followup", "messages": ["我的摄影作品被网店擅自用于商品页面，我有原始文件，请先给我方案。", "店铺经营者刚回复说图片来自供货商，不同意删除或赔偿，我该怎么回应？"]}
+        {
+          "case_id": "housing_agent_service_fee_followup",
+          "messages": [
+            "我是租客，退租后还有5000元押金由中介代管，请先给我方案。",
+            "中介刚回复说要先扣800元服务费才退余款，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "consumer_customer_service_voucher_followup",
+          "messages": [
+            "我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。",
+            "客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "administrative_case_officer_basis_followup",
+          "messages": [
+            "我收到行政处罚决定，认为认定事实不完整，请先给我方案。",
+            "承办人员刚回复说只能按原决定处理，也不提供进一步说明，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "traffic_adjuster_partial_repair_followup",
+          "messages": [
+            "交通事故后车辆已经维修，我有事故认定书和维修票据，请先给我方案。",
+            "保险理赔员刚回复说只认可一半修理费，其余不赔，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "ip_store_operator_supplier_followup",
+          "messages": [
+            "我的摄影作品被网店擅自用于商品页面，我有原始文件，请先给我方案。",
+            "店铺经营者刚回复说图片来自供货商，不同意删除或赔偿，我该怎么回应？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "housing_agent_service_fee_followup",
@@ -549,11 +824,41 @@
         "inheritance_unmarked_family_original_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_unmarked_landlord_deduction_followup", "messages": ["我是租客，退租后房东还扣着6000元押金，请先给我方案。", "房东表示只能退4500元，另外1500元算清洁费，我应该怎么办？"]},
-        {"case_id": "consumer_unmarked_merchant_extension_followup", "messages": ["我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。", "商家表示只能延期半年使用，不接受退款，我应该怎么办？"]},
-        {"case_id": "medical_unmarked_hospital_causation_followup", "messages": ["手术后出现持续疼痛，我有病历和复查记录，请先给我方案。", "医院表示目前的疼痛与手术无关，不同意进一步说明，我应该怎么办？"]},
-        {"case_id": "contract_unmarked_supplier_force_majeure_followup", "messages": ["供应商超过合同交付期仍未发货，我已经付款，请先给我方案。", "供应商表示延期属于不可抗力，拒绝承担违约责任，我应该怎么办？"]},
-        {"case_id": "inheritance_unmarked_family_original_followup", "messages": ["父亲去世后留有一份遗嘱照片，但原件在哪里还不清楚，请先给我方案。", "家人表示只有照片，没有原件，也不同意共同查找，我应该怎么办？"]}
+        {
+          "case_id": "housing_unmarked_landlord_deduction_followup",
+          "messages": [
+            "我是租客，退租后房东还扣着6000元押金，请先给我方案。",
+            "房东表示只能退4500元，另外1500元算清洁费，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "consumer_unmarked_merchant_extension_followup",
+          "messages": [
+            "我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。",
+            "商家表示只能延期半年使用，不接受退款，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "medical_unmarked_hospital_causation_followup",
+          "messages": [
+            "手术后出现持续疼痛，我有病历和复查记录，请先给我方案。",
+            "医院表示目前的疼痛与手术无关，不同意进一步说明，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "contract_unmarked_supplier_force_majeure_followup",
+          "messages": [
+            "供应商超过合同交付期仍未发货，我已经付款，请先给我方案。",
+            "供应商表示延期属于不可抗力，拒绝承担违约责任，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "inheritance_unmarked_family_original_followup",
+          "messages": [
+            "父亲去世后留有一份遗嘱照片，但原件在哪里还不清楚，请先给我方案。",
+            "家人表示只有照片，没有原件，也不同意共同查找，我应该怎么办？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "housing_unmarked_landlord_deduction_followup",
@@ -600,11 +905,41 @@
         "inheritance_pronoun_inventory_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "housing_pronoun_damage_followup", "messages": ["我是租客，退租后房东拒绝退押金，请先给我方案。", "他们回复说墙面损耗都应由我承担，也不提供明细，我该怎么回应？"]},
-        {"case_id": "consumer_pronoun_store_credit_followup", "messages": ["商家取消了我预订的服务，但没有退款，请先给我方案。", "他们回复说只能换成店内余额，不能原路退款，我该怎么回应？"]},
-        {"case_id": "medical_pronoun_record_followup", "messages": ["医院治疗后症状加重，我想先核对病历和处置过程，请给我方案。", "他们回复说只能现场看病历，不能复制完整资料，我该怎么回应？"]},
-        {"case_id": "contract_pronoun_substitute_followup", "messages": ["供应商交付的设备型号与合同不符，请先给我方案。", "他们回复说替代型号功能相近，所以不同意换货，我该怎么回应？"]},
-        {"case_id": "inheritance_pronoun_inventory_followup", "messages": ["父亲去世后家人一直没有共同核对遗产清单，请先给我方案。", "他们回复说部分财产不需要列入遗产，也拒绝说明依据，我该怎么回应？"]}
+        {
+          "case_id": "housing_pronoun_damage_followup",
+          "messages": [
+            "我是租客，退租后房东拒绝退押金，请先给我方案。",
+            "他们回复说墙面损耗都应由我承担，也不提供明细，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "consumer_pronoun_store_credit_followup",
+          "messages": [
+            "商家取消了我预订的服务，但没有退款，请先给我方案。",
+            "他们回复说只能换成店内余额，不能原路退款，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "medical_pronoun_record_followup",
+          "messages": [
+            "医院治疗后症状加重，我想先核对病历和处置过程，请给我方案。",
+            "他们回复说只能现场看病历，不能复制完整资料，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "contract_pronoun_substitute_followup",
+          "messages": [
+            "供应商交付的设备型号与合同不符，请先给我方案。",
+            "他们回复说替代型号功能相近，所以不同意换货，我该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "inheritance_pronoun_inventory_followup",
+          "messages": [
+            "父亲去世后家人一直没有共同核对遗产清单，请先给我方案。",
+            "他们回复说部分财产不需要列入遗产，也拒绝说明依据，我该怎么回应？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "housing_pronoun_damage_followup",
@@ -617,14 +952,18 @@
         {
           "id": "pronoun_opponent_updates_not_recognized",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases and 3 delivery-path regressions passed",
           "commit_subject": "Recognize pronoun opponent updates"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "后续轮次已能识别多种直接主体和经办角色，但未识别上下文已明确的“他们”指代，导致新主张未进入 details 和当前回复。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -647,11 +986,41 @@
         "traffic_actorless_insurer_scope_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "family_actorless_custody_followup", "messages": ["准备离婚，双方对孩子抚养安排有争议，请先给我方案。", "收到回复说孩子只能由对方抚养，不接受其他安排，我应该怎么办？"]},
-        {"case_id": "corporate_actorless_inspection_scope_followup", "messages": ["我是公司股东，已经要求查阅账簿但被拒绝，请先给我方案。", "收到回复说只能看年度报表，不能查会计账簿，我应该怎么办？"]},
-        {"case_id": "enforcement_actorless_installment_followup", "messages": ["生效判决履行期已过，对方仍未付款，请先给我执行方案。", "收到回复说只能分期支付，但没有提供具体计划，我应该怎么办？"]},
-        {"case_id": "administrative_actorless_basis_followup", "messages": ["我收到行政处罚决定，认为事实认定不完整，请先给我方案。", "收到回复说处理依据不能另行提供，只能看决定书，我应该怎么办？"]},
-        {"case_id": "traffic_actorless_insurer_scope_followup", "messages": ["发生交通事故后车辆受损，我有事故认定书和维修票据，请先给我方案。", "收到回复说只处理车辆损失，不认可其他合理费用，我应该怎么办？"]}
+        {
+          "case_id": "family_actorless_custody_followup",
+          "messages": [
+            "准备离婚，双方对孩子抚养安排有争议，请先给我方案。",
+            "收到回复说孩子只能由对方抚养，不接受其他安排，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "corporate_actorless_inspection_scope_followup",
+          "messages": [
+            "我是公司股东，已经要求查阅账簿但被拒绝，请先给我方案。",
+            "收到回复说只能看年度报表，不能查会计账簿，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "enforcement_actorless_installment_followup",
+          "messages": [
+            "生效判决履行期已过，对方仍未付款，请先给我执行方案。",
+            "收到回复说只能分期支付，但没有提供具体计划，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "administrative_actorless_basis_followup",
+          "messages": [
+            "我收到行政处罚决定，认为事实认定不完整，请先给我方案。",
+            "收到回复说处理依据不能另行提供，只能看决定书，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "traffic_actorless_insurer_scope_followup",
+          "messages": [
+            "发生交通事故后车辆受损，我有事故认定书和维修票据，请先给我方案。",
+            "收到回复说只处理车辆损失，不认可其他合理费用，我应该怎么办？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "family_actorless_custody_followup",
@@ -664,14 +1033,18 @@
         {
           "id": "actorless_reply_frames_not_recognized",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases and 3 delivery-path regressions passed",
           "commit_subject": "Recognize actorless reply updates"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "后续消息用“收到回复说／回复里写着”直接转述时没有明确主体，现有主体匹配无法提取该新主张。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -694,11 +1067,41 @@
         "medical_next_step_only_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "debt_next_step_only_followup", "messages": ["朋友欠我2万元，有借条和转账记录，已经到期，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
-        {"case_id": "housing_next_step_only_followup", "messages": ["我是租客，退租后房东扣着押金不退，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
-        {"case_id": "consumer_next_step_only_followup", "messages": ["健身房停止营业，预付余额没有退，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
-        {"case_id": "contract_next_step_only_followup", "messages": ["供应商超过约定期限仍未交货，我已经付款，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
-        {"case_id": "medical_next_step_only_followup", "messages": ["治疗后症状加重，我有完整病历和复查记录，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]}
+        {
+          "case_id": "debt_next_step_only_followup",
+          "messages": [
+            "朋友欠我2万元，有借条和转账记录，已经到期，请先给我方案。",
+            "那我现在最先做哪一步？请只说当前一步。"
+          ]
+        },
+        {
+          "case_id": "housing_next_step_only_followup",
+          "messages": [
+            "我是租客，退租后房东扣着押金不退，请先给我方案。",
+            "那我现在最先做哪一步？请只说当前一步。"
+          ]
+        },
+        {
+          "case_id": "consumer_next_step_only_followup",
+          "messages": [
+            "健身房停止营业，预付余额没有退，请先给我方案。",
+            "那我现在最先做哪一步？请只说当前一步。"
+          ]
+        },
+        {
+          "case_id": "contract_next_step_only_followup",
+          "messages": [
+            "供应商超过约定期限仍未交货，我已经付款，请先给我方案。",
+            "那我现在最先做哪一步？请只说当前一步。"
+          ]
+        },
+        {
+          "case_id": "medical_next_step_only_followup",
+          "messages": [
+            "治疗后症状加重，我有完整病历和复查记录，请先给我方案。",
+            "那我现在最先做哪一步？请只说当前一步。"
+          ]
+        }
       ],
       "failures_before_fix": [],
       "completed_root_causes": [],
@@ -726,11 +1129,41 @@
         "contract_new_delivery_materials"
       ],
       "anonymous_cases": [
-        {"case_id": "corporate_new_registry_materials", "messages": ["我是公司股东，想核对出资和股东权利，请先给我方案。", "我补充找到了股东名册和公司章程，请更新材料清单。"]},
-        {"case_id": "ip_new_creation_source_materials", "messages": ["我的摄影作品被网店使用，我正在整理权属材料，请先给我方案。", "我补充找到了创作源文件和首次发表页面，请更新材料清单。"]},
-        {"case_id": "traffic_new_dashcam_materials", "messages": ["发生交通事故，我有事故认定书但还在整理现场资料，请先给我方案。", "我补充找到了行车记录仪原视频和现场照片，请更新材料清单。"]},
-        {"case_id": "medical_new_consent_materials", "messages": ["手术后出现持续不适，我正在整理诊疗材料，请先给我方案。", "我补充找到了手术同意书和护理记录，请更新材料清单。"]},
-        {"case_id": "contract_new_delivery_materials", "messages": ["供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。", "我补充找到了物流签收单和验收记录，请更新材料清单。"]}
+        {
+          "case_id": "corporate_new_registry_materials",
+          "messages": [
+            "我是公司股东，想核对出资和股东权利，请先给我方案。",
+            "我补充找到了股东名册和公司章程，请更新材料清单。"
+          ]
+        },
+        {
+          "case_id": "ip_new_creation_source_materials",
+          "messages": [
+            "我的摄影作品被网店使用，我正在整理权属材料，请先给我方案。",
+            "我补充找到了创作源文件和首次发表页面，请更新材料清单。"
+          ]
+        },
+        {
+          "case_id": "traffic_new_dashcam_materials",
+          "messages": [
+            "发生交通事故，我有事故认定书但还在整理现场资料，请先给我方案。",
+            "我补充找到了行车记录仪原视频和现场照片，请更新材料清单。"
+          ]
+        },
+        {
+          "case_id": "medical_new_consent_materials",
+          "messages": [
+            "手术后出现持续不适，我正在整理诊疗材料，请先给我方案。",
+            "我补充找到了手术同意书和护理记录，请更新材料清单。"
+          ]
+        },
+        {
+          "case_id": "contract_new_delivery_materials",
+          "messages": [
+            "供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。",
+            "我补充找到了物流签收单和验收记录，请更新材料清单。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "corporate_new_registry_materials",
@@ -743,14 +1176,18 @@
         {
           "id": "specialist_evidence_aliases_missing",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases and 3 delivery-path regressions passed",
           "commit_subject": "Map specialist evidence aliases"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "证据别名只覆盖借贷、住房和消费的常见自然说法；公司、知识产权、交通、医疗和合同领域的新材料无法映射到规范证据任务，导致状态与导出没有更新。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -773,11 +1210,41 @@
         "inheritance_fast_resolution_constraint"
       ],
       "anonymous_cases": [
-        {"case_id": "debt_no_direct_contact_constraint", "messages": ["朋友欠款到期不还，我有转账和聊天，请先给我方案。", "我还要补充：请不要再让我联系对方，只接受正式程序，请据此更新方案。"]},
-        {"case_id": "housing_remote_only_constraint", "messages": ["我是租客，退租后押金没有退，请先给我方案。", "我还要补充：我人在外地，不能去现场办理，请据此更新方案。"]},
-        {"case_id": "consumer_very_low_cost_constraint", "messages": ["商家停止提供预付服务，也没有退款，请先给我方案。", "我还要补充：我能承担的费用很少，希望优先免费渠道，请据此更新方案。"]},
-        {"case_id": "contract_written_only_constraint", "messages": ["供应商延期交货并拒绝说明原因，请先给我方案。", "我还要补充：我只接受书面沟通，不进行电话交涉，请据此更新方案。"]},
-        {"case_id": "inheritance_fast_resolution_constraint", "messages": ["家人对遗产清单有争议，请先给我方案。", "我还要补充：我必须尽快处理完，不能长期拖延，请据此更新方案。"]}
+        {
+          "case_id": "debt_no_direct_contact_constraint",
+          "messages": [
+            "朋友欠款到期不还，我有转账和聊天，请先给我方案。",
+            "我还要补充：请不要再让我联系对方，只接受正式程序，请据此更新方案。"
+          ]
+        },
+        {
+          "case_id": "housing_remote_only_constraint",
+          "messages": [
+            "我是租客，退租后押金没有退，请先给我方案。",
+            "我还要补充：我人在外地，不能去现场办理，请据此更新方案。"
+          ]
+        },
+        {
+          "case_id": "consumer_very_low_cost_constraint",
+          "messages": [
+            "商家停止提供预付服务，也没有退款，请先给我方案。",
+            "我还要补充：我能承担的费用很少，希望优先免费渠道，请据此更新方案。"
+          ]
+        },
+        {
+          "case_id": "contract_written_only_constraint",
+          "messages": [
+            "供应商延期交货并拒绝说明原因，请先给我方案。",
+            "我还要补充：我只接受书面沟通，不进行电话交涉，请据此更新方案。"
+          ]
+        },
+        {
+          "case_id": "inheritance_fast_resolution_constraint",
+          "messages": [
+            "家人对遗产清单有争议，请先给我方案。",
+            "我还要补充：我必须尽快处理完，不能长期拖延，请据此更新方案。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "debt_no_direct_contact_constraint",
@@ -790,14 +1257,18 @@
         {
           "id": "natural_handling_constraints_not_persisted",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases and 3 delivery-path regressions passed",
           "commit_subject": "Persist natural handling constraints"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "约束提取只覆盖少量固定措辞，无法识别不要再联系对方、人在外地不能现场办理、费用很少、只接受书面沟通和必须尽快处理等自然表达。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -820,11 +1291,41 @@
         "enforcement_judge_reply_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "criminal_investigator_reply_followup", "messages": ["家人被刑事拘留，我收到了拘留通知书，请给我方案。", "办案人员刚刚回复说不能告知案件情况，也不提供文书，我应该怎么办？"]},
-        {"case_id": "traffic_police_reply_followup", "messages": ["发生交通事故后车辆受损，我有事故认定书，请给我方案。", "交警回复说要等责任认定才能办理，也不给其他说明，我应该怎么办？"]},
-        {"case_id": "administrative_counter_window_reply_followup", "messages": ["我收到行政处罚决定，认为事实认定不完整，请先给我方案。", "窗口工作人员回复说只能口头答复，不给书面说明，我应该怎么办？"]},
-        {"case_id": "medical_office_reply_followup", "messages": ["手术后出现持续疼痛，我有病历和复查记录，请先给我方案。", "医务科回复说只能走鉴定程序，不提供其他说明，我应该怎么办？"]},
-        {"case_id": "enforcement_judge_reply_followup", "messages": ["生效判决履行期已过，对方仍未付款，请先给我执行方案。", "执行法官回复说查不到对方财产，只能先终结本次执行，我应该怎么办？"]}
+        {
+          "case_id": "criminal_investigator_reply_followup",
+          "messages": [
+            "家人被刑事拘留，我收到了拘留通知书，请给我方案。",
+            "办案人员刚刚回复说不能告知案件情况，也不提供文书，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "traffic_police_reply_followup",
+          "messages": [
+            "发生交通事故后车辆受损，我有事故认定书，请给我方案。",
+            "交警回复说要等责任认定才能办理，也不给其他说明，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "administrative_counter_window_reply_followup",
+          "messages": [
+            "我收到行政处罚决定，认为事实认定不完整，请先给我方案。",
+            "窗口工作人员回复说只能口头答复，不给书面说明，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "medical_office_reply_followup",
+          "messages": [
+            "手术后出现持续疼痛，我有病历和复查记录，请先给我方案。",
+            "医务科回复说只能走鉴定程序，不提供其他说明，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "enforcement_judge_reply_followup",
+          "messages": [
+            "生效判决履行期已过，对方仍未付款，请先给我执行方案。",
+            "执行法官回复说查不到对方财产，只能先终结本次执行，我应该怎么办？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "criminal_investigator_reply_followup",
@@ -837,14 +1338,18 @@
         {
           "id": "authority_handler_aliases_missing_from_counterparty_update",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases, 3 delivery-path regressions, 257 related tests and 371 full tests passed",
           "commit_subject": "Recognize authority handler reply aliases"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "后续轮次的对方主张提取只覆盖对方、房东、商家、中介、客服、承办人员等称谓，遗漏办案人员、交警、窗口工作人员、医务科和执行法官等刑事、交通、行政、医疗与执行场景中的自然经办或机关称谓，导致新主张未进入 details，当前回复仍只给通用说明。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -867,11 +1372,41 @@
         "consumer_unobtainable_payment_record"
       ],
       "anonymous_cases": [
-        {"case_id": "traffic_unobtainable_accident_report", "messages": ["发生交通事故，我受伤还在治疗，请先给我方案。", "交警说事故认定书要等调查结束，我这边拿不到，请更新方案。"]},
-        {"case_id": "housing_unobtainable_handover_record", "messages": ["我是租客，退租后房东扣着押金不退，请先给我方案。", "房东把房屋交接记录收走了，我这边拿不到，请更新方案。"]},
-        {"case_id": "medical_unobtainable_medical_record", "messages": ["手术后出现后遗症，我还在和医院交涉，请先给我方案。", "医院说完整病历还在整理，我这边拿不到，请更新方案。"]},
-        {"case_id": "contract_unobtainable_delivery_record", "messages": ["供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。", "对方不给我签收单和验收记录，我这边拿不到，请更新方案。"]},
-        {"case_id": "consumer_unobtainable_payment_record", "messages": ["商家停止提供预付服务，也没有退款，请先给我方案。", "商家不给我开发票，付款凭证我这边拿不到，请更新方案。"]}
+        {
+          "case_id": "traffic_unobtainable_accident_report",
+          "messages": [
+            "发生交通事故，我受伤还在治疗，请先给我方案。",
+            "交警说事故认定书要等调查结束，我这边拿不到，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "housing_unobtainable_handover_record",
+          "messages": [
+            "我是租客，退租后房东扣着押金不退，请先给我方案。",
+            "房东把房屋交接记录收走了，我这边拿不到，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "medical_unobtainable_medical_record",
+          "messages": [
+            "手术后出现后遗症，我还在和医院交涉，请先给我方案。",
+            "医院说完整病历还在整理，我这边拿不到，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "contract_unobtainable_delivery_record",
+          "messages": [
+            "供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。",
+            "对方不给我签收单和验收记录，我这边拿不到，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "consumer_unobtainable_payment_record",
+          "messages": [
+            "商家停止提供预付服务，也没有退款，请先给我方案。",
+            "商家不给我开发票，付款凭证我这边拿不到，请更新方案。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "traffic_unobtainable_accident_report",
@@ -884,14 +1419,18 @@
         {
           "id": "postposed_unavailability_not_recognized",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit: 3 failed",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases, 3 delivery-path regressions, 274 related tests and 379 full tests passed",
           "commit_subject": "Read postposed evidence unavailability"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "材料可用性判断只接受同一分句内材料名在前的否定（没有借条）或分句内纯否定收尾（借条我没有），无法识别材料名在前、下一分句才说明“我这边拿不到/不给我”的自然表达，导致用户明确说拿不到的材料被记成“用户称有，尚未上传”并继续列入上传动作。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -914,11 +1453,41 @@
         "debt_counterparty_offsets_with_car"
       ],
       "anonymous_cases": [
-        {"case_id": "debt_counterparty_denies_principal", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说只借了2万元，剩下的是利息，我应该怎么办？"]},
-        {"case_id": "debt_counterparty_claims_repaid", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说这笔钱早就还清了，我应该怎么办？"]},
-        {"case_id": "debt_counterparty_partial_admission", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说只承认其中2万元，其他不认，我应该怎么办？"]},
-        {"case_id": "debt_counterparty_refuses_installments", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说不同意分期，也拒绝任何还款安排，我应该怎么办？"]},
-        {"case_id": "debt_counterparty_offsets_with_car", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说要用一辆车抵掉这笔借款，我应该怎么办？"]}
+        {
+          "case_id": "debt_counterparty_denies_principal",
+          "messages": [
+            "朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。",
+            "对方回复说只借了2万元，剩下的是利息，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "debt_counterparty_claims_repaid",
+          "messages": [
+            "朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。",
+            "对方回复说这笔钱早就还清了，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "debt_counterparty_partial_admission",
+          "messages": [
+            "朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。",
+            "对方回复说只承认其中2万元，其他不认，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "debt_counterparty_refuses_installments",
+          "messages": [
+            "朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。",
+            "对方回复说不同意分期，也拒绝任何还款安排，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "debt_counterparty_offsets_with_car",
+          "messages": [
+            "朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。",
+            "对方回复说要用一辆车抵掉这笔借款，我应该怎么办？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "debt_counterparty_denies_principal",
@@ -931,14 +1500,18 @@
         {
           "id": "debt_bypassed_counterparty_update_extraction",
           "before_fix": "5 generated cases failed; engine, API/export and Streamlit: 3 failed; two cases also overwrote the user amount",
-          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
           "verification": "5 generated cases, 3 delivery-path regressions, 281 related tests and 387 full tests passed",
           "commit_subject": "Persist debt counterparty denials in details"
         }
       ],
       "pending_root_causes": [],
       "root_cause": "借贷领域被排除在通用对方主张提取之外，领域内只识别约定还款、部分还款和款项用途等措辞；对方否认本金、否认欠款、只部分承认、拒绝分期或以物抵账时未进入 details，带金额的否认句还会被通用金额提取写入 amount，直接覆盖用户自己主张的本金。",
-      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
       "verification": {
         "before_fix": "5 failed; delivery paths 3 failed",
         "selected_cases_after_fix": "5 passed",
@@ -961,11 +1534,41 @@
         "labor_next_step_only_followup"
       ],
       "anonymous_cases": [
-        {"case_id": "labor_counterparty_denies_wage_debt", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "公司回复说只欠2万元，其余已经结清，我应该怎么办？"]},
-        {"case_id": "labor_hr_denies_arrears", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "人事回复说公司不承认欠薪，也不提供工资明细，我应该怎么办？"]},
-        {"case_id": "labor_counterparty_refuses_arbitration", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "公司回复说拒绝仲裁，要求我直接去起诉，我应该怎么办？"]},
-        {"case_id": "labor_counterparty_repayment_terms", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "公司回复说只能分三个月结清，不同意一次付清，我应该怎么办？"]},
-        {"case_id": "labor_next_step_only_followup", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "那我现在最先做哪一步？请只说当前一步。"]}
+        {
+          "case_id": "labor_counterparty_denies_wage_debt",
+          "messages": [
+            "我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。",
+            "公司回复说只欠2万元，其余已经结清，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "labor_hr_denies_arrears",
+          "messages": [
+            "我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。",
+            "人事回复说公司不承认欠薪，也不提供工资明细，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "labor_counterparty_refuses_arbitration",
+          "messages": [
+            "我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。",
+            "公司回复说拒绝仲裁，要求我直接去起诉，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "labor_counterparty_repayment_terms",
+          "messages": [
+            "我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。",
+            "公司回复说只能分三个月结清，不同意一次付清，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "labor_next_step_only_followup",
+          "messages": [
+            "我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。",
+            "那我现在最先做哪一步？请只说当前一步。"
+          ]
+        }
       ],
       "failures_before_fix": [
         "labor_counterparty_denies_wage_debt",
@@ -1014,11 +1617,41 @@
         "traffic_liability_finding_revoked"
       ],
       "anonymous_cases": [
-        {"case_id": "enforcement_execution_application_dismissed", "messages": ["生效判决履行期已过，对方仍未付款，请先给我执行方案。", "执行法官表示执行申请被驳回了，因为没有提供财产线索，我应该怎么办？"]},
-        {"case_id": "administrative_reconsideration_not_accepted", "messages": ["我收到行政处罚决定，认为事实认定不完整，请先给我方案。", "承办人员表示复议申请不予受理，因为超过期限了，我应该怎么办？"]},
-        {"case_id": "ip_platform_complaint_dismissed", "messages": ["我的摄影作品被网店盗用，我已经向平台投诉，请给我方案。", "平台表示投诉不成立，已经驳回了，我应该怎么办？"]},
-        {"case_id": "consumer_complaint_rejected", "messages": ["健身房停业，会员卡余额没有退，请给我方案。", "商家表示我的投诉已经被驳回，不再处理，我应该怎么办？"]},
-        {"case_id": "traffic_liability_finding_revoked", "messages": ["发生交通事故，交警已经出具事故认定书，请给我方案。", "交警表示对方申请复核，原认定书被撤销了，我应该怎么办？"]}
+        {
+          "case_id": "enforcement_execution_application_dismissed",
+          "messages": [
+            "生效判决履行期已过，对方仍未付款，请先给我执行方案。",
+            "执行法官表示执行申请被驳回了，因为没有提供财产线索，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "administrative_reconsideration_not_accepted",
+          "messages": [
+            "我收到行政处罚决定，认为事实认定不完整，请先给我方案。",
+            "承办人员表示复议申请不予受理，因为超过期限了，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "ip_platform_complaint_dismissed",
+          "messages": [
+            "我的摄影作品被网店盗用，我已经向平台投诉，请给我方案。",
+            "平台表示投诉不成立，已经驳回了，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "consumer_complaint_rejected",
+          "messages": [
+            "健身房停业，会员卡余额没有退，请给我方案。",
+            "商家表示我的投诉已经被驳回，不再处理，我应该怎么办？"
+          ]
+        },
+        {
+          "case_id": "traffic_liability_finding_revoked",
+          "messages": [
+            "发生交通事故，交警已经出具事故认定书，请给我方案。",
+            "交警表示对方申请复核，原认定书被撤销了，我应该怎么办？"
+          ]
+        }
       ],
       "failures_before_fix": [
         "enforcement_execution_application_dismissed",
@@ -1055,6 +1688,108 @@
         "full_suite": "403 passed, 1 warning"
       },
       "commit_subject": "Record and route procedural outcomes"
+    },
+    {
+      "round_id": "round-021-constraints-scope-and-overwrite",
+      "seed": 20260947,
+      "generator": "generate_round_twentyone_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "housing_constraint_then_withdrawn",
+        "medical_bare_record_unobtainable",
+        "debt_all_in_one_message",
+        "consumer_counterparty_amount_vs_correction",
+        "labor_negated_detailed_plan_scope"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "housing_constraint_then_withdrawn",
+          "messages": [
+            "我是租客，退租后房东扣着5000元押金不退，说墙面有损坏，请先给我方案。",
+            "另外补充一个限制：请不要再让我联系对方，我只接受书面方式处理，请按这个条件调整。",
+            "房屋在杭州市西湖区，退租是2026年6月30日。",
+            "我改变主意了，还是愿意再和房东协商一次，请更新方案。"
+          ]
+        },
+        {
+          "case_id": "medical_bare_record_unobtainable",
+          "messages": [
+            "我在医院做完手术后一直疼痛，怀疑和手术有关，请先给我方案。",
+            "病历还在医院，我现在拿不到。",
+            "手术是在广州市，2026年3月12日做的。",
+            "医院说这属于正常手术风险，不承担责任，我应该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "debt_all_in_one_message",
+          "messages": [
+            "有一笔借款对方一直拖着不还，请先给我方案。",
+            "事情发生在成都市，2026年1月8日借的钱，我是出借人，对方是个人，金额是3万5千元，我已经起诉并且立案了。",
+            "对方说只借了1万元，其余是利息，我应该怎么回应？"
+          ]
+        },
+        {
+          "case_id": "consumer_counterparty_amount_vs_correction",
+          "messages": [
+            "我在理发店办卡充了2000元，现在店关门了要退款。",
+            "商家说“只能退你500元”，我不同意，请更新方案。",
+            "更正一下，我实际充的是2600元，前面说错了。",
+            "我在深圳市南山区，事情是2026年5月10日。"
+          ]
+        },
+        {
+          "case_id": "labor_negated_detailed_plan_scope",
+          "messages": [
+            "我是员工，公司拖欠我工资，我想维权。",
+            "我在武汉市，入职是2025年9月1日。",
+            "只告诉我现在最先做哪一步就行，不用重复完整方案。"
+          ]
+        }
+      ],
+      "failures_before_fix": [
+        "labor_negated_detailed_plan_scope"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "negated_detailed_plan_request_treated_as_a_request",
+          "before_fix": "engine, API and Streamlit: 3 failed; the negated request produced reply_granularity=detailed_plan",
+          "fix_files": [
+            "backend/legal_domain/consultation/service.py"
+          ],
+          "verification": "3 path tests, 1 positive control and the full round-21 audit passed",
+          "commit_subject": "Honour negated detailed-plan requests"
+        },
+        {
+          "id": "next_step_only_request_answered_with_plan_summary",
+          "before_fix": "round-021 case labor_negated_detailed_plan_scope produced reply_granularity=plan_summary",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py",
+            "backend/legal_domain/consultation/service.py"
+          ],
+          "verification": "5 round-21 cases pass; 940 core tests pass",
+          "commit_subject": "Honour negated detailed-plan requests"
+        }
+      ],
+      "pending_root_causes": [
+        {
+          "id": "party_record_holds_inference_signal",
+          "found_in": "round-021 probe",
+          "evidence": "角色词表含“欠我”“公司拖欠我”等动词短语，client_perspective 用它们推断立场后，intake 会把该片段原样写入 parties，导出报告的“双方身份”因此出现“欠我”。不能直接不写：client_perspective 又依赖 parties 在后续轮次重新推导角色，曾尝试只写“真正的身份陈述”导致 debt_complete_progress 角色退化为 unconfirmed，已回退。",
+          "status": "pending"
+        }
+      ],
+      "root_cause": "“不用重复完整方案”与“只说当前一步”被当成索要完整方案：详细方案判定用的是裸 re.search，没有走项目统一的否定作用域工具；即便修掉后，缺少“只要一步”的粒度判定，仍会回落到方案摘要。",
+      "fix_files": [
+        "backend/legal_domain/consultation/service.py",
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "path_tests": "engine, API and Streamlit: 3 passed",
+        "positive_control": "unnegated detailed request still expands: passed",
+        "round_audit": "5/5 round-021 cases pass",
+        "core_tests": "940 passed without torch/gymnasium"
+      },
+      "commit_subject": "Honour negated detailed-plan requests"
     }
   ]
 }
