@@ -225,6 +225,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twelve_variants(),
         *generate_round_thirteen_variants(),
         *generate_round_fourteen_variants(),
+        *generate_round_fifteen_variants(),
     ]
 
 
@@ -934,6 +935,59 @@ def generate_round_fourteen_variants(seed: int = 20260922) -> list[RedTeamCase]:
             expected_evidence_names=evidence_names,
         )
         for case_id, domain, first, followup, evidence_names in specs
+    ]
+
+
+def generate_round_fifteen_variants(seed: int = 20260923) -> list[RedTeamCase]:
+    """Generate five unseen natural-language handling constraints."""
+    randomizer = Random(seed)
+    prefix = randomizer.choice(('另外补充一个限制', '我还要补充'))
+    request = randomizer.choice(('请据此更新方案', '请按这个条件调整'))
+    specs = (
+        (
+            'debt_no_direct_contact_constraint', 'debt',
+            '朋友欠款到期不还，我有转账和聊天，请先给我方案。',
+            f'{prefix}：请不要再让我联系对方，只接受正式程序，{request}。',
+            '不要再让我联系对方',
+        ),
+        (
+            'housing_remote_only_constraint', 'housing',
+            '我是租客，退租后押金没有退，请先给我方案。',
+            f'{prefix}：我人在外地，不能去现场办理，{request}。',
+            '不能去现场办理',
+        ),
+        (
+            'consumer_very_low_cost_constraint', 'consumer',
+            '商家停止提供预付服务，也没有退款，请先给我方案。',
+            f'{prefix}：我能承担的费用很少，希望优先免费渠道，{request}。',
+            '费用很少',
+        ),
+        (
+            'contract_written_only_constraint', 'contract',
+            '供应商延期交货并拒绝说明原因，请先给我方案。',
+            f'{prefix}：我只接受书面沟通，不进行电话交涉，{request}。',
+            '只接受书面沟通',
+        ),
+        (
+            'inheritance_fast_resolution_constraint', 'inheritance',
+            '家人对遗产清单有争议，请先给我方案。',
+            f'{prefix}：我必须尽快处理完，不能长期拖延，{request}。',
+            '必须尽快处理完',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'constraint_update'),
+            (first, followup),
+            domain,
+            expected_facts=(('constraints', constraint),),
+            forbidden_reply_fragments=('**按现有信息，先这样推进**',),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮补充**',),
+            max_followup_similarity=0.65,
+        )
+        for case_id, domain, first, followup, constraint in specs
     ]
 
 

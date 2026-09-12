@@ -3,8 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "running",
-  "pause_reason": "",
+  "loop_status": "paused",
+  "pause_reason": "按用户要求完成第11至第15轮后统一暂停",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -745,6 +745,53 @@
         "full_suite": "355 passed, 1 warning"
       },
       "commit_subject": "Map specialist evidence aliases"
+    },
+    {
+      "round_id": "round-015-natural-handling-constraints",
+      "seed": 20260923,
+      "generator": "generate_round_fifteen_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "debt_no_direct_contact_constraint",
+        "housing_remote_only_constraint",
+        "consumer_very_low_cost_constraint",
+        "contract_written_only_constraint",
+        "inheritance_fast_resolution_constraint"
+      ],
+      "anonymous_cases": [
+        {"case_id": "debt_no_direct_contact_constraint", "messages": ["朋友欠款到期不还，我有转账和聊天，请先给我方案。", "我还要补充：请不要再让我联系对方，只接受正式程序，请据此更新方案。"]},
+        {"case_id": "housing_remote_only_constraint", "messages": ["我是租客，退租后押金没有退，请先给我方案。", "我还要补充：我人在外地，不能去现场办理，请据此更新方案。"]},
+        {"case_id": "consumer_very_low_cost_constraint", "messages": ["商家停止提供预付服务，也没有退款，请先给我方案。", "我还要补充：我能承担的费用很少，希望优先免费渠道，请据此更新方案。"]},
+        {"case_id": "contract_written_only_constraint", "messages": ["供应商延期交货并拒绝说明原因，请先给我方案。", "我还要补充：我只接受书面沟通，不进行电话交涉，请据此更新方案。"]},
+        {"case_id": "inheritance_fast_resolution_constraint", "messages": ["家人对遗产清单有争议，请先给我方案。", "我还要补充：我必须尽快处理完，不能长期拖延，请据此更新方案。"]}
+      ],
+      "failures_before_fix": [
+        "debt_no_direct_contact_constraint",
+        "housing_remote_only_constraint",
+        "consumer_very_low_cost_constraint",
+        "contract_written_only_constraint",
+        "inheritance_fast_resolution_constraint"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "natural_handling_constraints_not_persisted",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "5 generated cases and 3 delivery-path regressions passed",
+          "commit_subject": "Persist natural handling constraints"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "约束提取只覆盖少量固定措辞，无法识别不要再联系对方、人在外地不能现场办理、费用很少、只接受书面沟通和必须尽快处理等自然表达。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "363 passed, 1 warning"
+      },
+      "commit_subject": "Persist natural handling constraints"
     }
   ]
 }
