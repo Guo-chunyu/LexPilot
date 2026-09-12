@@ -583,23 +583,20 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     ):
         put('procedure', message, message)
     counterparty_update = None
-    if state.case_type == 'debt':
-        # The area-specific debt question asks about repayment terms, partial
-        # performance and competing explanations for the transfer. Persist
-        # those answers as `details` even when they appear in separate clauses,
-        # otherwise the generic intake loop asks the same compound question.
-        debt_details = [
+    profile = PROFILES.get(state.case_type, PROFILES['general'])
+    if profile.extra_detail_pattern is not None:
+        # Practice areas (e.g. debt round 18) ask area-specific compound
+        # questions whose answers land in ``details``. The shared pipeline
+        # reads the pattern from the profile instead of inlining an
+        # ``if case_type == 'debt':`` branch, so adding a new practice area
+        # is a profile-only change.
+        extra_details = [
             sentence
             for sentence in sentences
-            if re.search(
-                r'约定.{0,20}(?:还款|归还|偿还|还)|'
-                r'(?:已还|还过|已偿还|偿还过).{0,20}(?:元|万|块|部分|剩)|'
-                r'(?:赠与|货款|借款用途|款项用途)',
-                sentence,
-            )
+            if profile.extra_detail_pattern.search(sentence)
         ]
-        if debt_details:
-            value = '；'.join(dict.fromkeys(debt_details))
+        if extra_details:
+            value = '；'.join(dict.fromkeys(extra_details))
             put('details', value, value)
     # Later-turn positions from the other party are part of the dispute, not
     # conversational noise.  Persist them so every delivery path can ground the
@@ -615,11 +612,10 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if dossier.turns > 1
         else r'.{0,8}(?:刚|又|最新|现(?:在)?).{0,120}'
     )
-    counterparty_verbs = (
-        r'(?:回复|表示|称|说|主张|否认|不承认|提出|发来)'
-        if state.case_type == 'debt'
-        else r'(?:回复|表示|称|说|主张|否认|不承认|拒绝|要求|提出|发来)'
-    )
+    # The counter-party verb set lives on the practice profile so debt can
+    # narrow it (e.g. ``拒绝`` must not be re-read as a fresh reply on a
+    # recorded position like “对方承认还欠4万元并拒绝还款”).
+    counterparty_verbs = profile.counterparty_verbs
     counterparty_update = re.search(
         r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人|'
         r'中介|客服|人事|承办人员|保险理赔员|店铺经营者|物业|开发商|'
@@ -627,7 +623,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         r'办案人员|民警|警官|交警|检察官|检察人员|执行法官|法官|书记员|'
         r'窗口工作人员|窗口|医务科|医务处|科室)'
         + counterparty_timing
-        + counterparty_verbs
+        + r'(?:' + counterparty_verbs + r')'
         + r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
         message,
     )

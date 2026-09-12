@@ -4,8 +4,20 @@ Law titles below are research leads: neither a verified corpus nor an assertion
 that a particular version or provision applies to the individual case.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Pattern
 import re
+
+
+# Default counterparty verb set — every profile uses this unless it overrides
+# with its own ``counterparty_verbs``. Debt narrows it so an already-recorded
+# "对方承认还欠X并拒绝还款" is not re-read as a fresh reply.
+_DEFAULT_COUNTERPARTY_VERBS = (
+    r'回复|表示|称|说|主张|否认|不承认|拒绝|要求|提出|发来'
+)
+_NARROW_DEBT_VERBS = (
+    r'回复|表示|称|说|主张|否认|不承认|提出|发来'
+)
 
 
 @dataclass(frozen=True)
@@ -22,6 +34,11 @@ class PracticeProfile:
     response: str
     costs: str
     communication: str
+    # Domain-specific intake extensions. The shared ``ingest_text`` reads them
+    # instead of inlining ``if case_type == 'debt': ...`` style branches so a
+    # new profile does not require touching ``intake.py``.
+    extra_detail_pattern: Pattern[str] | None = None
+    counterparty_verbs: str = _DEFAULT_COUNTERPARTY_VERBS
 
 
 PROFILES: dict[str, PracticeProfile] = {
@@ -38,7 +55,20 @@ PROFILES: dict[str, PracticeProfile] = {
         '对方可能称是赠与、已还款、实际借款人另有其人或利息过高。',
         '用约定用途的对话、交付记录和还款明细逐笔回应；不把转账金额直接当作全部未偿本金。',
         '先列本金、已还款和拟主张利息；诉讼费按请求和现行标准核算，保全担保、律师费另行询价。',
-        '我们先核对这笔款的用途、收到日期和已还金额。请书面确认尚欠金额及可履行的还款安排；如有异议，请说明是哪一笔。'),
+        '我们先核对这笔款的用途、收到日期和已还金额。请书面确认尚欠金额及可履行的还款安排；如有异议，请说明是哪一笔。',
+        # Round-18 root cause: a debt-specific extractor persists known
+        # repayment terms, partial performance and competing explanations for
+        # the transfer (赠与 / 货款 / 借款用途). The shared pipeline applies
+        # this from the profile instead of an inline ``if debt:`` branch.
+        extra_detail_pattern=re.compile(
+            r'约定.{0,20}(?:还款|归还|偿还|还)|'
+            r'(?:已还|还过|已偿还|偿还过).{0,20}(?:元|万|块|部分|剩)|'
+            r'(?:赠与|货款|借款用途|款项用途)'
+        ),
+        # Narrower counterparty verb set so a recorded position like
+        # "对方承认还欠4万元并拒绝还款" is not re-read as a fresh reply.
+        counterparty_verbs=_NARROW_DEBT_VERBS,
+    ),
     'family': PracticeProfile(
         '婚姻家庭', ('离婚', '抚养', '家暴', '彩礼', '夫妻', '结婚', '探望权'),
         '先分开处理人身安全、婚姻关系、孩子安排和财产债务，避免把不同诉求混在一起。',

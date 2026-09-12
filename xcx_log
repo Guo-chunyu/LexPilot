@@ -348,3 +348,23 @@
 
 - Stage 3：把 `details / procedure / constraints` 从自由文本升级为带 `assertor / supersedes / lifecycle` 的类型化槽位；对方主张不能覆盖用户断言；处理限制支持撤回生命周期。
 - Stage 4：把借贷分支（第 18 轮同类）与剩余的劳动专门流程特例接入共享接谈入口，领域 profile 只提供数据，不再决定控制流。
+
+### Stage 3 — 类型化槽位、assertor 与约束撤回生命周期（已完成并推送）
+
+- `SlotAssertion` 与 `CounterpartyClaim` 加入 `ConsultationDossier`；`CaseState.slot_assertions` 记录每个槽位的逐次断言历史。
+- `save_fact` 接收 `assertor` 参数。对方/机关对用户自有槽位（amount / parties / event_time / goal / location / procedure / constraints）的断言不再覆盖用户原值，转入 `counterparty_claims` 侧信道；`details` 仍为对方的合法写入位。
+- 用户更正通过 `_supersede_user_assertion` 将更早的用户断言标记 `superseded`；对方断言永远无法取代用户槽位。
+- `constraints` 引入 `withdrawn` 生命周期：`_withdraw_active_constraints` 仅撤回用户实际撤回主题的子句（例如"愿意再和对方协商一次"只撤回"不要再联系对方"，不会动"人在外地不能到场"）；`_recompute_constraints_after_withdrawal` 用剩下的活跃子句重建 `facts['constraints']`，使下游路线不再受旧约束影响。
+- 顺手补 `书面沟通优先` 入约束正则、`病历` 入医疗证据别名，关闭第 17 轮的 `bare_medical_record_alias_missing` 根因。
+- 新增 `tests/test_consultation_slot_lifecycle.py`（13 项）固化上述四个不变量。
+- 全量回归 892 passed；覆盖矩阵 0/144；提交 `f5de6ab` 并推送 origin/main。
+
+### Stage 4 — 借贷 / 劳动共享接谈入口与 profile 数据化（已完成）
+
+- `PracticeProfile` 增加 `extra_detail_pattern: Pattern[str] | None` 与 `counterparty_verbs: str` 两个字段；新增模块常量 `_DEFAULT_COUNTERPARTY_VERBS`（回复/表示/称/说/主张/否认/不承认/拒绝/要求/提出/发来）与 `_NARROW_DEBT_VERBS`（去掉"拒绝"，避免把已记录的"对方承认还欠 X 并拒绝还款"重新识别为新回复）。借贷 profile 接入 `_NARROW_DEBT_VERBS`，并在数据层一次性提供它的 `extra_detail_pattern`（约定还款 / 部分还款 / 赠与·货款·借款用途）。
+- `ingest_text` 读取 `PROFILES[case_type].extra_detail_pattern` 与 `counterparty_verbs`，删除 `if state.case_type == 'debt': ...` 这种内联分支；第 18 轮的借贷对方主张问题由通用句法 + profile 数据驱动，不再因领域分支漏抽。
+- 同步修复 `counterparty_update` 正则：把裸 `r'回复|表示|...|发来'` 用 `(?:回复|表示|...|发来)` 包住，避免 Python regex 引擎在 capture group 内部深 alternation + `.{0,8}` 的回溯组合下退化成 `商家刚回复` 5 字符短匹配，使第二轮消费跟进（"商家刚回复说只能把会员卡转给别人使用"）的对手主张重新进入 `details`，关闭红队第 8/9/10 轮的回归。
+- `intake.py` 中 `if state.case_type == 'debt':` 内联块消除，新增 profile 数据；`PROFILES['general']` 与 `PROFILES['labor_dispute']` 不提供 `extra_detail_pattern`，因此零回归。
+- 全量回归 892 passed；覆盖矩阵 0/144（149 项探测，含 5 项断言保护）。
+- 期间文件编辑过 `profiles.py` 导致债务块括号不平衡与 `'family':` 重复声明，已通过移除重复行 / 保留 PROFILES dict 闭括号修复，文件重新 import 16 个 profile 且只有 debt 注入 `extra_detail_pattern` 与窄动词表。
+
