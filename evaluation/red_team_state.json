@@ -2,7 +2,7 @@
   "schema_version": 1,
   "base_seed": 20260909,
   "round_size": 5,
-  "consecutive_clean_rounds": 0,
+  "consecutive_clean_rounds": 1,
   "loop_status": "running",
   "pause_reason": "",
   "case_pool_sources": {
@@ -666,6 +666,38 @@
         "full_suite": "340 passed, 1 warning"
       },
       "commit_subject": "Recognize actorless reply updates"
+    },
+    {
+      "round_id": "round-013-next-step-only-followups",
+      "seed": 20260921,
+      "generator": "generate_round_thirteen_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "debt_next_step_only_followup",
+        "housing_next_step_only_followup",
+        "consumer_next_step_only_followup",
+        "contract_next_step_only_followup",
+        "medical_next_step_only_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "debt_next_step_only_followup", "messages": ["朋友欠我2万元，有借条和转账记录，已经到期，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
+        {"case_id": "housing_next_step_only_followup", "messages": ["我是租客，退租后房东扣着押金不退，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
+        {"case_id": "consumer_next_step_only_followup", "messages": ["健身房停止营业，预付余额没有退，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
+        {"case_id": "contract_next_step_only_followup", "messages": ["供应商超过约定期限仍未交货，我已经付款，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]},
+        {"case_id": "medical_next_step_only_followup", "messages": ["治疗后症状加重，我有完整病历和复查记录，请先给我方案。", "那我现在最先做哪一步？请只说当前一步。"]}
+      ],
+      "failures_before_fix": [],
+      "completed_root_causes": [],
+      "pending_root_causes": [],
+      "root_cause": "未发现新的产品问题；已有方案后的纯下一步追问会直接返回当前最相关的一步，不重放首轮完整方案。",
+      "fix_files": [],
+      "verification": {
+        "before_fix": "5 passed",
+        "delivery_paths": "API/export and Streamlit: 2 passed",
+        "round_selected_suite": "8 passed",
+        "full_suite": "347 passed, 1 warning"
+      },
+      "commit_subject": "Add next-step-only red-team coverage"
     }
   ]
 }

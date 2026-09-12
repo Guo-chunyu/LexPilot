@@ -222,6 +222,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_ten_variants(),
         *generate_round_eleven_variants(),
         *generate_round_twelve_variants(),
+        *generate_round_thirteen_variants(),
     ]
 
 
@@ -850,6 +851,34 @@ def generate_round_twelve_variants(seed: int = 20260920) -> list[RedTeamCase]:
             max_followup_similarity=0.65,
         )
         for case_id, domain, first, followup, detail in specs
+    ]
+
+
+def generate_round_thirteen_variants(seed: int = 20260921) -> list[RedTeamCase]:
+    """Generate five unseen next-step-only follow-ups."""
+    randomizer = Random(seed)
+    question = randomizer.choice(('那我现在最先做哪一步', '那我今天先做什么'))
+    scope = randomizer.choice(('请只说当前一步', '不用重复完整方案'))
+    specs = (
+        ('debt_next_step_only_followup', 'debt', '', '朋友欠我2万元，有借条和转账记录，已经到期，请先给我方案。'),
+        ('housing_next_step_only_followup', 'housing', 'tenant', '我是租客，退租后房东扣着押金不退，请先给我方案。'),
+        ('consumer_next_step_only_followup', 'consumer', '', '健身房停止营业，预付余额没有退，请先给我方案。'),
+        ('contract_next_step_only_followup', 'contract', '', '供应商超过约定期限仍未交货，我已经付款，请先给我方案。'),
+        ('medical_next_step_only_followup', 'medical', '', '治疗后症状加重，我有完整病历和复查记录，请先给我方案。'),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'next_step_only'),
+            (first, f'{question}？{scope}。'),
+            domain,
+            role,
+            forbidden_reply_fragments=('**按现有信息，先这样推进**',),
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '**本轮最相关的下一步**'),
+            max_followup_similarity=0.65,
+        )
+        for case_id, domain, role, first in specs
     ]
 
 
