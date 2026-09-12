@@ -69,6 +69,10 @@ DEBT_GIFT_DEFENSE_FOLLOWUP = '补充一下，对方刚刚回复说这笔钱是�
 DEBT_FIRST_TURN_OPENING = '没有借条不等于可以直接下结论。先把每笔转账的时间、金额、收款人'
 CONSUMER_TRANSFER_START = '健身房停业，会员卡余额3000元，商家不退款，请先给我方案。'
 CONSUMER_TRANSFER_FOLLOWUP = '商家刚回复说只能把会员卡转给别人使用，不能退款，我应该怎么办？'
+REALISTIC_CONSUMER_START = '我在健身房办了 3000 元的会员卡，上周健身房突然停业了，商家不退钱。'
+REALISTIC_CONSUMER_LOCATION = '上海市'
+REALISTIC_CONSUMER_DATE = '2026.8.11'
+CONSUMER_FIRST_TURN_OPENING = '先确认是门店停业、迁址，还是经营主体已经异常'
 CUSTOMER_SERVICE_START = '我购买的网课无法继续使用，剩余费用2800元，要求退款，请先给我方案。'
 CUSTOMER_SERVICE_FOLLOWUP = '客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？'
 UNMARKED_MERCHANT_START = '我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。'
@@ -359,6 +363,69 @@ def test_counterparty_update_is_grounded_in_streamlit():
         state,
         at.session_state['messages'][-1]['content'],
         report_markdown(state),
+    )
+    assert not at.exception
+
+
+def _assert_realistic_consumer_conversation(
+    state,
+    counterparty_reply: str,
+    date_reply: str,
+) -> None:
+    assert state.case_type == 'consumer'
+    assert '只能把会员卡转给别人使用' in state.facts.get('details', '')
+    assert state.facts.get('location') == REALISTIC_CONSUMER_LOCATION
+    assert '**针对本轮追问**' in counterparty_reply
+    assert '转给别人使用' in counterparty_reply
+    assert CONSUMER_FIRST_TURN_OPENING not in counterparty_reply
+    assert state.facts.get('event_time') == REALISTIC_CONSUMER_DATE
+    assert state.pending_fact_ids != ['event_time']
+    assert '**已记录本轮补充**' in date_reply
+    assert REALISTIC_CONSUMER_DATE in date_reply
+    assert '**现在可以先做**' not in date_reply
+    assert '关键事情是什么时候发生的' not in date_reply
+
+
+def test_realistic_consumer_conversation_without_prior_plan_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(REALISTIC_CONSUMER_START)
+    second = engine.process(CONSUMER_TRANSFER_FOLLOWUP, first['case_state'])
+    third = engine.process(REALISTIC_CONSUMER_LOCATION, second['case_state'])
+    fourth = engine.process(REALISTIC_CONSUMER_DATE, third['case_state'])
+    _assert_realistic_consumer_conversation(
+        fourth['case_state'], second['reply'], fourth['reply']
+    )
+
+
+def test_realistic_consumer_conversation_without_prior_plan_in_api():
+    thread_id = 'red_team_realistic_consumer_without_prior_plan'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={'thread_id': thread_id, 'query': REALISTIC_CONSUMER_START})
+        second = client.post('/chat', json={'thread_id': thread_id, 'query': CONSUMER_TRANSFER_FOLLOWUP})
+        client.post('/chat', json={'thread_id': thread_id, 'query': REALISTIC_CONSUMER_LOCATION})
+        fourth = client.post('/chat', json={'thread_id': thread_id, 'query': REALISTIC_CONSUMER_DATE})
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert second.status_code == fourth.status_code == 200
+    _assert_realistic_consumer_conversation(
+        api_module.CaseState.from_value(fourth.json()['case_state']),
+        second.json()['reply'],
+        fourth.json()['reply'],
+    )
+
+
+def test_realistic_consumer_conversation_without_prior_plan_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(REALISTIC_CONSUMER_START).run(timeout=20)
+    at.chat_input[0].set_value(CONSUMER_TRANSFER_FOLLOWUP).run(timeout=20)
+    counterparty_reply = at.session_state['messages'][-1]['content']
+    at.chat_input[0].set_value(REALISTIC_CONSUMER_LOCATION).run(timeout=20)
+    at.chat_input[0].set_value(REALISTIC_CONSUMER_DATE).run(timeout=20)
+    _assert_realistic_consumer_conversation(
+        at.session_state['case_state'],
+        counterparty_reply,
+        at.session_state['messages'][-1]['content'],
     )
     assert not at.exception
 

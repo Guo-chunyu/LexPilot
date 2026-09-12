@@ -68,6 +68,18 @@ def _follow_up_analysis(message: str, state, profile) -> str:
             '不要只截取单句；如果没有直接写“借款”，转账备注、双方关系和催还后的回复'
             '只能作为需要结合上下文核对的间接材料，不能据此保证结果。'
         )
+    if (
+        state.case_type == 'consumer'
+        and re.search(r'转(?:给|让)|转卡', message)
+        and re.search(r'不(?:能|予|同意)?退|拒绝退款|不能退款', message)
+    ):
+        return (
+            f'{heading}：商家提出“转给别人使用”只是新的替代处理意见，'
+            '不等于你的退款请求已经解决。先保存这次回复的完整原文、时间和商家账号，'
+            '并把3000元付款、当前余额、剩余服务以及门店停业信息对应起来；'
+            '如果你不接受转卡，应在书面退款请求中明确写明不接受该替代方案，'
+            '要求商家说明经营主体、未履行金额和拒绝退款的依据。'
+        )
     current_details = str(state.facts.get('details', '')).strip()
     if current_details and current_details in message:
         return (
@@ -100,6 +112,17 @@ def _follow_up_analysis(message: str, state, profile) -> str:
         f'{heading}：我已按这次消息重新核对当前事实、材料和路线。'
         f'{profile.response} 下面只展示本轮变化与最相关的一步，完整更新保留在右侧报告。'
     )
+
+
+def _answered_slot_acknowledgement(slot: str, value: str) -> str:
+    """Acknowledge a short interview answer without replaying case guidance."""
+    if slot == 'location':
+        impact = '后续会按该地区核对办理渠道和地区性规则，但暂不据此直接确定具体管辖机关。'
+    elif slot == 'event_time':
+        impact = '后续会用这个时间核对规则版本和可能涉及的程序期限；仍需确认它对应停业、通知还是其他关键事件。'
+    else:
+        impact = '后续问题和方案会使用这项信息，不再按未知处理。'
+    return f'**已记录本轮补充**：{LABELS.get(slot, slot)}为“{value}”。{impact}'
 
 
 def _most_relevant_follow_up_step(message: str, report: dict) -> dict:
@@ -191,7 +214,19 @@ def process_consultation(message: str, state: CaseState) -> dict:
         pieces.append(f'明白，“{label}”暂时记为待核实，不会反复追问同一个问题。')
     if state.evidence_collection_exhausted:
         pieces.append('现有材料就按这些整理，不会再重复让你补同样的材料；缺的部分会列出合法替代办法。')
-    if had_plan:
+    is_follow_up = dossier.turns > 1
+    answered_previous_slot = bool(previous_slot and previous_slot in state.facts)
+    narrative_domains = identify_domains(state.user_narrative)
+    domain_reframed = bool(
+        re.search(r'更正|说错了|其实是|实际是|准确说', message)
+        and narrative_domains
+        and narrative_domains[0] not in {'general', state.case_type}
+    )
+    if answered_previous_slot:
+        current_analysis = _answered_slot_acknowledgement(
+            previous_slot, str(state.facts[previous_slot])
+        )
+    elif had_plan or (is_follow_up and not domain_reframed):
         current_analysis = (
             f'**针对本轮追问**：{dossier.analysis}'
             if dossier.analysis
@@ -202,7 +237,7 @@ def process_consultation(message: str, state: CaseState) -> dict:
     dossier.analysis = current_analysis
     pieces.append(current_analysis)
     pieces.append('')
-    if rules and not had_plan:
+    if rules and dossier.turns == 1:
         rule = rules[0]
         pieces += [f'**可先核对的规则**：{rule["summary"]}（[{rule["law_name"]}{rule["article"]}]({rule["source_url"]})）；是否适用还要结合发生时间和具体事实。', '']
     produce = explicit_plan or had_plan or not missing or dossier.turns >= 6
@@ -223,10 +258,11 @@ def process_consultation(message: str, state: CaseState) -> dict:
         action = LegalAction.GENERATE_DOCUMENT
         reason = '先提供现有信息下可执行的阶段方案，保留事实和法源核验缺口。'
     else:
-        task = _next_evidence_task(dossier.evidence_tasks)
-        pieces += [f'**现在可以先做**：{task.alternative if task.status == "暂无法提供" else task.how} 这些材料主要用于说明{task.proves}。']
+        if not answered_previous_slot:
+            task = _next_evidence_task(dossier.evidence_tasks)
+            pieces += [f'**现在可以先做**：{task.alternative if task.status == "暂无法提供" else task.how} 这些材料主要用于说明{task.proves}。']
         action = LegalAction.ASK_FACT
-        reason = '按地区、时间、诉求和本领域关键争点逐轮接谈。'
+        reason = '已记录本轮短答并继续接谈。' if answered_previous_slot else '按地区、时间、诉求和本领域关键争点逐轮接谈。'
     if missing:
         slot = missing[0]
         # Keep canonical common slots; only the area-specific question can be rephrased.
