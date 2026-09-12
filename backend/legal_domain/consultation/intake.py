@@ -6,6 +6,18 @@ from backend.legal_rl.state import CaseState, EvidenceGap, EvidenceStatus
 from .models import EvidenceTask, TimelineEntry
 from .profiles import OUTSIDE_MAINLAND, PROFILES
 from .perspective import client_perspective
+from ._spans import (
+    CLAUSE_BROAD as _DEFAULT_POLICY,
+    EVIDENCE_EXHAUSTED,
+    EXCLUSIVE_INVENTORY,
+    SENTENCE_BROAD,
+    find_asserted,
+    first_asserted,
+    has_asserted,
+    has_negated,
+    is_correction,
+    is_correction as _is_correction,
+)
 
 
 QUESTIONS = {
@@ -69,25 +81,19 @@ def wants_plan(text: str) -> bool:
 
 
 def says_evidence_exhausted(text: str) -> bool:
-    """Accept an exhaustion statement only when the matched phrase is asserted."""
-    for match in re.finditer(EXHAUSTED_PATTERN, text):
-        clause_start = max(text.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
-        prefix = text[clause_start:match.start()]
-        if re.search(r'(?:不是|并非|不代表|不等于|不能说|并不意味着)\s*$', prefix):
-            continue
-        return True
-    return False
+    """Accept an exhaustion statement only when its scope is asserted.
+
+    The previous inline shape — find a match, walk back to the last clause
+    break, then check the narrow-end-of-scope negation list — was duplicated
+    across the exclusion-scope siblings below. The ``_spans`` utility now
+    owns that policy.
+    """
+    return has_asserted(text, EXHAUSTED_PATTERN, policy=EVIDENCE_EXHAUSTED)
 
 
 def asserted_exclusive_inventory(text: str):
     """Return an asserted “only these materials” match, excluding scope negation."""
-    for match in re.finditer(r'(?:只有|仅有)([^，。；\n]{1,80})', text):
-        clause_start = max(text.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
-        prefix = text[clause_start:match.start()]
-        if re.search(r'(?:不是|并非|并不是)\s*$', prefix):
-            continue
-        return match
-    return None
+    return first_asserted(text, r'(?:只有|仅有)([^，。；\n]{1,80})', policy=EXCLUSIVE_INVENTORY)
 
 
 def _plausible_pending_answer(slot: str, message: str) -> bool:
@@ -184,9 +190,8 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
     accepted = True
     if old and str(old) != value:
         label = LABELS.get(key, key)
-        explicit_correction = source_type == 'user_message' and bool(correction_context or
-            re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正(?:一下|为|成)?|说错了', quote)
-            or re.search(r'(?:我|本人)不是[^，,；;]{1,20}[，,；;]\s*(?:我)?是', quote)
+        explicit_correction = source_type == 'user_message' and bool(
+            correction_context or is_correction(quote)
         )
         if source_type == 'uploaded_file':
             accepted = False
@@ -237,10 +242,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     extracted: set[str] = set()
     constraint_sentences: list[str] = []
     procedure_sentences: list[str] = []
-    correction_context = source_type == 'user_message' and bool(
-        re.search(r'而是|其实是|实际是|准确说是|应该是|应当是|更正(?:一下|为|成)?|说错了', message)
-        or re.search(r'(?:我|本人)不是[^，,；;]{1,20}[，,；;]\s*(?:我)?是', message)
-    )
+    correction_context = source_type == 'user_message' and is_correction(message)
 
     def put(key, value, quote):
         save_fact(state, key, value, quote, source_type=source_type, source_ref=source_ref,
@@ -287,9 +289,10 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'已经(?:起诉|投诉|报案|申请|协商)|收到.{0,10}(?:传票|通知|决定)',
             sentence,
         )
-        negative_procedure = re.search(
-            r'(?<!不是)(?<!并非)(?:没有|尚未|还没)(?:起诉|立案|投诉|报案|申请|协商)',
+        negative_procedure = has_asserted(
             sentence,
+            r'(?:没有|尚未|还没)(?:起诉|立案|投诉|报案|申请|协商)',
+            policy=SENTENCE_BROAD,
         )
         corporate_inspection_refusal = (
             state.case_type == 'corporate'
@@ -303,16 +306,14 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         # withdrawn) changes the case as much as filing it did.  Both an outcome
         # and a procedural object are required so substantive wording such as
         # “撤销合同” is not misread as procedure progress.
+        outcome_token = r'驳回|不予受理|不予立案|不受理|不成立|未受理|撤销|撤回|终结'
         outcome_procedure = (
-            re.search(r'驳回|不予受理|不予立案|不受理|不成立|未受理|撤销|撤回|终结', sentence)
+            has_asserted(sentence, outcome_token, policy=SENTENCE_BROAD)
             and re.search(
                 r'申请|投诉|举报|仲裁|复议|诉讼|起诉|执行|调解|复核|决定|立案|请求|裁决|判决|认定',
                 sentence,
             )
-            and not re.search(
-                r'(?:没有|尚未|还没|并未|并非|不是)\s*(?:被)?(?:驳回|不予受理|撤销|撤回)',
-                sentence,
-            )
+            and not has_negated(sentence, outcome_token, policy=SENTENCE_BROAD)
         )
         if (
             affirmative_procedure
@@ -506,30 +507,21 @@ def _has_asserted_urgent_deadline(message: str) -> bool:
 
 
 def _signal_states(message: str, pattern: str) -> list[bool]:
-    states = []
-    for match in re.finditer(pattern, message):
-        clause_start = max(message.rfind(mark, 0, match.start()) for mark in '，,。；;\n') + 1
-        prefix = message[clause_start:match.start()]
-        double_negative = bool(re.search(
-            r'(?:不是|并非|并不是|并不)\s*'
-            r'(?:没有|并未|不存在|无)\s*(?:被)?$',
-            prefix,
-        ))
-        negated = not double_negative and bool(re.search(
-            r'(?:(?:没有|并未|未曾|不是|并非|并不|无需|不需|不存在|尚未|未被|无须)'
-            r'[^，,。；;但]{0,6}|[不非无未])$',
-            prefix,
-        ))
-        states.append(not negated)
-    return states
+    """Backward-compatible signal-state list used by urgent-action code."""
+    return [state for state in _signal_state_iter(message, pattern)]
+
+
+def _signal_state_iter(message: str, pattern: str) -> list[bool]:
+    compiled = re.compile(pattern)
+    return [_DEFAULT_POLICY.is_asserted(message, m.start()) for m in compiled.finditer(message)]
 
 
 def _has_asserted_signal(message: str, pattern: str) -> bool:
-    return any(_signal_states(message, pattern))
+    return any(_signal_state_iter(message, pattern))
 
 
 def _has_negated_signal(message: str, pattern: str) -> bool:
-    return any(not state for state in _signal_states(message, pattern))
+    return any(not state for state in _signal_state_iter(message, pattern))
 
 
 def retracted_urgent_actions(message: str) -> set[str]:

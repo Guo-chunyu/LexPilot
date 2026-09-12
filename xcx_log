@@ -321,3 +321,30 @@
 
 - `handling_constraints_cannot_be_withdrawn`：用户明确撤销先前的处理限制后，`constraints` 仍保留原限制并继续影响后续方案。
 - `bare_medical_record_alias_missing`：医疗材料用裸称“病历”时不在证据别名内，“病历还在医院，我现在拿不到”无法映射到规范取证任务。
+
+## 评估后阶段化重构（Stage 1–4）
+
+依据上文后续优化方向的优先级，启动以“消灭并行路径与重复正则”为核心的阶段化重构。每一阶段都先固化目标、再最小修复、再全量回归、最后提交推送。
+
+### Stage 1 — 不变量 + 覆盖式安全网（已完成并推送）
+
+- 把 “每轮 5 个随机案例找 bug” 升级为可见可量测的缺口仪表。新增：
+  - `evaluation/consultation_coverage.py`：对 称谓 × 动词 × 材料 × 可得性框 × 轮次位置 做枚举矩阵，生成 144 条确定性探测 + 36 条断言保护探测。
+  - `scripts/report_consultation_coverage.py`：报告脚本。
+  - `tests/test_consultation_invariants.py`：6 条属性测试（用户槽位不被对方覆盖、计划不再列不可得材料、不递归回到同一槽位、共享分支语义等）。
+  - `tests/test_consultation_coverage.py`：覆盖矩阵完整性断言。
+- 矩阵首次运行发现 8 处缺口：含 1 处劳动专门流程遗漏（与第 19 轮同类）；分别修在 `intake.py` 的“统一接谈拥有可得性”、`reporting.py` 的“计划不列不可得材料”、`labor/facts.py` 的“证据识别复用 postposed-unavailability”。
+- 矩阵稳定后 0/144；全量回归 838 passed。
+- 提交 `399b54b Stage 1: invariant + enumerative coverage safety net`。
+
+### Stage 2 — 单一断言/否定作用域 utility（已完成，待推送）
+
+- 抽离 `backend/legal_domain/consultation/_spans.py`，统一 6 处分散的内联作用域检查（`says_evidence_exhausted`、`asserted_exclusive_inventory`、`_signal_states`、`negative_procedure`、`outcome_procedure`、`correction_context`），通过 `NegationPolicy` 与 `is_correction` 提供 4 套策略：`CLAUSE_BROAD`、`SENTENCE_BROAD`、`EVIDENCE_EXHAUSTED`、`EXCLUSIVE_INVENTORY`。
+- `intake.py` 中删除 `clause_start = max(text.rfind(mark, 0, match.start()) for mark in ...) + 1` 之类的模式、`(?<!不是)(?<!并非)` 之类作用域负向回看、`而是|其实是|...` 双处 inline 副本均集中到 `is_correction()`。失败模式 R1–R4 与 R17 现在共享同一个测试套。
+- 新增 `tests/test_consultation_spans.py`（28 项）与 `tests/test_consultation_intake_invariants.py`（5 项属性 + 反退化），固化“intake 不再 inline 这些片段”作为可断言不变量。
+- 全量回归 866 passed；覆盖矩阵仍 0/144。
+
+### Stage 3–4 计划
+
+- Stage 3：把 `details / procedure / constraints` 从自由文本升级为带 `assertor / supersedes / lifecycle` 的类型化槽位；对方主张不能覆盖用户断言；处理限制支持撤回生命周期。
+- Stage 4：把借贷分支（第 18 轮同类）与剩余的劳动专门流程特例接入共享接谈入口，领域 profile 只提供数据，不再决定控制流。
