@@ -391,3 +391,25 @@
 - 全量回归 900 passed（4 项新增 constraint coverage 测试）。
 - 提交 `6bdb713` 并推送 origin/main。
 
+## 2026-09-12 晚间 — Web 启动环境修复（本地运行排障记录）
+
+用户按 README 跑 `streamlit run app.py` 报
+`ImportError: cannot import name 'Final' from 'typing' (D:\python\python 3.7\lib\typing.py)`，
+`pip install -r requirements.txt` 报 `Literal` 缺失。根因：旧 `.venv` 是用系统 **Python 3.7.9** 建的，
+而新版 streamlit / pip 需要 `typing.Final` 与 `typing.Literal`（Python 3.8+ 才有）。
+
+修复与结论（未改动任何源码，纯环境）：
+- 删掉 3.7 的 `.venv`，改用托管 Python 3.13.12 重建，`python -m ensurepip --default-pip` 装 pip
+  （注意：该 venv 下 `pip install --upgrade pip` 会把 pip 自身删掉，务必走 ensurepip）。
+- **只装 `desktop/requirements-runtime.txt`**（streamlit / pydantic / PyYAML / numpy / httpx /
+  python-dotenv / pymupdf / Pillow / python-docx / openpyxl，共 10 个包，无 torch）。当前 Web
+  走规则策略 + SQLite FTS，法律正文检索无需本地 Embedding；torch / transformers /
+  sentence-transformers 仅服务于旧 DQN 实验、本地 BGE、CrossEncoder 与旧向量库，均为延迟导入。
+- 启动方式直接 `.\.venv\Scripts\python.exe -m streamlit run app.py`，避免 PowerShell 激活策略
+  与系统 Python 版本混淆；`http://localhost:8501/_stcore/health` 返回 200 验证通过。
+- 版本选择：项目 GitHub 安装包流程用 Python 3.12，3.13 仅核心 Web 可用，3.7 已不可用。
+
+待办（用户建议，未在本轮执行）：把根目录 `requirements.txt` 拆成
+`requirements-runtime.txt` / `requirements-api.txt` / `requirements-dev.txt` / `requirements-ml.txt`，
+让普通用户开 Web 不被强装约 1.5 GB 的 ML 依赖；拆分需同步 CI 与 `desktop/lexpilot.spec` 打包流程。
+
