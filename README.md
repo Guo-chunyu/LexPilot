@@ -87,12 +87,12 @@ flowchart LR
 
 不安装 Python 的朋友可直接使用 [Windows 与 macOS 桌面安装包说明](docs/desktop-installers.md)。GitHub 仓库推送 `v0.1.0` 这类版本标签后，会自动构建 Windows x64、Apple Silicon Mac 和 Intel Mac 三个未签名试用包，并添加到该版本的 GitHub Release。首次发布可照着 [Windows PowerShell 发布步骤](docs/publish-to-github-powershell.md) 操作。
 
-建议使用 Python 3.10 或更高版本：
+建议使用 Python 3.10 或更高版本（项目构建环境使用 3.12；Python 3.7 已不支持新版 streamlit）。只打开网页无需安装 torch 等机器学习依赖：
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-runtime.txt
 ```
 
 启动 Web：
@@ -106,6 +106,11 @@ streamlit run app.py
 ```powershell
 uvicorn backend.api:api_app --reload
 ```
+
+> 依赖已按用途拆分：`requirements-runtime.txt`（网页/API 最小集，无 torch）、
+> `requirements-dev.txt`（测试与评估）、`requirements-ml.txt`（旧强化学习 / 本地向量 / 重排模型，
+> 约 1.5 GB，仅需运行旧 DQN、本地 Embedding 或旧向量库时安装）。根目录 `requirements.txt`
+> 为三者聚合的全家桶入口，仅向后兼容保留。
 
 运行离线验收场景：
 
@@ -162,10 +167,17 @@ python scripts\demo_acceptance.py
 ## 测试
 
 ```powershell
+python -m pip install -r requirements-dev.txt
 pytest -q
 ```
 
 测试覆盖多轮状态更新、动作映射、证据缺口、主动追问、补偿计算、法源时效、文件安全校验与解析、API 上传和 Streamlit 控件。
+
+> 测试分两层：核心套件（896 项）只需 `requirements-dev.txt`；另有 2 个旧强化学习测试
+> （`tests/test_dqn.py`、`tests/test_observation_reward_environment.py`，共 4 项）依赖
+> torch / gymnasium，需额外安装 `requirements-ml.txt` 才能跑全量 900 项。只想验证网页
+> 与咨询逻辑时，可跳过这两个文件：`pytest -q --ignore=tests/test_dqn.py
+> --ignore=tests/test_observation_reward_environment.py`。
 
 持续红队进度保存在 `evaluation/red_team_state.json`。案例池同时保留人工失败样本、固定手写矩阵和固定种子自动变体；每轮选择 5 个未覆盖案例，修复前后结果与全量回归数量一并落盘。
 

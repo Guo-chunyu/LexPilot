@@ -1,0 +1,30 @@
+# 机器学习 / 向量检索 / 历史强化学习依赖。
+# 仅当需要运行旧 DQN 实验、本地 BGE Embedding、CrossEncoder 重排或
+# 构建旧向量数据库时才安装；网页规则决策路径完全不需要本文件。
+# 本文件体积约 1.5 GB（主要是 torch），请按需安装。
+
+-r requirements-runtime.txt
+
+# LLM & Agent（langchain / langgraph）
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+langchain-huggingface>=0.1.0
+langchain-text-splitters>=0.3.0
+langgraph>=0.2.0
+
+# Embedding & Reranker
+torch
+transformers
+sentence-transformers>=3.0.0
+huggingface-hub
+
+# Vector DB & Search
+chromadb>=0.5.0
+
+# 历史强化学习实验
+gymnasium>=1.0.0
+
+# RAGAS 评估（独立于核心测试套件；会引入 langchain 依赖）
+ragas>=0.2.0

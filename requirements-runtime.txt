@@ -1,0 +1,28 @@
+# 最小运行依赖：只打开 Web 工作台（规则决策路径）所需。
+# 不包含 torch / transformers / sentence-transformers / chromadb / langchain 等
+# 历史强化学习、本地向量与重排模型依赖——这些仅旧 DQN / 向量库 / 重排实验需要，
+# 且均为延迟导入，规则策略 + SQLite FTS 的网页路径完全用不到。
+#
+# 与 desktop/requirements-runtime.txt 保持一致，额外补齐 API 入口与规则路由
+# 实际 import 的 fastapi / uvicorn / networkx / rank-bm25 / numpy。
+
+# Web & API
+streamlit>=1.57,<2
+fastapi>=0.110.0
+uvicorn>=0.30.0
+httpx>=0.27
+python-multipart>=0.0.9
+python-dotenv>=1
+pydantic>=2.0.0
+PyYAML>=6.0
+
+# 数值与图（规则路由 / 证据图用到）
+numpy>=2
+networkx>=3.0
+rank-bm25
+
+# 文档处理与上传
+python-docx>=1.1
+openpyxl>=3.1
+pymupdf>=1.24
+Pillow>=10

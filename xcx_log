@@ -413,3 +413,31 @@
 `requirements-runtime.txt` / `requirements-api.txt` / `requirements-dev.txt` / `requirements-ml.txt`，
 让普通用户开 Web 不被强装约 1.5 GB 的 ML 依赖；拆分需同步 CI 与 `desktop/lexpilot.spec` 打包流程。
 
+## 2026-09-12 晚间 — requirements.txt 拆分（torch 移出根清单）
+
+按用户要求把根目录 `requirements.txt` 里的 torch 移除，按用途拆分为四份（+ 聚合入口）：
+
+| 文件 | 依赖数 | 内容 |
+| --- | --- | --- |
+| `requirements-runtime.txt` | 15 | 开网页/跑 API 最小集（streamlit/fastapi/uvicorn/httpx/pydantic/PyYAML/numpy/networkx/rank-bm25/python-docx/openpyxl/pymupdf/Pillow），**无 torch** |
+| `requirements-api.txt` | 0（`-r runtime`） | API 入口（fastapi/uvicorn 已并入 runtime） |
+| `requirements-dev.txt` | 3（`-r runtime`） | pytest / pandas / openpyxl（跑核心 896 项测试） |
+| `requirements-ml.txt` | 14（`-r runtime`） | torch/transformers/sentence-transformers/huggingface-hub/chromadb/gymnasium/langchain*/langgraph/ragas（旧 RL/向量/重排/RAGAS，约 1.5 GB） |
+| `requirements.txt` | 0（3 个 `-r`） | 全家桶聚合入口，仅向后兼容保留 |
+
+关键事实与依据：
+- 通过 `import app` 静态+运行时分析确认：Web 规则决策路径实际加载的第三方包只有
+  numpy / pydantic / httpx / python-dotenv / PyYAML / python-multipart（其余为 streamlit 传递依赖）。
+  `backend/graph.py` 的 `from langgraph.graph import StateGraph` 是函数内**延迟导入**，规则路径不触发。
+- `torch` 仅 `backend/legal_rl/dqn.py` + `policy.py` 用到；`gymnasium` 仅 `environment.py`；均为旧 RL 实验代码。
+- 全量 900 项测试 = 896 项核心 + 4 项 DQN/RL（`tests/test_dqn.py` 1 项 + `tests/test_observation_reward_environment.py` 3 项）。
+  核心 896 项只需 `requirements-dev.txt`；跑全量 900 项需额外 `requirements-ml.txt`。
+- `ragas` 原在 dev 清单，但它会拖入 langchain 全家桶，且仅 `eval/ragas_eval.py` 独立评估脚本使用，
+  `tests/` 与 `evaluation/` 均不 import，故移到 ml 清单。
+- CI（`.github/workflows/build-installers.yml`）只引用 `desktop/requirements-desktop.txt`（→ runtime，无 torch），
+  不受本次拆分影响；`desktop/lexpilot.spec` 第 62 行仍显式打包 ragas，为桌面版行为，未改动。
+- 验证：`pip install --dry-run -r requirements-runtime.txt` 依赖解析通过（仅需补 annotated-doc/fastapi/networkx/rank-bm25 四包）；
+  核心回归 `--ignore` 两个 DQN/RL 文件后 896 passed。
+
+README「快速开始」改为 `pip install -r requirements-runtime.txt`，「测试」章节补充两层测试说明。
+

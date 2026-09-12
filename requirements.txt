@@ -1,46 +1,20 @@
-# LLM & Agent
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-community>=0.3.0
-langchain-openai>=0.2.0
-langchain-huggingface>=0.1.0
-langchain-text-splitters>=0.3.0
-langgraph>=0.2.0
+# ============================================================================
+# LexPilot 依赖（聚合入口，向后兼容保留本文件名）
+#
+# 本文件安装全部依赖（运行 + 开发/测试 + 机器学习），体积约 1.5 GB。
+# 绝大多数用户只需打开网页，请不要安装本文件，改用精简清单：
+#
+#   开网页 / 跑 API：  pip install -r requirements-runtime.txt
+#   开发 / 跑测试：    pip install -r requirements-dev.txt
+#   旧 DQN / 向量库：  pip install -r requirements-ml.txt
+#
+# 依赖分类说明：
+#   requirements-runtime.txt  网页规则决策路径最小集（无 torch）
+#   requirements-api.txt      = runtime（API 已并入 runtime）
+#   requirements-dev.txt      测试与评估工具
+#   requirements-ml.txt       旧强化学习 / 本地向量 / 重排模型（约 1.5 GB）
+# ============================================================================
 
-# Embedding & Reranker
-torch
-transformers
-sentence-transformers>=3.0.0
-huggingface-hub
-
-# Vector DB & Search
-chromadb>=0.5.0
-rank-bm25
-numpy
-
-# Web & API
-streamlit>=1.57.0
-fastapi>=0.110.0
-uvicorn>=0.30.0
-httpx
-python-multipart>=0.0.9
-python-dotenv
-pydantic>=2.0.0
-PyYAML>=6.0
-gymnasium>=1.0.0
-
-# Document
-python-docx
-
-# Knowledge Graph
-networkx>=3.0
-
-# Eval
-pandas
-openpyxl
-ragas>=0.2.0
-pytest>=8.0.0
-
-# Multimodal (optional)
-pymupdf
-Pillow
+-r requirements-runtime.txt
+-r requirements-dev.txt
+-r requirements-ml.txt

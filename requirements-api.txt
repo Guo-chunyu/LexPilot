@@ -1,0 +1,5 @@
+# API 服务运行依赖 = Web 运行依赖 + 接口层本身所需。
+# API 的 fastapi / uvicorn 已并入 requirements-runtime.txt，此处仅做聚合，
+# 便于"只跑后端接口、不开网页"的场景单独安装。
+
+-r requirements-runtime.txt

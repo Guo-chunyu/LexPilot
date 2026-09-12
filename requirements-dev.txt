@@ -1,0 +1,13 @@
+# 开发 / 测试 / 评估依赖 = 运行依赖 + 测试与数据工具。
+# 普通用户只开网页无需安装本文件。
+# 注意：RAGAS 评估库（ragas）会拖入 langchain 全家桶，已移到 requirements-ml.txt，
+# 仅在需要跑 eval/ragas_eval.py 时安装。
+
+-r requirements-runtime.txt
+
+# 测试
+pytest>=8.0.0
+
+# 数据（评测矩阵 / 报告生成用到 pandas、openpyxl）
+pandas
+openpyxl
