@@ -107,15 +107,28 @@ def _plausible_pending_answer(slot: str, message: str) -> bool:
     return True
 
 
-def _evidence_mention(text: str, name: str) -> tuple[bool, bool]:
+POSTPOSED_UNAVAILABLE = re.compile(
+    r'(?:(?:我|本人|我们|这边|手头|目前|现在|暂时|一时|都|也|还)\s*)*'
+    r'(?:拿不到|拿不到手|拿不着|没拿到|没有拿到|没法拿|拿不出|要不?到|不给我|无法取得)'
+    r'\s*[了啊呀呢吧]?\s*$'
+)
+
+
+def _evidence_mention(text: str, name: str, siblings: tuple[str, ...] = ()) -> tuple[bool, bool]:
     """Return (mentioned, unavailable) without treating “没有借条” as possession."""
     terms = EVIDENCE_ALIASES.get(name, (name,))
     mentioned = any(term in text for term in terms)
     clauses = [part.strip() for part in re.split(r'[，,。；;\n]', text) if part.strip()]
+    sibling_terms = tuple(
+        term
+        for other in siblings
+        if other != name
+        for term in EVIDENCE_ALIASES.get(other, (other,))
+    )
     unavailable = False
     for term in terms:
         escaped = re.escape(term)
-        for clause in clauses:
+        for index, clause in enumerate(clauses):
             if term not in clause:
                 continue
             # A negation before the material must stay inside the same clause
@@ -131,17 +144,36 @@ def _evidence_mention(text: str, name: str) -> tuple[bool, bool]:
             # rest of the clause is purely the negation. This prevents
             # “有转账记录，没有借条” from negating the transfer record.
             after = re.fullmatch(
-                r'(?:(?:原件|材料|记录)\s*)?(?:(?:我|本人|手头|目前|现在)\s*)?'
-                r'(?:没有(?!问题)|没(?:有|了|找到|拿到|保存|留住)?|找不到|无法提供|无(?!问题|异议))'
+                r'(?:(?:原件|材料|记录)\s*)?'
+                r'(?:(?:我|本人|我们|这边|手头|目前|现在)\s*){0,2}'
+                r'(?:(?:都|也|还|暂时|一时)\s*)?'
+                r'(?:没有(?!问题)|没(?:有|了|找到|拿到|保存|留住)?|找不到|无法提供|无(?!问题|异议)'
+                r'|拿不到|拿不着|没法拿|拿不出|要不?到)'
                 r'[啊呀呢吧]?',
                 tail,
             )
-            if before or after:
+            # Natural speech often names the material first and only says “now I
+            # cannot get it” in a following clause. That clause counts only
+            # while no other material has been named in between, so
+            # “有转账记录，我拿不到借条” still cannot negate the transfer record.
+            if before or after or _later_clause_reports_unavailability(
+                clauses[index + 1:], sibling_terms
+            ):
                 unavailable = True
                 break
         if unavailable:
             break
     return mentioned, unavailable
+
+
+def _later_clause_reports_unavailability(clauses: list[str], sibling_terms: tuple[str, ...]) -> bool:
+    """Accept a trailing “I cannot get it” clause until another material appears."""
+    for clause in clauses:
+        if any(term in clause for term in sibling_terms) or '对方' in clause:
+            return False
+        if POSTPOSED_UNAVAILABLE.search(clause):
+            return True
+    return False
 
 
 def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='', correction_context=False) -> None:
@@ -369,20 +401,22 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if 'evidence_inventory' not in dossier.declined_slots:
             dossier.declined_slots.append('evidence_inventory')
     if source_type == 'user_message':
+        profile_evidence = PROFILES.get(state.case_type, PROFILES['general']).evidence
+        siblings = tuple(item[0] for item in profile_evidence)
         only = asserted_exclusive_inventory(message)
         if only and re.search(r'转账|聊天|截图|合同|通知|材料|证据|视频|借条', only.group(1)):
             # Explicitly exclusive inventory, not an assertion that missing
             # documents never existed or that supplied evidence proves the case.
             unavailable = []
-            for name, *_ in PROFILES.get(state.case_type, PROFILES['general']).evidence:
-                mentioned, denied = _evidence_mention(only.group(1), name)
+            for name, *_ in profile_evidence:
+                mentioned, denied = _evidence_mention(only.group(1), name, siblings)
                 if mentioned and not denied:
                     state.add_evidence(name, source='user_message', notes=f'{source_ref}：用户陈述现有材料，尚未核实。')
                 else:
                     unavailable.append(name)
             state.mark_evidence_unavailable(unavailable, exhausted=True)
-        for name, *_ in PROFILES.get(state.case_type, PROFILES['general']).evidence:
-            mentioned, denied = _evidence_mention(message, name)
+        for name, *_ in profile_evidence:
+            mentioned, denied = _evidence_mention(message, name, siblings)
             if denied:
                 state.mark_evidence_unavailable([name])
             elif mentioned:

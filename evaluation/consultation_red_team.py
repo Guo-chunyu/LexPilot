@@ -31,6 +31,8 @@ class RedTeamCase:
     expected_reply_fragments: tuple[str, ...] = ()
     max_followup_similarity: float | None = None
     expected_evidence_names: tuple[str, ...] = ()
+    forbidden_evidence_names: tuple[str, ...] = ()
+    expected_unavailable_evidence: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -227,6 +229,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fourteen_variants(),
         *generate_round_fifteen_variants(),
         *generate_round_sixteen_variants(),
+        *generate_round_seventeen_variants(),
     ]
 
 
@@ -1046,6 +1049,61 @@ def generate_round_sixteen_variants(seed: int = 20260924) -> list[RedTeamCase]:
     ]
 
 
+def generate_round_seventeen_variants(seed: int = 20260925) -> list[RedTeamCase]:
+    """Generate five unseen naturally phrased unobtainable-material follow-ups."""
+    randomizer = Random(seed)
+    denial = randomizer.choice(('我现在拿不到', '我这边拿不到'))
+    request = randomizer.choice(('请更新方案', '请据此调整材料清单'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    specs = (
+        (
+            'traffic_unobtainable_accident_report', 'traffic',
+            '发生交通事故，我受伤还在治疗，请先给我方案。',
+            f'交警说事故认定书要等调查结束，{denial}，{request}。',
+            '事故认定及现场记录',
+        ),
+        (
+            'housing_unobtainable_handover_record', 'housing',
+            '我是租客，退租后房东扣着押金不退，请先给我方案。',
+            f'房东把房屋交接记录收走了，{denial}，{request}。',
+            '房屋交接记录',
+        ),
+        (
+            'medical_unobtainable_medical_record', 'medical',
+            '手术后出现后遗症，我还在和医院交涉，请先给我方案。',
+            f'医院说完整病历还在整理，{denial}，{request}。',
+            '完整病历',
+        ),
+        (
+            'contract_unobtainable_delivery_record', 'contract',
+            '供应商交付的货物存在争议，我正在整理履行情况，请先给我方案。',
+            f'对方不给我签收单和验收记录，{denial}，{request}。',
+            '履行记录',
+        ),
+        (
+            'consumer_unobtainable_payment_record', 'consumer',
+            '商家停止提供预付服务，也没有退款，请先给我方案。',
+            f'商家不给我开发票，付款凭证{denial}，{request}。',
+            '付款和余额记录',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'unobtainable_material'),
+            (first, followup),
+            domain,
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮补充**',),
+            max_followup_similarity=0.65,
+            forbidden_evidence_names=(material,),
+            expected_unavailable_evidence=(material,),
+        )
+        for case_id, domain, first, followup, material in specs
+    ]
+
+
 def generate_anonymous_uploads() -> list[AnonymousUpload]:
     """Build minimal TXT/PDF/DOCX/PNG fixtures entirely in memory."""
     from docx import Document
@@ -1117,6 +1175,15 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
     for name in case.expected_evidence_names:
         if name not in evidence_names:
             failures.append(f'evidence inventory missing {name!r}')
+    for name in case.forbidden_evidence_names:
+        if name in evidence_names:
+            failures.append(f'evidence {name!r} wrongly recorded as held by the user')
+    unavailable_evidence = set(state.unavailable_evidence)
+    for name in case.expected_unavailable_evidence:
+        if name not in unavailable_evidence:
+            failures.append(
+                f'evidence {name!r} not recorded as unobtainable: {sorted(unavailable_evidence)}'
+            )
     for fragment in case.forbidden_reply_fragments:
         if fragment in replies[-1]:
             failures.append(f'repeated answered question: {fragment}')
