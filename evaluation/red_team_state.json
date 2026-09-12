@@ -886,6 +886,53 @@
         "full_suite": "379 passed, 1 warning"
       },
       "commit_subject": "Read postposed evidence unavailability"
+    },
+    {
+      "round_id": "round-018-debt-counterparty-denials",
+      "seed": 20260926,
+      "generator": "generate_round_eighteen_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "debt_counterparty_denies_principal",
+        "debt_counterparty_claims_repaid",
+        "debt_counterparty_partial_admission",
+        "debt_counterparty_refuses_installments",
+        "debt_counterparty_offsets_with_car"
+      ],
+      "anonymous_cases": [
+        {"case_id": "debt_counterparty_denies_principal", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说只借了2万元，剩下的是利息，我应该怎么办？"]},
+        {"case_id": "debt_counterparty_claims_repaid", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说这笔钱早就还清了，我应该怎么办？"]},
+        {"case_id": "debt_counterparty_partial_admission", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说只承认其中2万元，其他不认，我应该怎么办？"]},
+        {"case_id": "debt_counterparty_refuses_installments", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说不同意分期，也拒绝任何还款安排，我应该怎么办？"]},
+        {"case_id": "debt_counterparty_offsets_with_car", "messages": ["朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。", "对方回复说要用一辆车抵掉这笔借款，我应该怎么办？"]}
+      ],
+      "failures_before_fix": [
+        "debt_counterparty_denies_principal",
+        "debt_counterparty_claims_repaid",
+        "debt_counterparty_partial_admission",
+        "debt_counterparty_refuses_installments",
+        "debt_counterparty_offsets_with_car"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "debt_bypassed_counterparty_update_extraction",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit: 3 failed; two cases also overwrote the user amount",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "5 generated cases, 3 delivery-path regressions, 281 related tests and 387 full tests passed",
+          "commit_subject": "Persist debt counterparty denials in details"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "借贷领域被排除在通用对方主张提取之外，领域内只识别约定还款、部分还款和款项用途等措辞；对方否认本金、否认欠款、只部分承认、拒绝分期或以物抵账时未进入 details，带金额的否认句还会被通用金额提取写入 amount，直接覆盖用户自己主张的本金。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "related_suite": "281 passed",
+        "full_suite": "387 passed, 1 warning"
+      },
+      "commit_subject": "Persist debt counterparty denials in details"
     }
   ]
 }

@@ -230,6 +230,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fifteen_variants(),
         *generate_round_sixteen_variants(),
         *generate_round_seventeen_variants(),
+        *generate_round_eighteen_variants(),
     ]
 
 
@@ -1101,6 +1102,56 @@ def generate_round_seventeen_variants(seed: int = 20260925) -> list[RedTeamCase]
             expected_unavailable_evidence=(material,),
         )
         for case_id, domain, first, followup, material in specs
+    ]
+
+
+def generate_round_eighteen_variants(seed: int = 20260926) -> list[RedTeamCase]:
+    """Generate five unseen debt cases where the counterparty disputes the debt."""
+    randomizer = Random(seed)
+    reply_verb = randomizer.choice(('回复说', '表示'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    first_turn = '朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。'
+    specs = (
+        (
+            'debt_counterparty_denies_principal',
+            f'对方{reply_verb}只借了2万元，剩下的是利息，{question}？',
+            '只借了2万元',
+        ),
+        (
+            'debt_counterparty_claims_repaid',
+            f'对方{reply_verb}这笔钱早就还清了，{question}？',
+            '早就还清了',
+        ),
+        (
+            'debt_counterparty_partial_admission',
+            f'对方{reply_verb}只承认其中2万元，其他不认，{question}？',
+            '只承认其中2万元',
+        ),
+        (
+            'debt_counterparty_refuses_installments',
+            f'对方{reply_verb}不同意分期，也拒绝任何还款安排，{question}？',
+            '不同意分期',
+        ),
+        (
+            'debt_counterparty_offsets_with_car',
+            f'对方{reply_verb}要用一辆车抵掉这笔借款，{question}？',
+            '用一辆车抵掉',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            ('debt', 'multiturn', 'counterparty_denial'),
+            (first_turn, followup),
+            'debt',
+            expected_facts=(('amount', '4万元'), ('details', position)),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', position),
+            max_followup_similarity=0.65,
+        )
+        for case_id, followup, position in specs
     ]
 
 

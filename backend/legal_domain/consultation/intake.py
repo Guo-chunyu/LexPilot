@@ -351,39 +351,47 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         if debt_details:
             value = '；'.join(dict.fromkeys(debt_details))
             put('details', value, value)
-    if state.case_type != 'debt':
-        # Later-turn positions from the other party are part of the dispute,
-        # not conversational noise.  Persist them so every delivery path can
-        # ground the focused reply and the exported report in the new fact.
-        # Capture across commas because the condition attached to a position
-        # often follows in the next clause ("涨价，除非加价否则不发货").
-        counterparty_timing = (
-            r'.{0,8}(?:(?:刚|又|最新|现(?:在)?).{0,8})?'
-            if dossier.turns > 1
-            else r'.{0,8}(?:刚|又|最新|现(?:在)?).{0,120}'
-        )
+    # Later-turn positions from the other party are part of the dispute, not
+    # conversational noise.  Persist them so every delivery path can ground the
+    # focused reply and the exported report in the new fact.  Debt needs this
+    # too: a denial of the principal must land in `details` instead of being
+    # written into the user's own `amount` slot below.  Debt keeps a stricter
+    # report-frame verb set so an already recorded position such as
+    # “对方承认还欠4万元并拒绝还款” is not re-read as a fresh reply.
+    # Capture across commas because the condition attached to a position often
+    # follows in the next clause ("涨价，除非加价否则不发货").
+    counterparty_timing = (
+        r'.{0,8}(?:(?:刚|又|最新|现(?:在)?).{0,8})?'
+        if dossier.turns > 1
+        else r'.{0,8}(?:刚|又|最新|现(?:在)?).{0,120}'
+    )
+    counterparty_verbs = (
+        r'(?:回复|表示|称|说|主张|否认|不承认|提出|发来)'
+        if state.case_type == 'debt'
+        else r'(?:回复|表示|称|说|主张|否认|不承认|拒绝|要求|提出|发来)'
+    )
+    counterparty_update = re.search(
+        r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人|'
+        r'中介|客服|人事|承办人员|保险理赔员|店铺经营者|物业|开发商|'
+        r'保险人|承办机构|经营者|代理人|他们|'
+        r'办案人员|民警|警官|交警|检察官|检察人员|执行法官|法官|书记员|'
+        r'窗口工作人员|窗口|医务科|医务处|科室)'
+        + counterparty_timing
+        + counterparty_verbs
+        + r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
+        message,
+    )
+    if not counterparty_update and dossier.turns > 1:
         counterparty_update = re.search(
-            r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人|'
-            r'中介|客服|人事|承办人员|保险理赔员|店铺经营者|物业|开发商|'
-            r'保险人|承办机构|经营者|代理人|他们|'
-            r'办案人员|民警|警官|交警|检察官|检察人员|执行法官|法官|书记员|'
-            r'窗口工作人员|窗口|医务科|医务处|科室)'
-            + counterparty_timing
-            + r'(?:回复|表示|称|说|主张|否认|不承认|拒绝|要求|提出|发来)'
-            r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
+            r'((?:收到(?:的)?回复(?:说|称|表示|写明)?|'
+            r'回复(?:里|中)(?:说|称|表示|写着|写明))'
+            r'.{0,180}?)(?=[，,](?:我|现在我)?'
+            r'(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
             message,
         )
-        if not counterparty_update and dossier.turns > 1:
-            counterparty_update = re.search(
-                r'((?:收到(?:的)?回复(?:说|称|表示|写明)?|'
-                r'回复(?:里|中)(?:说|称|表示|写着|写明))'
-                r'.{0,180}?)(?=[，,](?:我|现在我)?'
-                r'(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
-                message,
-            )
-        if counterparty_update:
-            value = counterparty_update.group(1).strip('，,。；; ')
-            put('details', value, value)
+    if counterparty_update:
+        value = counterparty_update.group(1).strip('，,。；; ')
+        put('details', value, value)
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
     if amount_sentences and not counterparty_update:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))
