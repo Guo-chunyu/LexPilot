@@ -232,6 +232,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_seventeen_variants(),
         *generate_round_eighteen_variants(),
         *generate_round_nineteen_variants(),
+        *generate_round_twenty_variants(),
     ]
 
 
@@ -1211,6 +1212,61 @@ def generate_round_nineteen_variants(seed: int = 20260927) -> list[RedTeamCase]:
         )
     )
     return cases
+
+
+def generate_round_twenty_variants(seed: int = 20260928) -> list[RedTeamCase]:
+    """Generate five unseen procedure-outcome reversals reported by the handler."""
+    randomizer = Random(seed)
+    reply_verb = randomizer.choice(('回复说', '表示'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    specs = (
+        (
+            'enforcement_execution_application_dismissed', 'enforcement', '',
+            '生效判决履行期已过，对方仍未付款，请先给我执行方案。',
+            f'执行法官{reply_verb}执行申请被驳回了，因为没有提供财产线索，{question}？',
+            '驳回', 'formal',
+        ),
+        (
+            'administrative_reconsideration_not_accepted', 'administrative', '',
+            '我收到行政处罚决定，认为事实认定不完整，请先给我方案。',
+            f'承办人员{reply_verb}复议申请不予受理，因为超过期限了，{question}？',
+            '不予受理', 'formal',
+        ),
+        (
+            'ip_platform_complaint_dismissed', 'intellectual_property', '',
+            '我的摄影作品被网店盗用，我已经向平台投诉，请给我方案。',
+            f'平台{reply_verb}投诉不成立，已经驳回了，{question}？',
+            '不成立', 'mediation',
+        ),
+        (
+            'consumer_complaint_rejected', 'consumer', '',
+            '健身房停业，会员卡余额没有退，请给我方案。',
+            f'商家{reply_verb}我的投诉已经被驳回，不再处理，{question}？',
+            '驳回', 'mediation',
+        ),
+        (
+            'traffic_liability_finding_revoked', 'traffic', '',
+            '发生交通事故，交警已经出具事故认定书，请给我方案。',
+            f'交警{reply_verb}对方申请复核，原认定书被撤销了，{question}？',
+            '撤销', '',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'procedure_outcome'),
+            (first, followup),
+            domain,
+            expected_facts=(('procedure', outcome),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', outcome),
+            max_followup_similarity=0.65,
+            expected_route=route,
+        )
+        for case_id, domain, role, first, followup, outcome, route in specs
+    ]
 
 
 def generate_anonymous_uploads() -> list[AnonymousUpload]:

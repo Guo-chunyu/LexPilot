@@ -91,7 +91,11 @@ def compare_routes(state) -> dict:
     formal_only = state.case_type in ('criminal', 'administrative', 'enforcement')
     procedure = str(state.facts.get('procedure', ''))
     constraints = str(state.facts.get('constraints', ''))
-    failed = bool(re.search(r'拒绝|不回复|不理|协商.{0,8}(?:不成|失败|三次)|调解失败', procedure))
+    failed = bool(re.search(
+        r'拒绝|不回复|不理|协商.{0,8}(?:不成|失败|三次)|调解失败|'
+        r'驳回|不予受理|不予立案|不受理|不成立|未受理|已终结',
+        procedure,
+    ))
     filed = bool(re.search(
         r'已经起诉|已立案|收到.{0,8}(?:传票|开庭)|已经申请仲裁|'
         r'(?:已经|已).{0,36}(?:仲裁委员会|劳动仲裁).{0,16}(?:提交申请|受理)|'

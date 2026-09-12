@@ -202,6 +202,12 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
             state.consultation.conflicts = [
                 item for item in state.consultation.conflicts if item.get('fact') != label
             ]
+        elif key == 'procedure':
+            # The procedural record accumulates. A later outcome advances the
+            # case instead of contradicting the earlier procedural statement, so
+            # it must not be raised as a fact the user has to reconcile. The
+            # change itself is still reported through the per-turn decision delta.
+            pass
         else:
             change = {'fact': label, 'previous': str(old), 'current': value,
                 'source_ref': source_ref, 'status': '存在不同陈述，请核对'}
@@ -293,7 +299,27 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
                 sentence,
             )
         )
-        if affirmative_procedure or negative_procedure or corporate_inspection_refusal:
+        # A negative procedural outcome (dismissed, not accepted, revoked or
+        # withdrawn) changes the case as much as filing it did.  Both an outcome
+        # and a procedural object are required so substantive wording such as
+        # “撤销合同” is not misread as procedure progress.
+        outcome_procedure = (
+            re.search(r'驳回|不予受理|不予立案|不受理|不成立|未受理|撤销|撤回|终结', sentence)
+            and re.search(
+                r'申请|投诉|举报|仲裁|复议|诉讼|起诉|执行|调解|复核|决定|立案|请求|裁决|判决|认定',
+                sentence,
+            )
+            and not re.search(
+                r'(?:没有|尚未|还没|并未|并非|不是)\s*(?:被)?(?:驳回|不予受理|撤销|撤回)',
+                sentence,
+            )
+        )
+        if (
+            affirmative_procedure
+            or negative_procedure
+            or corporate_inspection_refusal
+            or outcome_procedure
+        ):
             procedure_sentences.append(sentence)
     if constraint_sentences:
         value = '；'.join(dict.fromkeys(constraint_sentences))

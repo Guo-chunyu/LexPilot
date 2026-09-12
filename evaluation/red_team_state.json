@@ -3,8 +3,22 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "active",
-  "pause_reason": "第16至第20轮红队批次进行中，全部达标后统一暂停并推送",
+  "loop_status": "paused",
+  "pause_reason": "按用户要求完成第16至第20轮后统一暂停并推送",
+  "pending_root_causes": [
+    {
+      "id": "handling_constraints_cannot_be_withdrawn",
+      "found_in": "round-017 and round-019 probes, not yet assigned to a round",
+      "evidence": "用户先说明“不要再让我联系对方”“只接受书面沟通”“人在外地不能去现场办理”，随后明确撤销该限制（例如“我改变主意了，还是愿意再和对方协商一次”），constraints 仍保留原限制并继续参与后续方案。",
+      "status": "pending"
+    },
+    {
+      "id": "bare_medical_record_alias_missing",
+      "found_in": "round-017 probe, not yet assigned to a round",
+      "evidence": "医疗材料用裸称“病历”时不在证据别名内，“病历还在医院，我现在拿不到”无法映射到规范取证任务，材料既未被登记也未被标记为暂无法提供。",
+      "status": "pending"
+    }
+  ],
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -986,6 +1000,61 @@
         "full_suite": "395 passed, 1 warning"
       },
       "commit_subject": "Route later labour updates through shared intake"
+    },
+    {
+      "round_id": "round-020-procedure-outcomes",
+      "seed": 20260928,
+      "generator": "generate_round_twenty_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "enforcement_execution_application_dismissed",
+        "administrative_reconsideration_not_accepted",
+        "ip_platform_complaint_dismissed",
+        "consumer_complaint_rejected",
+        "traffic_liability_finding_revoked"
+      ],
+      "anonymous_cases": [
+        {"case_id": "enforcement_execution_application_dismissed", "messages": ["生效判决履行期已过，对方仍未付款，请先给我执行方案。", "执行法官表示执行申请被驳回了，因为没有提供财产线索，我应该怎么办？"]},
+        {"case_id": "administrative_reconsideration_not_accepted", "messages": ["我收到行政处罚决定，认为事实认定不完整，请先给我方案。", "承办人员表示复议申请不予受理，因为超过期限了，我应该怎么办？"]},
+        {"case_id": "ip_platform_complaint_dismissed", "messages": ["我的摄影作品被网店盗用，我已经向平台投诉，请给我方案。", "平台表示投诉不成立，已经驳回了，我应该怎么办？"]},
+        {"case_id": "consumer_complaint_rejected", "messages": ["健身房停业，会员卡余额没有退，请给我方案。", "商家表示我的投诉已经被驳回，不再处理，我应该怎么办？"]},
+        {"case_id": "traffic_liability_finding_revoked", "messages": ["发生交通事故，交警已经出具事故认定书，请给我方案。", "交警表示对方申请复核，原认定书被撤销了，我应该怎么办？"]}
+      ],
+      "failures_before_fix": [
+        "enforcement_execution_application_dismissed",
+        "administrative_reconsideration_not_accepted",
+        "ip_platform_complaint_dismissed",
+        "consumer_complaint_rejected",
+        "traffic_liability_finding_revoked"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "procedure_outcomes_not_recorded_or_routed",
+          "before_fix": "5 generated cases failed on the procedure fact and, for the non-formal domains, on the recommended route; engine, API/export and Streamlit: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py",
+            "backend/legal_domain/consultation/planning.py",
+            "tests/test_case_red_team.py"
+          ],
+          "verification": "5 generated cases, 3 delivery-path regressions, 293 related tests and 403 full tests passed",
+          "commit_subject": "Record and route procedural outcomes"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "程序提取只判断程序是否已经启动或尚未启动，没有识别程序结果；驳回、不予受理、投诉不成立、撤销等表达因此未进入 procedure，路线比较仍认为协商可行。修复同时区分“程序推进”与“事实冲突”，避免把后续程序结果当成需要用户核对的不同陈述。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py",
+        "backend/legal_domain/consultation/planning.py",
+        "tests/test_case_red_team.py"
+      ],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "related_suite": "293 passed",
+        "full_suite": "403 passed, 1 warning"
+      },
+      "commit_subject": "Record and route procedural outcomes"
     }
   ]
 }
