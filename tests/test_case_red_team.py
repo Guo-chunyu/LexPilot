@@ -302,11 +302,11 @@ def test_platform_complaint_refusal_advances_streamlit():
 
 def _assert_debt_followup_answers_current_question(state, reply: str, exported: str = '') -> None:
     assert '对方刚刚回复说这笔钱是赠与' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '赠与抗辩' in reply
     assert '借款合意' in reply
     assert DEBT_FIRST_TURN_OPENING not in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     assert state.final_report['decision_delta']['status'] == 'changed'
     if exported:
         assert '对方刚刚回复说这笔钱是赠与' in exported
@@ -358,9 +358,9 @@ def test_debt_followup_answers_current_question_in_streamlit():
 def _assert_counterparty_update_is_grounded(state, reply: str, exported: str = '') -> None:
     assert state.case_type == 'consumer'
     assert '只能把会员卡转给别人使用' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '转给别人使用' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只能把会员卡转给别人使用' in exported
 
@@ -416,14 +416,14 @@ def _assert_realistic_consumer_conversation(
     assert state.case_type == 'consumer'
     assert '只能把会员卡转给别人使用' in state.facts.get('details', '')
     assert state.facts.get('location') == REALISTIC_CONSUMER_LOCATION
-    assert '**针对本轮追问**' in counterparty_reply
+    assert state.consultation.reply_mode_history[1] == 'follow_up'
     assert '转给别人使用' in counterparty_reply
     assert CONSUMER_FIRST_TURN_OPENING not in counterparty_reply
     assert state.facts.get('event_time') == REALISTIC_CONSUMER_DATE
     assert state.pending_fact_ids != ['event_time']
-    assert '**已记录本轮补充**' in date_reply
+    assert state.consultation.reply_mode == 'acknowledgement'
     assert REALISTIC_CONSUMER_DATE in date_reply
-    assert '**现在可以先做**' not in date_reply
+    assert state.consultation.reply_granularity == 'acknowledge_only'
     assert '关键事情是什么时候发生的' not in date_reply
 
 
@@ -474,10 +474,9 @@ def test_realistic_consumer_conversation_without_prior_plan_in_streamlit():
 def _assert_identity_question_is_answered(state, reply: str, exported: str = '') -> None:
     assert state.facts.get('parties') == EXPECTED_CONSUMER_PARTIES
     assert '怎么查询' not in state.facts['parties']
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '国家企业信用信息公示系统' in reply
     assert '支付记录' in reply
-    assert not reply.startswith('**已记录本轮补充**')
     if exported:
         assert EXPECTED_CONSUMER_PARTIES in exported
         assert '我应该怎么查询真正的经营主体' not in exported
@@ -530,10 +529,9 @@ def test_one_message_updates_multiple_slots_and_answers_new_question():
     assert state.facts.get('event_time') == '2026.8.11'
     assert '拿回剩余的3000元' in state.facts.get('goal', '')
     assert state.facts.get('parties') == '本人：学生；对方经营主体：暂不清楚'
-    assert '**针对本轮追问**' in second['reply']
+    assert state.consultation.reply_mode == 'follow_up'
     assert '先投诉' in second['reply']
     assert '起诉' in second['reply']
-    assert not second['reply'].startswith('**已记录本轮补充**')
 
 
 def _assert_explicit_detailed_plan_is_rendered(state, reply: str) -> None:
@@ -545,7 +543,7 @@ def _assert_explicit_detailed_plan_is_rendered(state, reply: str) -> None:
     assert '**具体操作**' in reply
     assert '**不顺利时**' in reply
     assert '人民法院在线服务' in reply
-    assert '**本轮最相关的下一步**' not in reply
+    assert state.consultation.reply_granularity == 'detailed_plan'
 
 
 def _run_debt_detailed_plan_conversation(engine: LexPilotEngine):
@@ -703,9 +701,9 @@ def _assert_counterparty_alias_update_is_grounded(state, reply: str, exported: s
     assert state.case_type == 'consumer'
     assert '2800元' in state.facts.get('amount', '')
     assert '只能补发代金券' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '只能补发代金券' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只能补发代金券' in exported
 
@@ -758,9 +756,9 @@ def _assert_unmarked_counterparty_update_is_grounded(
 ) -> None:
     assert state.case_type == 'consumer'
     assert '只能延期半年使用' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '只能延期半年使用' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只能延期半年使用' in exported
 
@@ -813,9 +811,9 @@ def _assert_pronoun_counterparty_update_is_grounded(
 ) -> None:
     assert state.case_type == 'consumer'
     assert '只能换成店内余额' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '只能换成店内余额' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只能换成店内余额' in exported
 
@@ -868,9 +866,9 @@ def _assert_actorless_reply_update_is_grounded(
 ) -> None:
     assert state.case_type == 'corporate'
     assert '只能看年度报表' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '只能看年度报表' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只能看年度报表' in exported
 
@@ -918,10 +916,9 @@ def test_actorless_reply_update_is_grounded_in_streamlit():
     assert not at.exception
 
 
-def _assert_next_step_only_reply_is_scoped(reply: str) -> None:
-    assert '**针对本轮追问**' in reply
-    assert '**本轮最相关的下一步**' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+def _assert_next_step_only_reply_is_scoped(state, reply: str) -> None:
+    assert state.consultation.reply_mode == 'follow_up'
+    assert state.consultation.reply_granularity == 'single_step'
 
 
 def test_next_step_only_followup_is_scoped_in_api_and_export():
@@ -938,7 +935,10 @@ def test_next_step_only_followup_is_scoped_in_api_and_export():
     finally:
         api_module._sessions.pop(thread_id, None)
     assert response.status_code == exported.status_code == 200
-    _assert_next_step_only_reply_is_scoped(response.json()['reply'])
+    _assert_next_step_only_reply_is_scoped(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+    )
     assert '## 具体行动步骤' in exported.content.decode('utf-8')
 
 
@@ -947,7 +947,8 @@ def test_next_step_only_followup_is_scoped_in_streamlit():
     at.chat_input[0].set_value(NEXT_STEP_ONLY_START).run(timeout=20)
     at.chat_input[0].set_value(NEXT_STEP_ONLY_FOLLOWUP).run(timeout=20)
     _assert_next_step_only_reply_is_scoped(
-        at.session_state['messages'][-1]['content']
+        at.session_state['case_state'],
+        at.session_state['messages'][-1]['content'],
     )
     assert at.get('download_button')
     assert not at.exception
@@ -963,8 +964,8 @@ def _assert_new_medical_evidence_is_mapped(
         if item.name == '完整病历'
     )
     assert task.status == '用户称有，尚未上传'
-    assert '**针对本轮补充**' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_mode == 'follow_up'
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '完整病历' in exported
         assert '用户称有，尚未上传' in exported
@@ -1018,8 +1019,8 @@ def _assert_remote_constraint_is_persisted(
 ) -> None:
     assert state.case_type == 'housing'
     assert '不能去现场办理' in state.facts.get('constraints', '')
-    assert '**针对本轮补充**' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_mode == 'follow_up'
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '不能去现场办理' in exported
 
@@ -1073,9 +1074,9 @@ def _assert_authority_alias_update_is_grounded(
     assert state.case_type == 'criminal'
     assert '不能告知案件情况' in state.facts.get('details', '')
     assert '**先处理紧急事项**' in reply
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '不能告知案件情况' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '不能告知案件情况' in exported
 
@@ -1133,8 +1134,8 @@ def _assert_unobtainable_material_is_not_an_upload_action(
     task = next(item for item in state.consultation.evidence_tasks if item.name == material)
     assert task.status == '暂无法提供'
     assert all(material not in step['materials'] for step in state.final_report['action_plan'])
-    assert '**针对本轮补充**' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_mode == 'follow_up'
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert material in exported
         assert '暂无法提供' in exported
@@ -1189,9 +1190,9 @@ def _assert_counterparty_denial_does_not_replace_principal(
     assert state.case_type == 'debt'
     assert '4万元' in state.facts.get('amount', '')
     assert '只借了2万元' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '只借了2万元' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只借了2万元' in exported
         assert '4万元' in exported
@@ -1245,9 +1246,9 @@ def _assert_labor_later_update_answers_current_turn(
 ) -> None:
     assert state.case_type == 'labor_dispute'
     assert '只欠2万元' in state.facts.get('details', '')
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '只欠2万元' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '只欠2万元' in exported
 
@@ -1301,9 +1302,9 @@ def _assert_procedure_outcome_is_recorded(
     assert state.case_type == 'intellectual_property'
     assert '不成立' in state.facts.get('procedure', '')
     assert state.final_report['strategy_comparison']['recommended_route'] == 'mediation'
-    assert '**针对本轮追问**' in reply
+    assert state.consultation.reply_mode == 'follow_up'
     assert '不成立' in reply
-    assert '**按现有信息，先这样推进**' not in reply
+    assert state.consultation.reply_granularity == 'single_step'
     if exported:
         assert '不成立' in exported
 
@@ -2014,3 +2015,53 @@ def test_labor_evidence_distinguishes_self_report_upload_and_human_verification(
     assert next(
         item for item in state.evidence_gaps if item.element_id == 'valid_probation_term'
     ).status == EvidenceStatus.PROVEN
+
+
+CONSUMER_TRANSFER_REPLY = '商家说可以把会员卡转给别人使用，但不能退款。'
+CONSUMER_ROUTE_QUESTION = '我想知道先投诉好还是直接起诉好？'
+
+
+def _consumer_engine_turns(amount_text: str) -> list[str]:
+    engine = LexPilotEngine()
+    state = None
+    replies = []
+    for message in [
+        f'我在一家健身房办了卡，一共付了{amount_text}，现在健身房关门了，我想退款。',
+        CONSUMER_TRANSFER_REPLY,
+        CONSUMER_ROUTE_QUESTION,
+    ]:
+        result = engine.process(message, state)
+        state = result['case_state']
+        replies.append(result['reply'])
+    return replies
+
+
+def test_consumer_transfer_reply_uses_the_case_amount_not_a_hardcoded_one():
+    replies = _consumer_engine_turns('1800元')
+    assert '1800元' in replies[1]
+    assert '3000元' not in replies[1]
+
+
+def test_consumer_route_advice_uses_the_case_amount_not_a_hardcoded_one():
+    replies = _consumer_engine_turns('1800元')
+    assert '3000元' not in replies[2]
+
+
+def test_consumer_transfer_reply_omits_amount_when_none_is_recorded():
+    """A case without any amount must not silently invent one."""
+    engine = LexPilotEngine()
+    first = engine.process('我在一家理发店办了预付卡，现在店关门了，我想退款。')
+    second = engine.process(CONSUMER_TRANSFER_REPLY, first['case_state'])
+    assert '3000元' not in second['reply']
+    assert not re.search(r'按目前\d+元', second['reply'])
+
+
+def test_consumer_subject_lookup_uses_the_surname_the_user_actually_gave():
+    engine = LexPilotEngine()
+    first = engine.process('我在一家健身房办了卡，付了1800元，现在店关门了，我想退款。')
+    second = engine.process(
+        '我只知道联系人可能姓李，怎么查询对方的经营主体？',
+        first['case_state'],
+    )
+    assert '李' in second['reply']
+    assert '可能姓张' not in second['reply']

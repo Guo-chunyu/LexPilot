@@ -111,3 +111,12 @@ class ConsultationDossier(BaseModel):
     # Side-channel for counterparty / authority assertions that must not
     # silently overwrite a user-owned slot.
     counterparty_claims: list[CounterpartyClaim] = Field(default_factory=list)
+    # How the last chat reply was shaped. Tests assert on these instead of on
+    # cosmetic wording, so the surface text can be reworded freely.
+    reply_mode: str = ''  # opening / acknowledgement / follow_up / detailed_plan
+    reply_granularity: str = ''  # interview / single_step / plan_summary / detailed_plan
+    # One entry per consultation turn, so a test can assert on an earlier turn
+    # without holding that turn's state object.
+    reply_mode_history: list[str] = Field(default_factory=list)
+    # Recently used wording variants, so the composer does not repeat itself.
+    wording_recent: list[str] = Field(default_factory=list)

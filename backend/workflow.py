@@ -68,6 +68,7 @@ def execute_action(
                 requests,
                 latest_user_message,
                 state.reply_transition,
+                state,
             )
             execution = ActionExecution(
                 result=f"请求 {len(requests)} 项证据。",
@@ -223,7 +224,15 @@ def labor_stage_plan(state: CaseState) -> dict:
     state.pending_evidence_requests = []
     state.done = False
     state.record_action(LegalAction.GENERATE_DOCUMENT, "用户请求按现有材料先形成具体行动步骤。", "generate_document", "已整理取证、办理渠道、材料、时间节点和替代路线。")
-    reply = "可以先按现有材料推进，尚未证实的事实与法源缺口会保留在报告中。\n\n" + "\n".join(f"{i}. **{step['title']}**：{step['instructions'][0]}" for i, step in enumerate(report.action_plan, 1)) + "\n\n右侧报告已列出完整步骤、材料和沟通草稿；你可以继续补充事实或问其中某一步。"
+    from backend.legal_domain.consultation.wording import WordingComposer
+    composer = WordingComposer(state.consultation)
+    steps_text = '\n'.join(
+        f'{i}. **{step["title"]}**：{step["instructions"][0]}'
+        for i, step in enumerate(report.action_plan, 1)
+    )
+    reply = (
+        f'{composer.stage_plan_intro()}\n\n{steps_text}\n\n{composer.stage_plan_outro()}'
+    )
     return {"case_state": state, "reply": reply, "requires_user": True}
 
 

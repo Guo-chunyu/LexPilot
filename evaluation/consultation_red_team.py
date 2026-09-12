@@ -530,7 +530,7 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
     reply_verb = randomizer.choice(('刚回复说', '刚表示'))
     question = randomizer.choice(('我该怎么回应', '我应该怎么办'))
     will_copy = randomizer.choice(('另一份遗嘱的照片', '一张新遗嘱照片'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     return [
         RedTeamCase(
             'housing_damage_reason_followup', ('housing', 'multiturn', 'opponent_update'),
@@ -541,7 +541,7 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
             'housing', 'tenant', expected_facts=(('details', '1200元墙面修复费'),),
             forbidden_reply_fragments=(*common_forbidden, '房东只说“有损坏”'),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '墙面修复费'),
+            expected_reply_fragments=('@mode:follow_up', '墙面修复费'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -553,7 +553,7 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
             'consumer', expected_facts=(('details', '只能把会员卡转给别人使用'),),
             forbidden_reply_fragments=(*common_forbidden, '先确认是门店停业'),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '转给别人使用'),
+            expected_reply_fragments=('@mode:follow_up', '转给别人使用'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -565,7 +565,7 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
             'medical', expected_facts=(('details', '正常手术风险'),),
             forbidden_reply_fragments=(*common_forbidden, '先保证后续治疗'),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '正常手术风险'),
+            expected_reply_fragments=('@mode:follow_up', '正常手术风险'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -577,7 +577,7 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
             'contract', expected_facts=(('details', '除非再加2万元'),),
             forbidden_reply_fragments=(*common_forbidden, '先把合同约定'),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '除非再加2万元'),
+            expected_reply_fragments=('@mode:follow_up', '除非再加2万元'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -589,7 +589,7 @@ def generate_round_eight_variants(seed: int = 20260916) -> list[RedTeamCase]:
             'inheritance', expected_facts=(('details', '拒绝提供原件'),),
             forbidden_reply_fragments=(*common_forbidden, '先确定哪些财产确属被继承人'),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '拒绝提供原件'),
+            expected_reply_fragments=('@mode:follow_up', '拒绝提供原件'),
             max_followup_similarity=0.65,
         ),
     ]
@@ -600,7 +600,7 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_verb = randomizer.choice(('刚回复说', '刚表示'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     return [
         RedTeamCase(
             'housing_agent_service_fee_followup',
@@ -613,7 +613,7 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
             expected_facts=(('amount', '5000元押金'), ('details', '扣800元服务费')),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '扣800元服务费'),
+            expected_reply_fragments=('@mode:follow_up', '扣800元服务费'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -627,7 +627,7 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
             expected_facts=(('amount', '2800元'), ('details', '只能补发代金券')),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '只能补发代金券'),
+            expected_reply_fragments=('@mode:follow_up', '只能补发代金券'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -641,7 +641,7 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
             expected_facts=(('details', '只能按原决定处理'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '只能按原决定处理'),
+            expected_reply_fragments=('@mode:follow_up', '只能按原决定处理'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -655,7 +655,7 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
             expected_facts=(('details', '只认可一半修理费'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '只认可一半修理费'),
+            expected_reply_fragments=('@mode:follow_up', '只认可一半修理费'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -669,7 +669,7 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
             expected_facts=(('details', '图片来自供货商'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '图片来自供货商'),
+            expected_reply_fragments=('@mode:follow_up', '图片来自供货商'),
             max_followup_similarity=0.65,
         ),
     ]
@@ -680,7 +680,7 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_verb = randomizer.choice(('回复说', '表示'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     return [
         RedTeamCase(
             'housing_unmarked_landlord_deduction_followup',
@@ -693,7 +693,7 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
             expected_facts=(('amount', '6000元押金'), ('details', '1500元算清洁费')),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '1500元算清洁费'),
+            expected_reply_fragments=('@mode:follow_up', '1500元算清洁费'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -707,7 +707,7 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
             expected_facts=(('details', '只能延期半年使用'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '只能延期半年使用'),
+            expected_reply_fragments=('@mode:follow_up', '只能延期半年使用'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -721,7 +721,7 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
             expected_facts=(('details', '疼痛与手术无关'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '疼痛与手术无关'),
+            expected_reply_fragments=('@mode:follow_up', '疼痛与手术无关'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -735,7 +735,7 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
             expected_facts=(('details', '延期属于不可抗力'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '延期属于不可抗力'),
+            expected_reply_fragments=('@mode:follow_up', '延期属于不可抗力'),
             max_followup_similarity=0.65,
         ),
         RedTeamCase(
@@ -749,7 +749,7 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
             expected_facts=(('details', '只有照片，没有原件'),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '只有照片，没有原件'),
+            expected_reply_fragments=('@mode:follow_up', '只有照片，没有原件'),
             max_followup_similarity=0.65,
         ),
     ]
@@ -760,7 +760,7 @@ def generate_round_eleven_variants(seed: int = 20260919) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_phrase = randomizer.choice(('他们回复说', '他们表示'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     specs = (
         (
             'housing_pronoun_damage_followup', 'housing', 'tenant',
@@ -803,7 +803,7 @@ def generate_round_eleven_variants(seed: int = 20260919) -> list[RedTeamCase]:
             expected_facts=(('details', detail),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', detail),
+            expected_reply_fragments=('@mode:follow_up', detail),
             max_followup_similarity=0.65,
         )
         for case_id, domain, role, first, followup, detail in specs
@@ -815,7 +815,7 @@ def generate_round_twelve_variants(seed: int = 20260920) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_frame = randomizer.choice(('回复里写着', '收到回复说'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     specs = (
         (
             'family_actorless_custody_followup', 'family',
@@ -857,7 +857,7 @@ def generate_round_twelve_variants(seed: int = 20260920) -> list[RedTeamCase]:
             expected_facts=(('details', detail),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', detail),
+            expected_reply_fragments=('@mode:follow_up', detail),
             max_followup_similarity=0.65,
         )
         for case_id, domain, first, followup, detail in specs
@@ -883,9 +883,9 @@ def generate_round_thirteen_variants(seed: int = 20260921) -> list[RedTeamCase]:
             (first, f'{question}？{scope}。'),
             domain,
             role,
-            forbidden_reply_fragments=('**按现有信息，先这样推进**',),
+            forbidden_reply_fragments=('@granularity:plan_summary',),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '**本轮最相关的下一步**'),
+            expected_reply_fragments=('@mode:follow_up', '@granularity:single_step'),
             max_followup_similarity=0.65,
         )
         for case_id, domain, role, first in specs
@@ -935,9 +935,9 @@ def generate_round_fourteen_variants(seed: int = 20260922) -> list[RedTeamCase]:
             (domain, 'multiturn', 'new_evidence'),
             (first, followup),
             domain,
-            forbidden_reply_fragments=('**按现有信息，先这样推进**',),
+            forbidden_reply_fragments=('@granularity:plan_summary',),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮补充**',),
+            expected_reply_fragments=('@mode:follow_up',),
             max_followup_similarity=0.65,
             expected_evidence_names=evidence_names,
         )
@@ -989,9 +989,9 @@ def generate_round_fifteen_variants(seed: int = 20260923) -> list[RedTeamCase]:
             (first, followup),
             domain,
             expected_facts=(('constraints', constraint),),
-            forbidden_reply_fragments=('**按现有信息，先这样推进**',),
+            forbidden_reply_fragments=('@granularity:plan_summary',),
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮补充**',),
+            expected_reply_fragments=('@mode:follow_up',),
             max_followup_similarity=0.65,
         )
         for case_id, domain, first, followup, constraint in specs
@@ -1003,7 +1003,7 @@ def generate_round_sixteen_variants(seed: int = 20260924) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_verb = randomizer.choice(('回复说', '表示'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     specs = (
         (
             'criminal_investigator_reply_followup', 'criminal',
@@ -1045,7 +1045,7 @@ def generate_round_sixteen_variants(seed: int = 20260924) -> list[RedTeamCase]:
             expected_facts=(('details', detail),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', detail),
+            expected_reply_fragments=('@mode:follow_up', detail),
             max_followup_similarity=0.65,
         )
         for case_id, domain, first, followup, detail in specs
@@ -1057,7 +1057,7 @@ def generate_round_seventeen_variants(seed: int = 20260925) -> list[RedTeamCase]
     randomizer = Random(seed)
     denial = randomizer.choice(('我现在拿不到', '我这边拿不到'))
     request = randomizer.choice(('请更新方案', '请据此调整材料清单'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     specs = (
         (
             'traffic_unobtainable_accident_report', 'traffic',
@@ -1098,7 +1098,7 @@ def generate_round_seventeen_variants(seed: int = 20260925) -> list[RedTeamCase]
             domain,
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮补充**',),
+            expected_reply_fragments=('@mode:follow_up',),
             max_followup_similarity=0.65,
             forbidden_evidence_names=(material,),
             expected_unavailable_evidence=(material,),
@@ -1112,7 +1112,7 @@ def generate_round_eighteen_variants(seed: int = 20260926) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_verb = randomizer.choice(('回复说', '表示'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     first_turn = '朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。'
     specs = (
         (
@@ -1150,7 +1150,7 @@ def generate_round_eighteen_variants(seed: int = 20260926) -> list[RedTeamCase]:
             expected_facts=(('amount', '4万元'), ('details', position)),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', position),
+            expected_reply_fragments=('@mode:follow_up', position),
             max_followup_similarity=0.65,
         )
         for case_id, followup, position in specs
@@ -1162,7 +1162,7 @@ def generate_round_nineteen_variants(seed: int = 20260927) -> list[RedTeamCase]:
     randomizer = Random(seed)
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
     first_turn = '我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。'
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     specs = (
         (
             'labor_counterparty_denies_wage_debt',
@@ -1194,7 +1194,7 @@ def generate_round_nineteen_variants(seed: int = 20260927) -> list[RedTeamCase]:
             expected_facts=(('details', position),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', position),
+            expected_reply_fragments=('@mode:follow_up', position),
             max_followup_similarity=0.65,
         )
         for case_id, followup, position in specs
@@ -1207,7 +1207,7 @@ def generate_round_nineteen_variants(seed: int = 20260927) -> list[RedTeamCase]:
             'labor_dispute', 'employee',
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', '**本轮最相关的下一步**'),
+            expected_reply_fragments=('@mode:follow_up', '@granularity:single_step'),
             max_followup_similarity=0.65,
         )
     )
@@ -1219,7 +1219,7 @@ def generate_round_twenty_variants(seed: int = 20260928) -> list[RedTeamCase]:
     randomizer = Random(seed)
     reply_verb = randomizer.choice(('回复说', '表示'))
     question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
-    common_forbidden = ('**按现有信息，先这样推进**',)
+    common_forbidden = ('@granularity:plan_summary',)
     specs = (
         (
             'enforcement_execution_application_dismissed', 'enforcement', '',
@@ -1261,7 +1261,7 @@ def generate_round_twenty_variants(seed: int = 20260928) -> list[RedTeamCase]:
             expected_facts=(('procedure', outcome),),
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
-            expected_reply_fragments=('**针对本轮追问**', outcome),
+            expected_reply_fragments=('@mode:follow_up', outcome),
             max_followup_similarity=0.65,
             expected_route=route,
         )
@@ -1305,6 +1305,24 @@ UNSAFE_RESULT_LANGUAGE = re.compile(r'保证.{0,8}(?:胜诉|赔偿)|肯定胜诉
 CALCULATED_DEADLINE = re.compile(r'(?:截止|最迟).{0,12}\d{4}[-年]\d{1,2}[-月]\d{1,2}')
 
 
+def reply_satisfies(fragment: str, reply: str, state) -> bool:
+    """Resolve one expected/forbidden fragment.
+
+    A fragment may name a structural reply property instead of literal text so
+    the case expectations survive rewording of the surface copy:
+    ``@mode:follow_up``, ``@granularity:single_step``, ``@mode_at:1=follow_up``.
+    """
+    if fragment.startswith('@mode_at:'):
+        index, _, expected = fragment.removeprefix('@mode_at:').partition('=')
+        history = state.consultation.reply_mode_history
+        return int(index) < len(history) and history[int(index)] == expected
+    if fragment.startswith('@mode:'):
+        return state.consultation.reply_mode == fragment.removeprefix('@mode:')
+    if fragment.startswith('@granularity:'):
+        return state.consultation.reply_granularity == fragment.removeprefix('@granularity:')
+    return fragment in reply
+
+
 def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[str]:
     """Return concise invariant failures for one completed synthetic case."""
 
@@ -1334,7 +1352,7 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
         if fragment not in value:
             failures.append(f'fact {key} missing {fragment!r}: {value!r}')
     for fragment in case.expected_reply_fragments:
-        if fragment not in replies[-1]:
+        if not reply_satisfies(fragment, replies[-1], state):
             failures.append(f'current-turn reply missing {fragment!r}')
     evidence_names = {item.name for item in state.evidence}
     for name in case.expected_evidence_names:
@@ -1350,7 +1368,7 @@ def audit_red_team_result(case: RedTeamCase, state, replies: list[str]) -> list[
                 f'evidence {name!r} not recorded as unobtainable: {sorted(unavailable_evidence)}'
             )
     for fragment in case.forbidden_reply_fragments:
-        if fragment in replies[-1]:
+        if reply_satisfies(fragment, replies[-1], state):
             failures.append(f'repeated answered question: {fragment}')
     if case.max_followup_similarity is not None and len(replies) > 1:
         similarity = SequenceMatcher(None, replies[0], replies[-1]).ratio()

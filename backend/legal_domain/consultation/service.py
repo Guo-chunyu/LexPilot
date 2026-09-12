@@ -9,6 +9,7 @@ from .intake import (
     retracted_urgent_actions, says_evidence_exhausted, urgent_actions, wants_plan,
 )
 from .profiles import PROFILES, domain_label, identify_domains, route_case
+from .wording import WordingComposer
 from .reporting import build_consultation_report
 from .research import research_case
 from .semantic import enrich_consultation
@@ -57,12 +58,31 @@ def _case_opening(state, profile) -> str:
     return profile.focus
 
 
+_AMOUNT_UNIT = re.compile(r'[0-9零一二两三四五六七八九十百千万点.,]+\s*(?:万元|元|万)')
+
+
+def _recorded_amount(state) -> str:
+    """The bare amount the user stated, never a value borrowed from one case.
+
+    The stored fact may carry surrounding wording ("付了1800元"); only the
+    number and unit belong in a sentence of ours.
+    """
+    raw = str(state.facts.get('amount', '')).strip()
+    match = _AMOUNT_UNIT.search(raw)
+    return match.group(0).strip() if match else ''
+
+
+def _recorded_surname(state) -> str:
+    """The surname the user actually gave for a counterparty contact, if any."""
+    match = re.search(r'可能姓([\u4e00-\u9fff])', str(state.facts.get('parties', '')))
+    return match.group(1) if match else ''
+
+
 def _follow_up_analysis(message: str, state, profile) -> str:
     """Answer the current turn instead of replaying the first-turn opening."""
-    heading = '**针对本轮追问**' if re.search(r'[？?]|怎么|如何|什么|是否|能否', message) else '**针对本轮补充**'
     if state.case_type == 'debt' and '赠与' in message:
         return (
-            f'{heading}：对方现在提出的是“赠与抗辩”。重点不是重复证明转账发生，'
+            f'对方现在提出的是“赠与抗辩”。重点不是重复证明转账发生，'
             '而是证明双方当时存在借款合意：把转账前后的完整微信、款项用途、还款约定、'
             '催款内容，以及对方曾承认欠款或讨论还款的原始上下文按时间对应。'
             '不要只截取单句；如果没有直接写“借款”，转账备注、双方关系和催还后的回复'
@@ -73,10 +93,12 @@ def _follow_up_analysis(message: str, state, profile) -> str:
         and re.search(r'转(?:给|让)|转卡', message)
         and re.search(r'不(?:能|予|同意)?退|拒绝退款|不能退款', message)
     ):
+        amount = _recorded_amount(state)
+        amount_phrase = f'并把{amount}的付款' if amount else '并把你的付款'
         return (
-            f'{heading}：商家提出“转给别人使用”只是新的替代处理意见，'
+            f'商家提出“转给别人使用”只是新的替代处理意见，'
             '不等于你的退款请求已经解决。先保存这次回复的完整原文、时间和商家账号，'
-            '并把3000元付款、当前余额、剩余服务以及门店停业信息对应起来；'
+            f'{amount_phrase}、当前余额、剩余服务以及门店停业信息对应起来；'
             '如果你不接受转卡，应在书面退款请求中明确写明不接受该替代方案，'
             '要求商家说明经营主体、未履行金额和拒绝退款的依据。'
         )
@@ -85,8 +107,10 @@ def _follow_up_analysis(message: str, state, profile) -> str:
         r'|(?:查询|查找|确认|核实).{0,8}(?:经营主体|商家主体|对方主体)',
         message,
     ):
+        surname = _recorded_surname(state)
+        surname_phrase = f'“可能姓{surname}”' if surname else '一个姓氏'
         return (
-            f'{heading}：先不要用“可能姓张”直接确定退款义务主体，姓名只能作为联系人线索。'
+            f'先不要用{surname_phrase}直接确定退款义务主体，姓名只能作为联系人线索。'
             '按这个顺序核对：先查看支付记录中的商户全称和商户订单号，再看会员协议、'
             '发票、收据、平台订单、门店公示的营业执照或公众号认证信息；取得名称或统一社会信用代码后，'
             '到国家企业信用信息公示系统核对登记主体和当前登记状态。'
@@ -98,8 +122,10 @@ def _follow_up_analysis(message: str, state, profile) -> str:
         and '投诉' in message
         and '起诉' in message
     ):
+        amount = _recorded_amount(state)
+        amount_phrase = f'按目前{amount}的预付消费争议' if amount else '按目前这笔预付消费争议'
         return (
-            f'{heading}：按目前3000元预付消费争议，建议先投诉：这一步成本较低，也便于取得处理回执，'
+            f'{amount_phrase}，建议先投诉：这一步成本较低，也便于取得处理回执，'
             '同时把诉讼材料作为后备，不必把两条路线理解成只能二选一。'
             '先确认实际收款和经营主体，整理付款、余额、停业及拒绝退款记录后提交平台或12315投诉；'
             '投诉不能自动带来退款，也不能替代对期限和管辖的核对。若投诉未解决，再根据主体状态、'
@@ -108,19 +134,19 @@ def _follow_up_analysis(message: str, state, profile) -> str:
     current_details = str(state.facts.get('details', '')).strip()
     if current_details and current_details in message:
         return (
-            f'{heading}：你本轮补充的争点是“{current_details}”。'
+            f'你本轮补充的争点是“{current_details}”。'
             f'{profile.response} 先保存这次回复的完整原文、时间和上下文，'
             '再将对方的新说法与合同、付款、履行及其他已有材料逐项对应；'
             '目前先按争议主张核对，不能只凭对方单方表述直接下结论。'
         )
     if re.search(r'更正|说错了|实际是|准确说', message):
         return (
-            f'{heading}：这次更正已替换当前方案采用的对应事实，旧说法只保留在更正记录中。'
+            f'这次更正已替换当前方案采用的对应事实，旧说法只保留在更正记录中。'
             '下面只列更正造成的方案变化和当前最相关的一步。'
         )
     if re.search(r'对方.{0,20}(?:说|称|主张|回复|否认|拒绝|不承认)', message):
         return (
-            f'{heading}：这次对方的新说法已作为待核实的争点记录。'
+            f'这次对方的新说法已作为待核实的争点记录。'
             f'{profile.response} 先保留完整原文和上下文，再把对方说法与已有材料逐项对应。'
         )
     if re.search(r'材料|证据|准备什么|怎么准备', message):
@@ -130,11 +156,11 @@ def _follow_up_analysis(message: str, state, profile) -> str:
         ]
         named = '、'.join(available[:3]) or '本轮提到的原始材料'
         return (
-            f'{heading}：先围绕当前争点整理{named}，保留完整内容、形成时间和来源；'
+            f'先围绕当前争点整理{named}，保留完整内容、形成时间和来源；'
             '材料能证明什么、不能证明什么要分开写，缺失部分使用报告中的合法替代方式。'
         )
     return (
-        f'{heading}：我已按这次消息重新核对当前事实、材料和路线。'
+        f'我已按这次消息重新核对当前事实、材料和路线。'
         f'{profile.response} 下面只展示本轮变化与最相关的一步，完整更新保留在右侧报告。'
     )
 
@@ -147,7 +173,7 @@ def _answered_slot_acknowledgement(slot: str, value: str) -> str:
         impact = '后续会用这个时间核对规则版本和可能涉及的程序期限；仍需确认它对应停业、通知还是其他关键事件。'
     else:
         impact = '后续问题和方案会使用这项信息，不再按未知处理。'
-    return f'**已记录本轮补充**：{LABELS.get(slot, slot)}为“{value}”。{impact}'
+    return f'{LABELS.get(slot, slot)}我按“{value}”记录。{impact}'
 
 
 def _most_relevant_follow_up_step(message: str, report: dict) -> dict:
@@ -278,56 +304,66 @@ def process_consultation(message: str, state: CaseState) -> dict:
         and narrative_domains[0] not in {'general', state.case_type}
     )
     if detailed_plan_request:
+        dossier.reply_mode = 'detailed_plan'
         current_analysis = (
-            '**针对本轮请求**：下面按当前已记录的事实与材料直接展开完整实施方案；'
+            '下面按当前已记录的事实与材料直接展开完整实施方案；'
             '尚未确认的地区、主体或期限会明确保留为核对项，不用单步摘要代替方案。'
         )
     elif answered_previous_slot and not has_explicit_question(message):
+        dossier.reply_mode = 'acknowledgement'
         current_analysis = _answered_slot_acknowledgement(
             previous_slot, str(state.facts[previous_slot])
         )
     elif had_plan or (is_follow_up and not domain_reframed):
-        current_analysis = (
-            f'**针对本轮追问**：{dossier.analysis}'
-            if dossier.analysis
-            else _follow_up_analysis(message, state, profile)
-        )
+        dossier.reply_mode = 'follow_up'
+        current_analysis = dossier.analysis or _follow_up_analysis(message, state, profile)
     else:
+        dossier.reply_mode = 'opening'
         current_analysis = dossier.analysis or _case_opening(state, profile)
     dossier.analysis = current_analysis
+    dossier.reply_mode_history.append(dossier.reply_mode)
     pieces.append(current_analysis)
     pieces.append('')
     if rules and dossier.turns == 1:
         rule = rules[0]
-        pieces += [f'**可先核对的规则**：{rule["summary"]}（[{rule["law_name"]}{rule["article"]}]({rule["source_url"]})）；是否适用还要结合发生时间和具体事实。', '']
+        pieces += [f'可以先核对这条规则：{rule["summary"]}（[{rule["law_name"]}{rule["article"]}]({rule["source_url"]})）。是否适用还要结合发生时间和具体事实。', '']
     produce = explicit_plan or had_plan or not missing or dossier.turns >= 6
+    composer = WordingComposer(dossier)
     if produce:
         report = build_consultation_report(state)
         if not detailed_plan_request:
             pieces += decision_delta_reply_lines(report.get('decision_delta', {}))
-        pieces.append('**建议先走的路线**：' + report['strategy_comparison']['decision_reason'])
+        pieces.append(report['strategy_comparison']['decision_reason'])
         if detailed_plan_request:
+            dossier.reply_granularity = 'detailed_plan'
             pieces += _detailed_plan_lines(report)
             pieces += [
                 '',
                 '右侧“报告”已同步更新，可继续下载 Word / PDF；聊天中的步骤与当前报告使用同一份事实状态。',
             ]
         elif had_plan:
+            dossier.reply_granularity = 'single_step'
             step = _most_relevant_follow_up_step(message, report)
             if step:
-                pieces += [
-                    '**本轮最相关的下一步**',
-                    f'**{step["title"]}**（建议{step["suggested_date"]}开始）：{step["instructions"][0]}',
-                ]
-            pieces += ['', '右侧“报告”已按本轮消息更新，完整步骤和导出内容以当前版本为准。']
+                pieces.append(
+                    f'{composer.single_step_lead()}**{step["title"]}**'
+                    f'（建议{step["suggested_date"]}开始）：{step["instructions"][0]}'
+                )
+            pieces += ['', composer.report_pointer()]
         else:
-            pieces += ['**按现有信息，先这样推进**', *[f'{i}. **{s["title"]}**（建议{s["suggested_date"]}开始）：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”，可下载 Word / PDF：包含办理入口、具体操作、材料、费用比较、期限核对和沟通草稿。日程是行动建议，不能替代法定期限。后续补充材料会更新方案。']
+            dossier.reply_granularity = 'plan_summary'
+            pieces += [composer.plan_intro(), *[f'{i}. **{s["title"]}**（建议{s["suggested_date"]}开始）：{s["instructions"][0]}' for i, s in enumerate(report['action_plan'], 1)], '', '完整方案已同步到右侧“报告”，可下载 Word / PDF：包含办理入口、具体操作、材料、费用比较、期限核对和沟通草稿。日程是行动建议，不能替代法定期限。后续补充材料会更新方案。']
         action = LegalAction.GENERATE_DOCUMENT
         reason = '先提供现有信息下可执行的阶段方案，保留事实和法源核验缺口。'
     else:
         if not answered_previous_slot:
+            dossier.reply_granularity = 'interview'
             task = _next_evidence_task(dossier.evidence_tasks)
-            pieces += [f'**现在可以先做**：{task.alternative if task.status == "暂无法提供" else task.how} 这些材料主要用于说明{task.proves}。']
+            pieces += [f'现在可以先做的是：{task.alternative if task.status == "暂无法提供" else task.how} 这些材料主要用于说明{task.proves}。']
+        else:
+            # A bare answer to the pending question must not also trigger the
+            # "prepare this material now" paragraph.
+            dossier.reply_granularity = 'acknowledge_only'
         action = LegalAction.ASK_FACT
         reason = '已记录本轮短答并继续接谈。' if answered_previous_slot else '按地区、时间、诉求和本领域关键争点逐轮接谈。'
     if missing:
@@ -345,12 +381,17 @@ def process_consultation(message: str, state: CaseState) -> dict:
             state.pending_evidence_requests = [t.name for t in dossier.evidence_tasks if not t.source_refs][:2]
             action = LegalAction.REQUEST_EVIDENCE if not produce else action
         if had_plan and already_asked:
-            pieces += ['', f'**仍待确认**：{LABELS.get(slot, slot)}。这不影响先回答本轮问题，需要时再补充。']
+            pieces += ['', f'{LABELS.get(slot, slot)}还缺，不过这不影响先回答你这轮的问题，需要时再补。']
         else:
-            pieces += ['', '**接下来最需要确认的是**：' + question]
+            pieces += ['', question]
     else:
         pieces += ['', '可以继续告诉我对方的新回复、补充材料，或者说明希望先推进哪一步。']
     if not produce:
         dossier.stage = '事实与证据接谈'
     state.record_action(action, reason, 'general_consultation', f'{domain_label(state.case_type)}：已整理 {len(state.facts)} 项事实、{len(dossier.evidence_tasks)} 项取证任务。')
-    return {'case_state': state, 'reply': '\n'.join(pieces), 'requires_user': True}
+    return {'case_state': state, 'reply': _join_pieces(pieces), 'requires_user': True}
+
+
+def _join_pieces(pieces: list[str]) -> str:
+    """Join reply pieces without leaving stacked blank lines."""
+    return re.sub(r'\n{3,}', '\n\n', '\n'.join(pieces)).strip()

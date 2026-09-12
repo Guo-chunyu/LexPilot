@@ -1,5 +1,6 @@
 import pytest
 
+from backend.legal_domain.consultation.wording import REPHRASE_POOLS
 from backend.legal_domain.labor.facts import extract_labor_facts
 from backend.legal_domain.labor.model import get_labor_model
 from backend.legal_rl.state import CaseState
@@ -140,7 +141,7 @@ def test_engine_accepts_spoken_salary_and_moves_to_evidence_instead_of_repeating
     assert updated.facts["monthly_salary"] == 10000
     assert updated.current_action.name == "REQUEST_EVIDENCE"
     assert "平均月工资" not in result["reply"]
-    assert "手头有没有" in result["reply"]
+    assert "有的话可以直接上传" in result["reply"]
 
 
 @pytest.mark.parametrize("answer", ["剩下的没有了", "没有", "现有材料就这些"])
@@ -173,7 +174,7 @@ def test_no_more_materials_is_remembered_and_never_reasked(answer: str, monkeypa
     assert updated.pending_evidence_requests == []
     assert updated.current_action.name != "REQUEST_EVIDENCE"
     assert "不会再重复让你补同样的材料" in result["reply"]
-    assert "手头有没有" not in result["reply"]
+    assert "有的话可以直接上传" not in result["reply"]
     assert provider.calls == 0
     assert updated.ai_calls_this_turn == 0
 
@@ -188,7 +189,10 @@ def test_repeated_salary_question_is_rephrased_instead_of_replayed():
 
     result = LexPilotEngine().process("这个数字我不确定", state)
 
-    assert "刚才这个数字我没有识别准确" in result["reply"]
+    assert any(
+        variant in result["reply"]
+        for variant in REPHRASE_POOLS["monthly_salary"]
+    )
     assert "解除前十二个月的平均月工资大约是多少" not in result["reply"]
     assert "为判断案件，先补充一个关键事实" not in result["reply"]
 

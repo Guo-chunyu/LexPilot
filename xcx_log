@@ -490,3 +490,57 @@ README「快速开始」改为 `pip install -r requirements-runtime.txt`，「�
 - 时长提取会先排除完整日期，避免把日期里的“2025年”误算成工作时长，再正确读取“5个月”。
 - 新增引擎、API、Streamlit三项真实四轮回归；修复前引擎回归失败，修复后三个入口均通过。无需Torch/Gymnasium的核心全量测试914项通过，1个既有第三方弃用警告。
 
+## 2026-09-13 — 表达层与分分析层拆分（P0–P3）
+
+背景：用户反馈"回答都很机械化，就像按模板回答"。诊断结论是**不是架构问题，是分析层模板与表达层措辞没解耦**——
+分析用模板是对的（确定性/可审计/防幻觉），但给用户的那段话也长成模板，默认一轮最多叠 6 个加粗伪标题
+（`**针对本轮追问**` / `**已记录本轮补充**` / `**建议先走的路线**` / `**本轮最相关的下一步**` /
+`**接下来最需要确认的是**` / `**仍待确认**`）加固定收尾。
+
+**结论：不重写架构。** 重写会丢 900+ 测试、235 个覆盖探针、16 个 PracticeProfile 的防幻觉护栏和
+decision_delta 可审计链路。只改表达层。
+
+### P0 通用路径硬编码测试值（真实 bug）
+
+- `service.py` 的 consumer 分支里写死了测试用的 `3000元` 和 `可能姓张`，会对**每一个**消费类用户
+  输出"按目前3000元预付消费争议"，不管实际金额；姓氏同理。
+- 改为读取 `state.facts['amount']` 与 `parties` 中实际记录的姓氏；没有记录时不提具体数字/姓氏。
+- 新增 4 项回归（1800元案例、无金额案例、姓李案例）：修复前 4 项失败，修复后通过。
+
+### P1 去掉默认轮次的伪标题
+
+- `_follow_up_analysis` / `_answered_slot_acknowledgement` 不再输出 `**针对本轮追问**` 等前缀，改连贯表达。
+- `**建议先走的路线**` 改为直接给出 `decision_reason`；`**本轮最相关的下一步**` 改为"眼下最关键的一步是…"；
+  `**按现有信息，先这样推进**` 改为"按现有信息，可以先这样推进："。
+- **保留** `_detailed_plan_lines`（用户明确索要详细实施方案时才出现，是用户要的结构，不是噪音）。
+- 收尾追问不再套"接下来最需要确认的是"，直接问。
+- 金额短语只取"数字+单位"（原始事实可能是"付了1800元"），避免出现"并把付了1800元付款"这种病句；
+  没有金额时说"你的付款/这笔预付消费争议"，不编数字。
+- `_join_pieces` 折叠连续空行，修掉确认类回复尾部多出的空行。
+
+### P1 配套：回复形态结构化，测试不再断言字面文案
+
+为了让措辞可自由改写，把"回复长什么样"变成可断言的状态字段（`ConsultationDossier`）：
+- `reply_mode`：`opening` / `acknowledgement` / `follow_up` / `detailed_plan`
+- `reply_granularity`：`interview` / `acknowledge_only` / `single_step` / `plan_summary` / `detailed_plan`
+- `reply_mode_history`：每轮一个，便于断言中间轮次
+- `wording_recent`：最近用过的措辞变体（跨序列化保留）
+
+红队审计新增语义标记解析（`evaluation/consultation_red_team.py: reply_satisfies`）：
+案例期望里的 `@mode:follow_up` / `@granularity:single_step` / `@mode_at:1=follow_up` 走结构化校验，
+其余仍按字面匹配。批量迁移 38 处字面断言 → 语义标记，**没有降低任何断言强度**，只是不再依赖文案。
+
+### P2/P3 措辞变体池 + WordingComposer
+
+- 新增 `backend/legal_domain/consultation/wording.py`：变体池 + `WordingComposer`。
+  `GENERIC_LEAD_POOL` 由 3 句扩到 12 句；`FACT_LEAD_POOLS` 每 fact_id 3 个变体；
+  `REPHRASE_POOLS` 每 fact_id 3 个变体；另有证据引导、单步引导、报告指针、方案开场等池。
+- `pick_variant(pool, recent, turn)` 确定性旋转并跳过最近用过的，避免连续两轮同一句。
+- `WordingComposer` 由 dossier 驱动，`wording_recent` 随会话序列化，恢复后仍记得说过什么。
+- `dialogue.py`（追问/证据请求）与 `service.py`（单步引导/报告指针/方案开场）改为调用 composer。
+- 新增 `tests/test_wording_variation.py` 8 项：变体池规模、旋转不重复、连续两轮不回用、
+  跨 `public_dict()` 序列化保留、真实多轮访谈前导语不全相同、以及"措辞变化不改变所问问题"。
+
+验证：无需 Torch/Gymnasium 的核心全量测试 926 项通过（914 → 926，新增 P0 回归 4 项 + 措辞层 8 项）。
+
+

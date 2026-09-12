@@ -107,7 +107,7 @@ def test_streamlit_supports_rule_only_two_turn_chat_and_evidence_upload():
     state = at.session_state["case_state"]
     assert state.facts["monthly_salary"] == 10000
     assert "平均月工资" not in at.session_state["messages"][-1]["content"]
-    assert "手头有没有" in at.session_state["messages"][-1]["content"]
+    assert "有的话可以直接上传" in at.session_state["messages"][-1]["content"]
     assistant_messages = [
         message["content"]
         for message in at.session_state["messages"]
@@ -121,7 +121,7 @@ def test_streamlit_supports_rule_only_two_turn_chat_and_evidence_upload():
     assert state.evidence_collection_exhausted is True
     assert state.pending_evidence_requests == []
     assert "不会再重复让你补同样的材料" in at.session_state["messages"][-1]["content"]
-    assert "手头有没有" not in at.session_state["messages"][-1]["content"]
+    assert "有的话可以直接上传" not in at.session_state["messages"][-1]["content"]
     assert not at.exception
 
 

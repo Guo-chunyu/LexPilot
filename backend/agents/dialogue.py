@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
+from backend.legal_domain.consultation.wording import WordingComposer
 
 
 NATURAL_FACT_QUESTIONS = {
@@ -61,6 +62,15 @@ REPHRASED_QUESTIONS = {
 }
 
 
+def _join(lead: str, question: str) -> str:
+    """Glue a lead to a question without leaving a dangling separator."""
+    if not lead:
+        return question
+    if lead.endswith(('，', '：', '。')):
+        return f'{lead}{question}'
+    return f'{lead} {question}'
+
+
 def compose_fact_follow_up(
     state: CaseState,
     fallback_questions: list[str],
@@ -75,32 +85,17 @@ def compose_fact_follow_up(
     repeated = bool(fact_id and fact_id in previous_pending_fact_ids)
 
     generated_transition = state.reply_transition if not repeated else ""
+    composer = WordingComposer(state.consultation)
 
     if repeated:
-        reply = REPHRASED_QUESTIONS.get(
-            fact_id,
-            f"这条信息我还没确认下来，我换个更直接的问法：{question}如果确实不清楚，直接告诉我“不知道”就可以。",
-        )
+        reply = composer.rephrase(fact_id, question)
     elif generated_transition:
-        separator = "" if generated_transition.endswith(("，", "：")) else " "
-        reply = f"{generated_transition}{separator}{question}"
+        reply = _join(generated_transition, question)
     elif not any(record.action == LegalAction.ASK_FACT for record in state.action_history):
-        reply = f"我先和你一起把情况理清。{question}"
+        reply = _join('我先和你一起把情况理清。', question)
     else:
-        lead = FOLLOW_UP_LEADS.get(fact_id)
-        if lead:
-            separator = "" if lead.endswith(("，", "：")) else " "
-            reply = f"{lead}{separator}{question}"
-        else:
-            transitions = (
-                "明白，这一点我记下了。",
-                "好的，我们接着往下梳理。",
-                "了解，再确认一个细节。",
-            )
-            follow_up_count = sum(
-                record.action == LegalAction.ASK_FACT for record in state.action_history
-            )
-            reply = f"{transitions[follow_up_count % len(transitions)]}{question}"
+        lead = composer.fact_lead(fact_id) or composer.generic_lead()
+        reply = _join(lead, question)
 
     # Store exactly what the user saw so older serialized sessions remain recoverable.
     state.pending_questions = [question] if fact_id else fallback_questions
@@ -111,13 +106,20 @@ def compose_evidence_follow_up(
     requests: list[str],
     latest_user_message: str = "",
     transition: str = "",
+    state: CaseState | None = None,
 ) -> str:
     """Ask for evidence without sounding like an abrupt system instruction."""
 
     items = "\n".join(f"- {name}" for name in requests)
-    transition = transition or "情况我已经大致理清了。"
-    separator = "" if transition.endswith(("，", "：")) else " "
+    composer = WordingComposer(state.consultation) if state is not None else None
+    intro = composer.evidence_intro(transition) if composer else (
+        transition or "情况我已经大致理清了。"
+    )
+    request = composer.evidence_request() if composer else (
+        "接下来最好把关键材料固定下来，你可以先看看手头有没有："
+    )
+    separator = "" if intro.endswith(("，", "：")) else " "
     return (
-        f"{transition}{separator}接下来最好把关键材料固定下来，你可以先看看手头有没有：\n\n"
+        f"{intro}{separator}{request}\n\n"
         f"{items}\n\n有的话可以直接上传；暂时没有也没关系，告诉我现有的材料就行。"
     )

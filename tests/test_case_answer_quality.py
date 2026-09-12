@@ -54,7 +54,7 @@ def test_rejected_debt_request_keeps_available_evidence_and_skips_repeat_negotia
     assert tasks['催款记录'].status == '用户称有，尚未上传'
     assert state.final_report['strategy_comparison']['recommended_route'] != 'negotiation'
     assert '协商已经受阻' in result['reply']
-    assert '接下来最需要确认的是' in result['reply']
+    assert state.pending_questions and state.pending_questions[0] in result['reply']
 
 
 def test_evidence_denial_after_material_name_is_not_treated_as_possession():
