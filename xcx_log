@@ -367,4 +367,15 @@
 - `intake.py` 中 `if state.case_type == 'debt':` 内联块消除，新增 profile 数据；`PROFILES['general']` 与 `PROFILES['labor_dispute']` 不提供 `extra_detail_pattern`，因此零回归。
 - 全量回归 892 passed；覆盖矩阵 0/144（149 项探测，含 5 项断言保护）。
 - 期间文件编辑过 `profiles.py` 导致债务块括号不平衡与 `'family':` 重复声明，已通过移除重复行 / 保留 PROFILES dict 闭括号修复，文件重新 import 16 个 profile 且只有 debt 注入 `extra_detail_pattern` 与窄动词表。
+- 提交 `3e844a5` 并推送 origin/main。
+
+### Stage 5 — 证据别名 + 不可得条件的枚举覆盖（已完成）
+
+- 新增 `evaluation/consultation_alias_coverage.py`：把 R17 / `bare_medical_record_alias_missing` 这类"找不到别名"症状从逐轮人工发现升级为显式探测。每个 `EVIDENCE_ALIASES` 键必须至少有一个自然 phrasing 探测（46 项 alias probe），每个不可得条件边界各有一个 scope probe（9 项 scope probe）。
+- `audit_alias_probe` 把"自然短语字符串是否命中任何 alias"作为单向校验；`audit_scope_probe` 把同一句子里"另一种材料不在场才能让"我拿不到"延伸过来"的边界硬编码，包括 `我有转账记录，借条我这边拿不到` 不应让 `转账记录` 标为不可得。
+- `scripts/report_consultation_alias_coverage.py` 输出探测计数与缺口，可作为 CI signal。
+- 新增 `tests/test_consultation_alias_coverage.py`（4 项）：每个 `EVIDENCE_ALIASES` 必须被探测、所有 alias probe 通过、所有 scope probe 通过、sibling 安全约束。
+- 验证：手动伪造一个"未注册别名"探测和一个"应该 sibling 安全却把转账记录标不可得"的探测，矩阵正确报缺；删除伪造后回归通过。
+- 全量回归 896 passed（4 项新增）；可量测：46 项 alias probe + 9 项 scope probe 全部 0 缺口。
+- 提交 `ab359b1` 并推送 origin/main。
 
