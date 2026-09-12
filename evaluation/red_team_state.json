@@ -4,7 +4,7 @@
   "round_size": 5,
   "consecutive_clean_rounds": 0,
   "loop_status": "paused",
-  "pause_reason": "按用户要求仅完成第9轮后暂停",
+  "pause_reason": "按用户要求仅完成第10轮后暂停",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -521,6 +521,57 @@
         "full_suite": "316 passed, 1 warning"
       },
       "commit_subject": "Recognize counterparty representative aliases"
+    },
+    {
+      "round_id": "round-010-unmarked-opponent-updates",
+      "seed": 20260918,
+      "generator": "generate_round_ten_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "housing_unmarked_landlord_deduction_followup",
+        "consumer_unmarked_merchant_extension_followup",
+        "medical_unmarked_hospital_causation_followup",
+        "contract_unmarked_supplier_force_majeure_followup",
+        "inheritance_unmarked_family_original_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "housing_unmarked_landlord_deduction_followup", "messages": ["我是租客，退租后房东还扣着6000元押金，请先给我方案。", "房东表示只能退4500元，另外1500元算清洁费，我应该怎么办？"]},
+        {"case_id": "consumer_unmarked_merchant_extension_followup", "messages": ["我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。", "商家表示只能延期半年使用，不接受退款，我应该怎么办？"]},
+        {"case_id": "medical_unmarked_hospital_causation_followup", "messages": ["手术后出现持续疼痛，我有病历和复查记录，请先给我方案。", "医院表示目前的疼痛与手术无关，不同意进一步说明，我应该怎么办？"]},
+        {"case_id": "contract_unmarked_supplier_force_majeure_followup", "messages": ["供应商超过合同交付期仍未发货，我已经付款，请先给我方案。", "供应商表示延期属于不可抗力，拒绝承担违约责任，我应该怎么办？"]},
+        {"case_id": "inheritance_unmarked_family_original_followup", "messages": ["父亲去世后留有一份遗嘱照片，但原件在哪里还不清楚，请先给我方案。", "家人表示只有照片，没有原件，也不同意共同查找，我应该怎么办？"]}
+      ],
+      "failures_before_fix": [
+        "housing_unmarked_landlord_deduction_followup",
+        "consumer_unmarked_merchant_extension_followup",
+        "medical_unmarked_hospital_causation_followup",
+        "contract_unmarked_supplier_force_majeure_followup",
+        "inheritance_unmarked_family_original_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "later_opponent_updates_required_recency_marker",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "verification": "5 generated cases, 3 delivery-path regressions, 9 related tests and 324 full tests passed",
+          "commit_subject": "Recognize unmarked later opponent updates"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "通用对方更新提取把“刚、又、最新、现在”等时间标记设为必需条件，导致后续轮次中自然的“房东表示、商家回复说”等新主张未进入 details；其中的金额还可能覆盖原始请求金额。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "324 passed, 1 warning"
+      },
+      "commit_subject": "Recognize unmarked later opponent updates"
     }
   ]
 }

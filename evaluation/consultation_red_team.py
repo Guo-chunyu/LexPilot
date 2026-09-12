@@ -219,6 +219,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_seven_variants(),
         *generate_round_eight_variants(),
         *generate_round_nine_variants(),
+        *generate_round_ten_variants(),
     ]
 
 
@@ -656,6 +657,86 @@ def generate_round_nine_variants(seed: int = 20260917) -> list[RedTeamCase]:
             forbidden_reply_fragments=common_forbidden,
             origin='auto_variant',
             expected_reply_fragments=('**针对本轮追问**', '图片来自供货商'),
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
+    """Generate five unseen follow-ups without an explicit recency marker."""
+    randomizer = Random(seed)
+    reply_verb = randomizer.choice(('回复说', '表示'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    return [
+        RedTeamCase(
+            'housing_unmarked_landlord_deduction_followup',
+            ('housing', 'multiturn', 'unmarked_opponent_update'),
+            (
+                '我是租客，退租后房东还扣着6000元押金，请先给我方案。',
+                f'房东{reply_verb}只能退4500元，另外1500元算清洁费，{question}？',
+            ),
+            'housing', 'tenant',
+            expected_facts=(('amount', '6000元押金'), ('details', '1500元算清洁费')),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '1500元算清洁费'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'consumer_unmarked_merchant_extension_followup',
+            ('consumer', 'multiturn', 'unmarked_opponent_update'),
+            (
+                '我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。',
+                f'商家{reply_verb}只能延期半年使用，不接受退款，{question}？',
+            ),
+            'consumer',
+            expected_facts=(('details', '只能延期半年使用'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '只能延期半年使用'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'medical_unmarked_hospital_causation_followup',
+            ('medical', 'multiturn', 'unmarked_opponent_update'),
+            (
+                '手术后出现持续疼痛，我有病历和复查记录，请先给我方案。',
+                f'医院{reply_verb}目前的疼痛与手术无关，不同意进一步说明，{question}？',
+            ),
+            'medical',
+            expected_facts=(('details', '疼痛与手术无关'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '疼痛与手术无关'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'contract_unmarked_supplier_force_majeure_followup',
+            ('contract', 'multiturn', 'unmarked_opponent_update'),
+            (
+                '供应商超过合同交付期仍未发货，我已经付款，请先给我方案。',
+                f'供应商{reply_verb}延期属于不可抗力，拒绝承担违约责任，{question}？',
+            ),
+            'contract',
+            expected_facts=(('details', '延期属于不可抗力'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '延期属于不可抗力'),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'inheritance_unmarked_family_original_followup',
+            ('inheritance', 'multiturn', 'unmarked_opponent_update'),
+            (
+                '父亲去世后留有一份遗嘱照片，但原件在哪里还不清楚，请先给我方案。',
+                f'家人{reply_verb}只有照片，没有原件，也不同意共同查找，{question}？',
+            ),
+            'inheritance',
+            expected_facts=(('details', '只有照片，没有原件'),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '只有照片，没有原件'),
             max_followup_similarity=0.65,
         ),
     ]
