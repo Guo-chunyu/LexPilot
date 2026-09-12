@@ -309,7 +309,7 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         counterparty_update = re.search(
             r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人|'
             r'中介|客服|人事|承办人员|保险理赔员|店铺经营者|物业|开发商|'
-            r'保险人|承办机构|经营者|代理人)'
+            r'保险人|承办机构|经营者|代理人|他们)'
             + counterparty_timing
             + r'(?:回复|表示|称|说|主张|否认|不承认|拒绝|要求|提出|发来)'
             r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',

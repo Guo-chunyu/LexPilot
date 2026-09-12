@@ -220,6 +220,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_eight_variants(),
         *generate_round_nine_variants(),
         *generate_round_ten_variants(),
+        *generate_round_eleven_variants(),
     ]
 
 
@@ -739,6 +740,61 @@ def generate_round_ten_variants(seed: int = 20260918) -> list[RedTeamCase]:
             expected_reply_fragments=('**针对本轮追问**', '只有照片，没有原件'),
             max_followup_similarity=0.65,
         ),
+    ]
+
+
+def generate_round_eleven_variants(seed: int = 20260919) -> list[RedTeamCase]:
+    """Generate five unseen pronoun-based opponent follow-ups."""
+    randomizer = Random(seed)
+    reply_phrase = randomizer.choice(('他们回复说', '他们表示'))
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    specs = (
+        (
+            'housing_pronoun_damage_followup', 'housing', 'tenant',
+            '我是租客，退租后房东拒绝退押金，请先给我方案。',
+            f'{reply_phrase}墙面损耗都应由我承担，也不提供明细，{question}？',
+            '墙面损耗都应由我承担',
+        ),
+        (
+            'consumer_pronoun_store_credit_followup', 'consumer', '',
+            '商家取消了我预订的服务，但没有退款，请先给我方案。',
+            f'{reply_phrase}只能换成店内余额，不能原路退款，{question}？',
+            '只能换成店内余额',
+        ),
+        (
+            'medical_pronoun_record_followup', 'medical', '',
+            '医院治疗后症状加重，我想先核对病历和处置过程，请给我方案。',
+            f'{reply_phrase}只能现场看病历，不能复制完整资料，{question}？',
+            '只能现场看病历',
+        ),
+        (
+            'contract_pronoun_substitute_followup', 'contract', '',
+            '供应商交付的设备型号与合同不符，请先给我方案。',
+            f'{reply_phrase}替代型号功能相近，所以不同意换货，{question}？',
+            '替代型号功能相近',
+        ),
+        (
+            'inheritance_pronoun_inventory_followup', 'inheritance', '',
+            '父亲去世后家人一直没有共同核对遗产清单，请先给我方案。',
+            f'{reply_phrase}部分财产不需要列入遗产，也拒绝说明依据，{question}？',
+            '部分财产不需要列入遗产',
+        ),
+    )
+    return [
+        RedTeamCase(
+            case_id,
+            (domain, 'multiturn', 'pronoun_opponent_update'),
+            (first, followup),
+            domain,
+            role,
+            expected_facts=(('details', detail),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', detail),
+            max_followup_similarity=0.65,
+        )
+        for case_id, domain, role, first, followup, detail in specs
     ]
 
 

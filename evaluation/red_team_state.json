@@ -3,8 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "paused",
-  "pause_reason": "按用户要求仅完成第10轮后暂停",
+  "loop_status": "running",
+  "pause_reason": "",
   "case_pool_sources": {
     "human_failures": "人工复现并保留的真实失败案例用例",
     "fixed_cases": "跨领域固定手写回归矩阵",
@@ -572,6 +572,53 @@
         "full_suite": "324 passed, 1 warning"
       },
       "commit_subject": "Recognize unmarked later opponent updates"
+    },
+    {
+      "round_id": "round-011-pronoun-opponent-updates",
+      "seed": 20260919,
+      "generator": "generate_round_eleven_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "housing_pronoun_damage_followup",
+        "consumer_pronoun_store_credit_followup",
+        "medical_pronoun_record_followup",
+        "contract_pronoun_substitute_followup",
+        "inheritance_pronoun_inventory_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "housing_pronoun_damage_followup", "messages": ["我是租客，退租后房东拒绝退押金，请先给我方案。", "他们回复说墙面损耗都应由我承担，也不提供明细，我该怎么回应？"]},
+        {"case_id": "consumer_pronoun_store_credit_followup", "messages": ["商家取消了我预订的服务，但没有退款，请先给我方案。", "他们回复说只能换成店内余额，不能原路退款，我该怎么回应？"]},
+        {"case_id": "medical_pronoun_record_followup", "messages": ["医院治疗后症状加重，我想先核对病历和处置过程，请给我方案。", "他们回复说只能现场看病历，不能复制完整资料，我该怎么回应？"]},
+        {"case_id": "contract_pronoun_substitute_followup", "messages": ["供应商交付的设备型号与合同不符，请先给我方案。", "他们回复说替代型号功能相近，所以不同意换货，我该怎么回应？"]},
+        {"case_id": "inheritance_pronoun_inventory_followup", "messages": ["父亲去世后家人一直没有共同核对遗产清单，请先给我方案。", "他们回复说部分财产不需要列入遗产，也拒绝说明依据，我该怎么回应？"]}
+      ],
+      "failures_before_fix": [
+        "housing_pronoun_damage_followup",
+        "consumer_pronoun_store_credit_followup",
+        "medical_pronoun_record_followup",
+        "contract_pronoun_substitute_followup",
+        "inheritance_pronoun_inventory_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "pronoun_opponent_updates_not_recognized",
+          "before_fix": "5 generated cases failed; engine, API/export and Streamlit regression: 3 failed",
+          "fix_files": ["backend/legal_domain/consultation/intake.py"],
+          "verification": "5 generated cases and 3 delivery-path regressions passed",
+          "commit_subject": "Recognize pronoun opponent updates"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "后续轮次已能识别多种直接主体和经办角色，但未识别上下文已明确的“他们”指代，导致新主张未进入 details 和当前回复。",
+      "fix_files": ["backend/legal_domain/consultation/intake.py"],
+      "verification": {
+        "before_fix": "5 failed; delivery paths 3 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "round_selected_suite": "9 passed",
+        "full_suite": "332 passed, 1 warning"
+      },
+      "commit_subject": "Recognize pronoun opponent updates"
     }
   ]
 }

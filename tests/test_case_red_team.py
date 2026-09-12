@@ -26,6 +26,7 @@ from evaluation.consultation_red_team import (
     generate_round_eight_variants,
     generate_round_nine_variants,
     generate_round_ten_variants,
+    generate_round_eleven_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -63,6 +64,8 @@ CUSTOMER_SERVICE_START = '我购买的网课无法继续使用，剩余费用280
 CUSTOMER_SERVICE_FOLLOWUP = '客服刚回复说只能补发代金券，不能退还剩余费用，我该怎么回应？'
 UNMARKED_MERCHANT_START = '我预付了摄影套餐，但门店一直无法安排服务，要求退款，请先给我方案。'
 UNMARKED_MERCHANT_FOLLOWUP = '商家表示只能延期半年使用，不接受退款，我应该怎么办？'
+PRONOUN_MERCHANT_START = '商家取消了我预订的服务，但没有退款，请先给我方案。'
+PRONOUN_MERCHANT_FOLLOWUP = '他们回复说只能换成店内余额，不能原路退款，我该怎么回应？'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -435,6 +438,61 @@ def test_unmarked_counterparty_update_is_grounded_in_streamlit():
     at.chat_input[0].set_value(UNMARKED_MERCHANT_FOLLOWUP).run(timeout=20)
     state = at.session_state['case_state']
     _assert_unmarked_counterparty_update_is_grounded(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
+
+
+def _assert_pronoun_counterparty_update_is_grounded(
+    state, reply: str, exported: str = ''
+) -> None:
+    assert state.case_type == 'consumer'
+    assert '只能换成店内余额' in state.facts.get('details', '')
+    assert '**针对本轮追问**' in reply
+    assert '只能换成店内余额' in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    if exported:
+        assert '只能换成店内余额' in exported
+
+
+def test_pronoun_counterparty_update_is_grounded_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(PRONOUN_MERCHANT_START)
+    second = engine.process(PRONOUN_MERCHANT_FOLLOWUP, first['case_state'])
+    _assert_pronoun_counterparty_update_is_grounded(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_pronoun_counterparty_update_is_grounded_in_api_and_export():
+    thread_id = 'red_team_pronoun_counterparty_update'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': PRONOUN_MERCHANT_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': PRONOUN_MERCHANT_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_pronoun_counterparty_update_is_grounded(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_pronoun_counterparty_update_is_grounded_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(PRONOUN_MERCHANT_START).run(timeout=20)
+    at.chat_input[0].set_value(PRONOUN_MERCHANT_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_pronoun_counterparty_update_is_grounded(
         state,
         at.session_state['messages'][-1]['content'],
         report_markdown(state),
@@ -892,6 +950,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_eight_variants': generate_round_eight_variants,
         'generate_round_nine_variants': generate_round_nine_variants,
         'generate_round_ten_variants': generate_round_ten_variants,
+        'generate_round_eleven_variants': generate_round_eleven_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
