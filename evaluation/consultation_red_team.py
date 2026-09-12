@@ -231,6 +231,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_sixteen_variants(),
         *generate_round_seventeen_variants(),
         *generate_round_eighteen_variants(),
+        *generate_round_nineteen_variants(),
     ]
 
 
@@ -1153,6 +1154,63 @@ def generate_round_eighteen_variants(seed: int = 20260926) -> list[RedTeamCase]:
         )
         for case_id, followup, position in specs
     ]
+
+
+def generate_round_nineteen_variants(seed: int = 20260927) -> list[RedTeamCase]:
+    """Generate five unseen labour specialist-path later-turn updates."""
+    randomizer = Random(seed)
+    question = randomizer.choice(('我应该怎么办', '我该怎么回应'))
+    first_turn = '我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。'
+    common_forbidden = ('**按现有信息，先这样推进**',)
+    specs = (
+        (
+            'labor_counterparty_denies_wage_debt',
+            f'公司回复说只欠2万元，其余已经结清，{question}？',
+            '只欠2万元',
+        ),
+        (
+            'labor_hr_denies_arrears',
+            f'人事回复说公司不承认欠薪，也不提供工资明细，{question}？',
+            '不承认欠薪',
+        ),
+        (
+            'labor_counterparty_refuses_arbitration',
+            f'公司回复说拒绝仲裁，要求我直接去起诉，{question}？',
+            '拒绝仲裁',
+        ),
+        (
+            'labor_counterparty_repayment_terms',
+            f'公司回复说只能分三个月结清，不同意一次付清，{question}？',
+            '只能分三个月结清',
+        ),
+    )
+    cases = [
+        RedTeamCase(
+            case_id,
+            ('labor_dispute', 'multiturn', 'counterparty_denial'),
+            (first_turn, followup),
+            'labor_dispute', 'employee',
+            expected_facts=(('details', position),),
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', position),
+            max_followup_similarity=0.65,
+        )
+        for case_id, followup, position in specs
+    ]
+    cases.append(
+        RedTeamCase(
+            'labor_next_step_only_followup',
+            ('labor_dispute', 'multiturn', 'next_step_only'),
+            (first_turn, '那我现在最先做哪一步？请只说当前一步。'),
+            'labor_dispute', 'employee',
+            forbidden_reply_fragments=common_forbidden,
+            origin='auto_variant',
+            expected_reply_fragments=('**针对本轮追问**', '**本轮最相关的下一步**'),
+            max_followup_similarity=0.65,
+        )
+    )
+    return cases
 
 
 def generate_anonymous_uploads() -> list[AnonymousUpload]:

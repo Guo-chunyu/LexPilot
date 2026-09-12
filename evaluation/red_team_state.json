@@ -933,6 +933,59 @@
         "full_suite": "387 passed, 1 warning"
       },
       "commit_subject": "Persist debt counterparty denials in details"
+    },
+    {
+      "round_id": "round-019-labor-later-turn-updates",
+      "seed": 20260927,
+      "generator": "generate_round_nineteen_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "labor_counterparty_denies_wage_debt",
+        "labor_hr_denies_arrears",
+        "labor_counterparty_refuses_arbitration",
+        "labor_counterparty_repayment_terms",
+        "labor_next_step_only_followup"
+      ],
+      "anonymous_cases": [
+        {"case_id": "labor_counterparty_denies_wage_debt", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "公司回复说只欠2万元，其余已经结清，我应该怎么办？"]},
+        {"case_id": "labor_hr_denies_arrears", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "人事回复说公司不承认欠薪，也不提供工资明细，我应该怎么办？"]},
+        {"case_id": "labor_counterparty_refuses_arbitration", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "公司回复说拒绝仲裁，要求我直接去起诉，我应该怎么办？"]},
+        {"case_id": "labor_counterparty_repayment_terms", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "公司回复说只能分三个月结清，不同意一次付清，我应该怎么办？"]},
+        {"case_id": "labor_next_step_only_followup", "messages": ["我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。", "那我现在最先做哪一步？请只说当前一步。"]}
+      ],
+      "failures_before_fix": [
+        "labor_counterparty_denies_wage_debt",
+        "labor_hr_denies_arrears",
+        "labor_counterparty_refuses_arbitration",
+        "labor_counterparty_repayment_terms",
+        "labor_next_step_only_followup"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "labor_specialist_path_bypassed_shared_later_turn_intake",
+          "before_fix": "5 generated cases failed; the specialist interview re-asked its opening question instead of answering the new turn",
+          "fix_files": [
+            "backend/legal_domain/consultation/perspective.py",
+            "backend/workflow.py"
+          ],
+          "verification": "5 generated cases, 3 delivery-path regressions, 287 related tests and 395 full tests passed",
+          "commit_subject": "Route later labour updates through shared intake"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "劳动者一方走的是劳动专门流程，该流程既不调用通用接谈提取，也不递增 consultation.turns，只有程序性措辞才会触发共享提取。于是第二轮对方否认欠薪、拒绝仲裁、提出分期方案或用户只问当前一步时，新主张无法进入 details，系统反而重复追问首轮入职时间或重放完整方案；turns 不递增还使共享提取把这些轮次当成首轮，从而跳过后续轮次的对方主张识别。",
+      "fix_files": [
+        "backend/legal_domain/consultation/perspective.py",
+        "backend/workflow.py"
+      ],
+      "verification": {
+        "before_fix": "5 failed",
+        "selected_cases_after_fix": "5 passed",
+        "delivery_path_suite": "3 passed",
+        "related_suite": "287 passed",
+        "full_suite": "395 passed, 1 warning"
+      },
+      "commit_subject": "Route later labour updates through shared intake"
     }
   ]
 }

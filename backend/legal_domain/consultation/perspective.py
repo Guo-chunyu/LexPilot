@@ -43,8 +43,29 @@ def client_perspective(state, message='') -> dict:
     return {'id': 'unconfirmed', 'label': '咨询者身份待确认', 'basis': '先确认本人和对方身份，再决定请求或抗辩方向。', 'verified': False}
 
 
+LATER_TURN_UPDATE = re.compile(
+    r'(?:回复|表示|称|主张|否认|不承认|发来|撤回|撤销)'
+    r'|收到.{0,8}回复'
+    r'|更正|说错了|其实是|实际是|准确说是'
+    r'|只说当前一步|不用重复完整?(?:方案|全部)'
+    r'|又找到了|补充找到了|后来找到了'
+)
+
+
 def uses_general_consultation(state, message='') -> bool:
-    return state.case_type != 'labor_dispute' or client_perspective(state, message)['id'] == 'employer'
+    if state.case_type != 'labor_dispute':
+        return True
+    if client_perspective(state, message)['id'] == 'employer':
+        return True
+    # A later labour turn that reports a counterparty position, a correction or a
+    # scoped next-step request is an update to an existing case, not an answer to
+    # the specialist interview. It needs the shared later-turn intake and the
+    # focused reply, otherwise the interview asks the same opening question again
+    # and the new position never reaches `details` or the exported report.
+    # The specialist path never advances `consultation.turns`, so prior
+    # conversation is detected from the stored narrative instead.
+    already_in_progress = bool(state.user_narrative or state.action_history)
+    return already_in_progress and bool(LATER_TURN_UPDATE.search(message))
 
 
 def case_profile(state):

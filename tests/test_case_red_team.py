@@ -34,6 +34,7 @@ from evaluation.consultation_red_team import (
     generate_round_sixteen_variants,
     generate_round_seventeen_variants,
     generate_round_eighteen_variants,
+    generate_round_nineteen_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -87,6 +88,8 @@ TRAFFIC_UNOBTAINABLE_START = '发生交通事故，我受伤还在治疗，请�
 TRAFFIC_UNOBTAINABLE_FOLLOWUP = '交警说事故认定书要等调查结束，我这边拿不到，请更新方案。'
 DEBT_PRINCIPAL_DENIAL_START = '朋友向我借款4万元，有转账记录和微信聊天，还没还，请先给我方案。'
 DEBT_PRINCIPAL_DENIAL_FOLLOWUP = '对方回复说只借了2万元，剩下的是利息，我应该怎么办？'
+LABOR_COUNTERPARTY_START = '我是员工，公司拖欠工资6万元，没有劳动合同，只有工资流水和工作微信，请给我方案。'
+LABOR_COUNTERPARTY_FOLLOWUP = '公司回复说只欠2万元，其余已经结清，我应该怎么办？'
 
 
 def _assert_corporate_inspection_refusal_advances_route(state) -> None:
@@ -898,6 +901,61 @@ def test_counterparty_denial_does_not_replace_principal_in_streamlit():
     assert not at.exception
 
 
+def _assert_labor_later_update_answers_current_turn(
+    state, reply: str, exported: str = ''
+) -> None:
+    assert state.case_type == 'labor_dispute'
+    assert '只欠2万元' in state.facts.get('details', '')
+    assert '**针对本轮追问**' in reply
+    assert '只欠2万元' in reply
+    assert '**按现有信息，先这样推进**' not in reply
+    if exported:
+        assert '只欠2万元' in exported
+
+
+def test_labor_later_update_answers_current_turn_in_engine():
+    engine = LexPilotEngine()
+    first = engine.process(LABOR_COUNTERPARTY_START)
+    second = engine.process(LABOR_COUNTERPARTY_FOLLOWUP, first['case_state'])
+    _assert_labor_later_update_answers_current_turn(
+        second['case_state'], second['reply'], report_markdown(second['case_state'])
+    )
+
+
+def test_labor_later_update_answers_current_turn_in_api_and_export():
+    thread_id = 'red_team_labor_later_update'
+    client = TestClient(api_module.api_app)
+    try:
+        client.post('/chat', json={
+            'thread_id': thread_id, 'query': LABOR_COUNTERPARTY_START,
+        })
+        response = client.post('/chat', json={
+            'thread_id': thread_id, 'query': LABOR_COUNTERPARTY_FOLLOWUP,
+        })
+        exported = client.get(f'/cases/{thread_id}/report.md')
+    finally:
+        api_module._sessions.pop(thread_id, None)
+    assert response.status_code == exported.status_code == 200
+    _assert_labor_later_update_answers_current_turn(
+        api_module.CaseState.from_value(response.json()['case_state']),
+        response.json()['reply'],
+        exported.content.decode('utf-8'),
+    )
+
+
+def test_labor_later_update_answers_current_turn_in_streamlit():
+    at = AppTest.from_file(str(APP_PATH), default_timeout=20).run()
+    at.chat_input[0].set_value(LABOR_COUNTERPARTY_START).run(timeout=20)
+    at.chat_input[0].set_value(LABOR_COUNTERPARTY_FOLLOWUP).run(timeout=20)
+    state = at.session_state['case_state']
+    _assert_labor_later_update_answers_current_turn(
+        state,
+        at.session_state['messages'][-1]['content'],
+        report_markdown(state),
+    )
+    assert not at.exception
+
+
 def _assert_debt_correction_is_respected(state, reply: str) -> None:
     assert state.case_type == 'debt'
     assert re.search(r'约定一个月后(?:归还|还款)', state.facts['details'])
@@ -1356,6 +1414,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_sixteen_variants': generate_round_sixteen_variants,
         'generate_round_seventeen_variants': generate_round_seventeen_variants,
         'generate_round_eighteen_variants': generate_round_eighteen_variants,
+        'generate_round_nineteen_variants': generate_round_nineteen_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 

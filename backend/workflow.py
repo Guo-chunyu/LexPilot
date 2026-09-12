@@ -155,6 +155,10 @@ def execute_action(
 
 def prepare_labor_turn(message: str, state: CaseState) -> CaseState:
     """Apply specialist and shared intake extraction for every labor entry point."""
+    # The shared consultation path advances this counter itself. The specialist
+    # path must do the same, otherwise later labour turns are still treated as
+    # first turns by the shared extractors and by fact provenance labels.
+    state.consultation.turns += 1
     case = extract_labor_facts(message, state)
     # Keep the labor interview's own evidence and pending-answer semantics.
     # Only procedure-bearing turns need the cross-domain procedure extractor.
