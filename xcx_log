@@ -1436,6 +1436,49 @@ decision_delta 可审计链路。只改表达层。
 - ✅ "欠条"作为角色信号（本轮）。
 - ⏳ 多域混合消息、证据上传后的状态推进：尚未系统探测（留待后续轮次）。
 
+## 2026-09-13 — 第 47 轮：劳动流程从不计算/展示紧急事项（seed 20260991）
+
+收尾遗留候选"多域混合消息/证据上传"。5 个匿名案例：
+劳动+被打伤、劳动+明天前提交材料、劳动+3天内办理手续、劳动+威胁要打、普通劳动（负向对照）。
+
+### 根因：劳动专门流程完全没有紧急事项通道
+
+- 复现（多域探针）：`公司拖欠我工资，还把我打伤了` 的 `urgent_actions` 为**空**，
+  回复里也没有"先处理紧急事项"；而同样的话走共享接谈流程时是能识别安全的。
+- 根因：`urgent_actions` / `retracted_urgent_actions` 只在共享接谈流程 `process_consultation` 里调用；
+  劳动专门流程 `prepare_labor_turn`（`workflow.py`）从不调用，劳动回复
+  （`labor_stage_plan` / `labor_single_step` / `_report_reply`）也不展示。于是劳动案件里
+  的人身安全与文书期限被整体丢弃。
+- 修复：
+  1. `prepare_labor_turn` 镜像共享流程：先做撤回，再并入 `urgent_actions(message, case)`。
+  2. 新增 `_urgent_block(state)`，在劳动三个回复入口前置"**先处理紧急事项**"清单。
+
+### 配套回归：定点单元测试
+
+- 新增 `tests/test_labor_urgent_actions.py`（5 项）：4 类紧急劳动场景必须记录并出现在回复里；
+  普通劳动案件必须不出现。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_fortyseven_variants`。
+- `evaluation/red_team_state.json` 追加 `round-047-labor-path-urgent-actions`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 5 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1353 项通过**（1 个既有第三方弃用警告）。
+
+### 遗留候选收尾结果（第 45–47 轮全部完成）
+
+- ✅ `party_record_holds_inference_signal`（第 45 轮，提交 `85e420b`）。
+- ✅ "欠条"作为角色信号（第 46 轮，提交 `9a1d1c2`）。
+- ✅ 多域/劳动路径的紧急事项通道（本轮）。多域探针还发现两个**新**候选（见下）。
+
+### 遗留候选收尾时发现的新的候选根因（未处理）
+
+- **否定作用域过宽**：`房东不退我押金还打人` 的"打人"被前面的"不退"按同一子句否定掉，
+  `_has_asserted_signal` 返回 False → 安全紧急不触发（`还打人` 单独则正常）。
+- 多域 `domain_ids` 对劳动类混合案件为空（`公司不签合同也不发工资` → `domain_ids=[]`），
+  不影响 `case_type`，但"相关领域"卡片缺内容。
+
 
 
 

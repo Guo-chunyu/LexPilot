@@ -3683,6 +3683,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "15 passed (tests/test_role_inference.py)"
       }
+    },
+    {
+      "round_id": "round-047-labor-path-urgent-actions",
+      "generator": "generate_round_fortyseven_variants",
+      "seed": 20260991,
+      "status": "completed",
+      "root_cause": "劳动专门流程（prepare_labor_turn）从不调用 urgent_actions，劳动回复也不展示紧急事项；共享接谈流程才有。\"公司拖欠工资还把我打伤了\"因此没有任何安全提示。",
+      "failures_before_fix": [
+        "labor_urgent_safety_assault",
+        "labor_urgent_deadline_tomorrow",
+        "labor_urgent_deadline_days",
+        "labor_urgent_threat"
+      ],
+      "fix_files": [
+        "backend/workflow.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "labor_path_urgent_actions",
+          "before_fix": "round-47 探针 M1 显示劳动路径 \"公司拖欠我工资，还把我打伤了\" 的 urgent_actions 为空",
+          "fix_files": [
+            "backend/workflow.py"
+          ],
+          "commit_subject": "Compute and surface urgent actions on the labour path",
+          "verification": "5 round-47 cases, 5 labour-urgent unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "labor_urgent_safety_assault",
+        "labor_urgent_deadline_tomorrow",
+        "labor_urgent_deadline_days",
+        "labor_urgent_threat",
+        "labor_control_no_urgent"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "labor_urgent_safety_assault",
+          "messages": [
+            "公司拖欠我工资，还把我打伤了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_urgent_deadline_tomorrow",
+          "messages": [
+            "公司拖欠我工资，规定明天前提交仲裁材料，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_urgent_deadline_days",
+          "messages": [
+            "公司辞退我了，要求我3天内办理离职手续并答复，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_urgent_threat",
+          "messages": [
+            "公司拖欠我工资，还威胁要打我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_control_no_urgent",
+          "messages": [
+            "公司拖欠我工资，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Compute and surface urgent actions on the labour path",
+      "verification": {
+        "before_fix": "4 failed (labour path produced no urgent action and no 紧急事项 block)",
+        "core_suite": "1353 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "5 passed (tests/test_labor_urgent_actions.py)"
+      }
     }
   ]
 }

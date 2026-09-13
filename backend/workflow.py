@@ -175,8 +175,24 @@ def prepare_labor_turn(message: str, state: CaseState) -> CaseState:
     # semantics to `extract_labor_facts`. While the interview is still waiting
     # for an answer, the turn is a scoped answer and must not be read as a global
     # "these are all my materials" statement.
-    from backend.legal_domain.consultation.intake import ingest_text
+    from backend.legal_domain.consultation.intake import (
+        ingest_text,
+        retracted_urgent_actions,
+        urgent_actions,
+    )
     ingest_text(message, case, contextual=False, scoped_inventory=bool(case.pending_questions))
+    # Round-47: the shared consultation path computes urgent actions; the labour
+    # specialist path did not, so a labour case with violence or an imminent
+    # deadline showed no safety warning at all. Mirror the shared behaviour.
+    retracted = retracted_urgent_actions(message)
+    if retracted:
+        case.consultation.urgent_actions = [
+            action for action in case.consultation.urgent_actions if action not in retracted
+        ]
+    case.consultation.urgent_actions = list(dict.fromkeys([
+        *case.consultation.urgent_actions,
+        *urgent_actions(message, case),
+    ]))
     detect_evidence_gaps(case)
     return case
 
@@ -244,8 +260,10 @@ def labor_stage_plan(state: CaseState, message: str = "") -> dict:
     )
     limit = 2 if wants_multiple_questions(message) else 1
     follow_up = _proactive_information_block(state, limit=limit)
+    urgent = _urgent_block(state)
     reply = (
-        f'{composer.stage_plan_intro()}\n\n{steps_text}\n\n'
+        (urgent + '\n' if urgent else '')
+        + f'{composer.stage_plan_intro()}\n\n{steps_text}\n\n'
         f'{composer.stage_plan_outro()}\n\n{follow_up}'
     )
     return {"case_state": state, "reply": reply, "requires_user": True}
@@ -267,11 +285,14 @@ def labor_single_step(state: CaseState) -> dict:
         "generate_document",
         "已给出当前最优先的一步。",
     )
+    urgent = _urgent_block(state)
+    prefix = urgent + '\n' if urgent else ''
     if not steps:
         return {
             "case_state": state,
             "reply": (
-                "现在最先做的是把已知事实和手头材料固定下来："
+                prefix
+                + "现在最先做的是把已知事实和手头材料固定下来："
                 "导出工资流水、保存工作群聊天和考勤截图，并记清入职日期和离职日期。\n\n"
                 + _proactive_information_block(state, limit=1)
             ),
@@ -285,9 +306,17 @@ def labor_single_step(state: CaseState) -> dict:
         lines.append(f'- 办理渠道：{step["channel"]}')
     return {
         "case_state": state,
-        "reply": "\n".join(lines) + "\n\n" + _proactive_information_block(state, limit=1),
+        "reply": prefix + "\n".join(lines) + "\n\n" + _proactive_information_block(state, limit=1),
         "requires_user": True,
     }
+
+
+def _urgent_block(state: CaseState) -> str:
+    """Surface urgent actions in labour replies (the shared path already does this)."""
+    urgent = list(dict.fromkeys(state.consultation.urgent_actions))
+    if not urgent:
+        return ''
+    return '\n'.join(['**先处理紧急事项**', *(f'- {item}' for item in urgent), ''])
 
 
 def _proactive_information_block(state: CaseState, limit: int = 1) -> str:
@@ -385,8 +414,10 @@ def _report_reply(state: CaseState) -> str:
         if state.evidence_collection_exhausted
         else ""
     )
+    urgent = _urgent_block(state)
     return (
-        acknowledgement
+        (urgent + '\n' if urgent else '')
+        + acknowledgement
         + "已按现有事实和材料形成结构化阶段性行动方案。\n\n"
         f"- 事实完整度：{state.fact_completeness:.0%}\n"
         f"- 证据完整度：{state.evidence_completeness:.0%}\n"
