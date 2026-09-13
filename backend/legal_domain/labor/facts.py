@@ -525,6 +525,23 @@ def _monthly_salary_amount(text: str) -> float | None:
         return None
     amount = rf"[￥¥]?\s*({NUMBER_PATTERN})\s*(?:元|块钱|块)?"
     fillers = r"(?:大概|大约|约|差不多|是|为|有|能拿|拿)?"
+    # Round-27: an amount attached to an arrears construction ("拖欠我工资3万元")
+    # is the sum owed, not the monthly wage. Reading it as ``monthly_salary``
+    # corrupts any compensation estimate. Only accept it as the wage when an
+    # explicit monthly marker is also present (e.g. "月薪2万").
+    arrears = re.search(
+        rf"(?:拖欠|欠|补发|克扣|少发|未发|没发|追讨|讨要)"
+        rf"\s*(?:我|本人|我们)?\s*(?:的)?\s*(?:工资|薪资|报酬|劳动报酬)"
+        rf"\s*{fillers}\s*{amount}",
+        normalized,
+    )
+    explicit_monthly = re.search(
+        rf"(?:每个月|每月|一个月|月薪|月平均工资|平均月工资)"
+        rf"\s*(?:工资|薪资|收入|到手|税前)?\s*{fillers}\s*{amount}",
+        normalized,
+    )
+    if arrears and not explicit_monthly:
+        return None
     patterns = (
         rf"(?:每个月|每月|一个月|月薪|月工资)\s*(?:工资|薪资|收入|到手|税前)?\s*{fillers}\s*{amount}",
         rf"(?:平均月工资|月平均工资|工资|薪资|收入|到手|税前)\s*(?:一个月|每个月|每月)?\s*{fillers}\s*{amount}",

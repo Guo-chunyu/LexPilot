@@ -2208,6 +2208,81 @@
         "slot_lifecycle_suite": "1 passed",
         "constraint_coverage_probes": "4 withdrawal probes added (3 positive, 1 negative)"
       }
+    },
+    {
+      "round_id": "round-027-wage-arrears-as-monthly-salary",
+      "generator": "generate_round_twentyseven_variants",
+      "seed": 20260971,
+      "status": "completed",
+      "root_cause": "劳动事实抽取的 _monthly_salary_amount 第二条正则以裸“工资/薪资/收入”匹配任意紧跟的数字，把“公司拖欠我工资3万元”“公司补发工资5万元”里的欠薪/补发总额误读为 monthly_salary，进而污染赔偿金估算。",
+      "failures_before_fix": [
+        "labor_arrears_not_monthly_salary",
+        "labor_arrears_keeps_explicit_monthly",
+        "labor_backpay_not_monthly_salary",
+        "labor_monthly_only_still_parsed",
+        "labor_arrears_short_form"
+      ],
+      "fix_files": [
+        "backend/legal_domain/labor/facts.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "wage_arrears_as_monthly_salary",
+          "before_fix": "round-27 探针 L1 显示“公司拖欠我工资3万元”把 monthly_salary 置为 30000.0（实为欠薪总额），5 个案例在修复前全部命中错误月薪",
+          "fix_files": [
+            "backend/legal_domain/labor/facts.py"
+          ],
+          "commit_subject": "Stop reading a wage-arrears total as the monthly wage",
+          "verification": "5 round-27 cases, 13 monthly-salary unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "labor_arrears_not_monthly_salary",
+        "labor_arrears_keeps_explicit_monthly",
+        "labor_backpay_not_monthly_salary",
+        "labor_monthly_only_still_parsed",
+        "labor_arrears_short_form"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "labor_arrears_not_monthly_salary",
+          "messages": [
+            "公司拖欠我工资3万元，我是员工，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_arrears_keeps_explicit_monthly",
+          "messages": [
+            "公司拖欠我工资3万元，月薪是1万元，我是员工，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_backpay_not_monthly_salary",
+          "messages": [
+            "公司补发工资5万元，我是员工，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_monthly_only_still_parsed",
+          "messages": [
+            "我是员工，公司没签劳动合同，月工资8000元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "labor_arrears_short_form",
+          "messages": [
+            "老板拖欠我工资2万，我是员工，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Stop reading a wage-arrears total as the monthly wage",
+      "verification": {
+        "before_fix": "5 failed (arrears total read as monthly_salary)",
+        "core_suite": "1019 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "13 passed (tests/test_labor_monthly_salary.py)"
+      }
     }
   ]
 }

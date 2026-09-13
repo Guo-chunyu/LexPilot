@@ -243,6 +243,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentyfour_variants(),
         *generate_round_twentyfive_variants(),
         *generate_round_twentysix_variants(),
+        *generate_round_twentyseven_variants(),
     ]
 
 
@@ -1759,6 +1760,74 @@ def generate_round_twentysix_variants(seed: int = 20260970) -> list[RedTeamCase]
             ),
             'debt', '',
             forbidden_facts=(('constraints', '打官司'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentyseven_variants(seed: int = 20260971) -> list[RedTeamCase]:
+    """Five unseen variants over wage-arrears vs monthly-wage parsing.
+
+    Round 27 locks the fix for a bare "拖欠/补发…工资<amount>" being read as the
+    monthly wage. The arrears total must not become ``monthly_salary`` (it would
+    corrupt any compensation estimate), but an explicit monthly marker must
+    still be parsed even when an arrears clause is present in the same turn.
+    """
+    return [
+        RedTeamCase(
+            'labor_arrears_not_monthly_salary',
+            ('labor_dispute', 'amount_parse', 'monthly_salary'),
+            (
+                '公司拖欠我工资3万元，我是员工，请给我方案。',
+            ),
+            'labor_dispute', 'employee',
+            forbidden_facts=(('monthly_salary', '30000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_arrears_keeps_explicit_monthly',
+            ('labor_dispute', 'amount_parse', 'monthly_salary'),
+            (
+                '公司拖欠我工资3万元，月薪是1万元，我是员工，请给我方案。',
+            ),
+            'labor_dispute', 'employee',
+            expected_facts=(('monthly_salary', '10000'),),
+            forbidden_facts=(('monthly_salary', '30000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_backpay_not_monthly_salary',
+            ('labor_dispute', 'amount_parse', 'monthly_salary'),
+            (
+                '公司补发工资5万元，我是员工，请给我方案。',
+            ),
+            'labor_dispute', 'employee',
+            forbidden_facts=(('monthly_salary', '50000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_monthly_only_still_parsed',
+            ('labor_dispute', 'amount_parse', 'monthly_salary'),
+            (
+                '我是员工，公司没签劳动合同，月工资8000元，请给我方案。',
+            ),
+            'labor_dispute', 'employee',
+            expected_facts=(('monthly_salary', '8000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_arrears_short_form',
+            ('labor_dispute', 'amount_parse', 'monthly_salary'),
+            (
+                '老板拖欠我工资2万，我是员工，请给我方案。',
+            ),
+            'labor_dispute', 'employee',
+            forbidden_facts=(('monthly_salary', '20000'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
