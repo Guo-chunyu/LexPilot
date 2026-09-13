@@ -616,11 +616,23 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     # it once so the date extraction below stays scoped to the user's words
     # (mirrors the existing `not counterparty_update` guard on amount).
     counterparty_update = _detect_counterparty_update(message, dossier, state.case_type)
+    # Prefer a date explicitly anchored to the dispute event (e.g.
+    # "事情发生在2026年3月1日") over an incidental date such as a contract
+    # signing date that appears earlier in the same turn. Round-24 probe C
+    # showed "合同是2025年11月签的，事情发生在2026年3月1日" stored 2025年11月
+    # as event_time because the loop took the first date and stopped.
+    _event_date_span = None
+    _first_date_span = None
     for sentence in sentences:
         date_match = re.search(DATE_PATTERN, sentence)
         if date_match and not counterparty_update:
-            if 'event_time' not in extracted:
-                put('event_time', date_match.group(0), sentence)
+            _span = (date_match.group(0), sentence)
+            if _first_date_span is None:
+                _first_date_span = _span
+            if _event_date_span is None and re.search(
+                r'(?:事情|事件|事故|纠纷|事发|案发)?\s*(?:发生|事发|案发)', sentence
+            ):
+                _event_date_span = _span
             entry = TimelineEntry(date_text=date_match.group(0), description=sentence[:600], source_ref=source_ref, source_type=source_type, status='材料记载，待核实' if source_type == 'uploaded_file' else '用户陈述，待核实')
             if not any(item.description == entry.description and item.source_ref == source_ref for item in dossier.timeline):
                 dossier.timeline.append(entry)
@@ -679,6 +691,9 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             or outcome_procedure
         ):
             procedure_sentences.append(sentence)
+    _chosen_event_time = _event_date_span or _first_date_span
+    if _chosen_event_time is not None and 'event_time' not in extracted:
+        put('event_time', _chosen_event_time[0], _chosen_event_time[1])
     if constraint_sentences:
         # If the user is withdrawing prior handling constraints, the prior
         # active assertions must be marked ``withdrawn`` *before* the new

@@ -65,6 +65,19 @@ def test_counterparty_date_not_written_when_user_omitted_event_time():
     assert 'event_time' not in state.facts, state.facts.get('event_time')
 
 
+def test_incidental_date_does_not_overwrite_event_anchored_date():
+    """Round-24: an incidental date (e.g. a contract signing date) that appears
+    before the explicitly event-anchored date in the same turn must not become
+    ``event_time``; the '事情发生…' date wins.
+    """
+    state = _state('contract')
+    _run(
+        state,
+        '合同是2025年11月签的，事情发生在2026年3月1日，请给我方案。',
+    )
+    assert str(state.facts.get('event_time', '')) == '2026年3月1日', state.facts.get('event_time')
+
+
 def test_counterparty_claim_does_not_overwrite_user_amount():
     state = _state('debt')
     _run(state, '朋友欠我4万元，请给我方案。', '借条转账都有', '一个月一万', '对方说只欠2万元')

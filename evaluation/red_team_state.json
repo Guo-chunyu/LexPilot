@@ -1971,6 +1971,82 @@
         "core_suite": "963 passed without torch/gymnasium"
       },
       "commit_subject": "Stop counterparty dates overwriting user event_time"
+    },
+    {
+      "round_id": "round-024-incidental-date-before-event",
+      "seed": 20260968,
+      "generator": "generate_round_twentyfour_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "contract_incidental_date_before_event",
+        "housing_month_date_correction",
+        "debt_relative_deadline_not_event_time",
+        "traffic_cp_date_question_followup",
+        "debt_event_date_survives_counterparty_repayment"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "contract_incidental_date_before_event",
+          "messages": [
+            "合同是2025年11月签的，事情发生在2026年3月1日，请给我方案。",
+            "那我接下来该做什么？"
+          ]
+        },
+        {
+          "case_id": "housing_month_date_correction",
+          "messages": [
+            "租房纠纷，事情发生在2026年3月，请给我方案。",
+            "更正一下，准确说是2026年4月。"
+          ]
+        },
+        {
+          "case_id": "debt_relative_deadline_not_event_time",
+          "messages": [
+            "朋友欠我2万元，对方要求我在下周三之前回复，请给我方案。",
+            "那我该怎么催款？"
+          ]
+        },
+        {
+          "case_id": "traffic_cp_date_question_followup",
+          "messages": [
+            "交通事故后车辆受损，请给我方案。",
+            "交警说2026年5月才能定责，那我现在该做什么？"
+          ]
+        },
+        {
+          "case_id": "debt_event_date_survives_counterparty_repayment",
+          "messages": [
+            "朋友欠我4万元，事情发生在2026年2月15日，请给我方案。",
+            "对方说2026年12月才还，我该怎么回应？"
+          ]
+        }
+      ],
+      "failures_before_fix": [
+        "contract_incidental_date_before_event"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "incidental_date_overwrites_event_date",
+          "before_fix": "round-24 case contract_incidental_date_before_event stored the contract signing date 2025年11月 as event_time, dropping the explicitly event-anchored dispute date 2026年3月1日",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "verification": "5 round-24 cases, 1 slot-lifecycle test and the full core suite passed",
+          "commit_subject": "Prefer event-anchored date over incidental date"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "日期循环取本轮第一个日期后立即写入 event_time 并停止，导致同一句话里先出现的 incidental 日期（如“合同是2025年11月签的”）覆盖后出现的、明确以“事情发生”锚定的争议日期（“事情发生在2026年3月1日”）。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "before_fix": "1 failed, 4 passed (correction/adjacent locks)",
+        "selected_cases_after_fix": "5 passed",
+        "slot_lifecycle_suite": "1 passed",
+        "core_suite": "974 passed without torch/gymnasium"
+      },
+      "commit_subject": "Prefer event-anchored date over incidental date"
     }
   ]
 }

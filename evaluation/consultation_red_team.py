@@ -240,6 +240,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentyone_variants(),
         *generate_round_twentytwo_variants(),
         *generate_round_twentythree_variants(),
+        *generate_round_twentyfour_variants(),
     ]
 
 
@@ -1530,6 +1531,81 @@ def generate_round_twentythree_variants(seed: int = 20260967) -> list[RedTeamCas
             ),
             'traffic', 'unconfirmed',
             forbidden_facts=(('event_time', '2026年5月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentyfour_variants(seed: int = 20260968) -> list[RedTeamCase]:
+    """Five unseen variants over date selection and event-time correction.
+
+    Round 24 locks the fix for an incidental date appearing before the
+    explicitly event-anchored date in the same turn (e.g. a contract signing
+    date winning over "事情发生在…"), plus four date/correction behaviours.
+    """
+    return [
+        RedTeamCase(
+            'contract_incidental_date_before_event',
+            ('contract', 'multiturn', 'event_time', 'date_selection'),
+            (
+                '合同是2025年11月签的，事情发生在2026年3月1日，请给我方案。',
+                '那我接下来该做什么？',
+            ),
+            'contract', '',
+            expected_facts=(('event_time', '2026年3月1日'),),
+            forbidden_facts=(('event_time', '2025年11月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'housing_month_date_correction',
+            ('housing', 'multiturn', 'fact_correction', 'event_time'),
+            (
+                '租房纠纷，事情发生在2026年3月，请给我方案。',
+                '更正一下，准确说是2026年4月。',
+            ),
+            'housing', '',
+            expected_facts=(('event_time', '2026年4月'),),
+            forbidden_facts=(('event_time', '2026年3月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_relative_deadline_not_event_time',
+            ('debt', 'multiturn', 'event_time', 'relative_date'),
+            (
+                '朋友欠我2万元，对方要求我在下周三之前回复，请给我方案。',
+                '那我该怎么催款？',
+            ),
+            'debt', '',
+            forbidden_facts=(('event_time', '下周三'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_cp_date_question_followup',
+            ('traffic', 'multiturn', 'counterparty_date', 'event_time'),
+            (
+                '交通事故后车辆受损，请给我方案。',
+                '交警说2026年5月才能定责，那我现在该做什么？',
+            ),
+            'traffic', '',
+            forbidden_facts=(('event_time', '2026年5月'),),
+            origin='auto_variant',
+            expected_reply_fragments=('@mode:follow_up',),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_event_date_survives_counterparty_repayment',
+            ('debt', 'multiturn', 'counterparty_date', 'event_time'),
+            (
+                '朋友欠我4万元，事情发生在2026年2月15日，请给我方案。',
+                '对方说2026年12月才还，我该怎么回应？',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '2026年2月15日'),),
+            forbidden_facts=(('event_time', '2026年12月'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
