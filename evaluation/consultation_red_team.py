@@ -244,6 +244,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentyfive_variants(),
         *generate_round_twentysix_variants(),
         *generate_round_twentyseven_variants(),
+        *generate_round_twentyeight_variants(),
     ]
 
 
@@ -1828,6 +1829,73 @@ def generate_round_twentyseven_variants(seed: int = 20260971) -> list[RedTeamCas
             ),
             'labor_dispute', 'employee',
             forbidden_facts=(('monthly_salary', '20000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentyeight_variants(seed: int = 20260972) -> list[RedTeamCase]:
+    """Five unseen variants over colloquial approximate amounts.
+
+    Round 28 locks the fix for an approximator ("多"/"余") between the number and
+    the unit. "8000多块" previously produced no ``amount`` even though
+    "3万多元" did, because 万 is itself a unit but 块/元 are not preceded by an
+    allowed approximator.
+    """
+    return [
+        RedTeamCase(
+            'amount_colloquial_duo_kuai',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '朋友欠我8000多块，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '8000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_colloquial_duo_yuan',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '对方欠我3万多元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '3万'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_colloquial_yu_yuan',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '朋友欠我2万余元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '2万'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_plain_still_parsed',
+            ('debt', 'amount_parse'),
+            (
+                '朋友欠我5000元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '5000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_duo_kuai_variant',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '同事欠我1万多块，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('amount', '1万'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

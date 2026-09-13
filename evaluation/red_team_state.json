@@ -2283,6 +2283,81 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "13 passed (tests/test_labor_monthly_salary.py)"
       }
+    },
+    {
+      "round_id": "round-028-colloquial-approximate-amount",
+      "generator": "generate_round_twentyeight_variants",
+      "seed": 20260972,
+      "status": "completed",
+      "root_cause": "AMOUNT_PATTERN 为 `[...]+\\s*(?:万元|元|块钱|块|万)`，不允许数字与单位之间出现口语约数词“多/余”。因“万”本身是单位单位，“3万多元”能命中，但“8000多块”“8000多元”（块/元不是万）无法命中，导致口语近似金额整句不产生 amount。",
+      "failures_before_fix": [
+        "amount_colloquial_duo_kuai",
+        "amount_colloquial_duo_yuan",
+        "amount_colloquial_yu_yuan",
+        "amount_plain_still_parsed",
+        "amount_duo_kuai_variant"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "colloquial_amount_approximator",
+          "before_fix": "round-28 探针 B1 显示“朋友欠我8000多块”不产生 amount（仅 parties），而“3万多元”可以，属同类表达不一致",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Accept colloquial approximate amounts",
+          "verification": "5 round-28 cases, 10 amount-pattern unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "amount_colloquial_duo_kuai",
+        "amount_colloquial_duo_yuan",
+        "amount_colloquial_yu_yuan",
+        "amount_plain_still_parsed",
+        "amount_duo_kuai_variant"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "amount_colloquial_duo_kuai",
+          "messages": [
+            "朋友欠我8000多块，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_colloquial_duo_yuan",
+          "messages": [
+            "对方欠我3万多元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_colloquial_yu_yuan",
+          "messages": [
+            "朋友欠我2万余元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_plain_still_parsed",
+          "messages": [
+            "朋友欠我5000元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_duo_kuai_variant",
+          "messages": [
+            "同事欠我1万多块，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Accept colloquial approximate amounts",
+      "verification": {
+        "before_fix": "2 failed (8000多块 / 1万多块 produced no amount)",
+        "core_suite": "1039 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "10 passed (tests/test_amount_colloquial.py)"
+      }
     }
   ]
 }
