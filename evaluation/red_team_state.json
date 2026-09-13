@@ -4058,6 +4058,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "18 passed (tests/test_domain_routing.py)"
       }
+    },
+    {
+      "round_id": "round-052-bare-threat-safety-signal",
+      "generator": "generate_round_fiftytwo_variants",
+      "seed": 20260996,
+      "status": "completed",
+      "root_cause": "安全信号只认\"威胁要打/杀/砍/伤害/弄死\"，不认最直接的\"威胁我/恐吓我\"，因此\"他威胁我\"\"对方一直恐吓我\"没有任何安全提示。",
+      "failures_before_fix": [
+        "threat_bare_me",
+        "threat_intimidate",
+        "threat_afraid"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "bare_threat_safety_signal",
+          "before_fix": "round-49/52 探针显示\"他威胁我\"不在 SAFETY_SIGNAL 内",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Treat a bare personal threat as a safety signal",
+          "verification": "5 round-52 cases, 16 safety-signal unit tests and the full core suite passed; \"他威胁我要起诉\"（法律威胁）不误判"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "threat_bare_me",
+        "threat_intimidate",
+        "threat_afraid",
+        "threat_legal_control",
+        "threat_plain_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "threat_bare_me",
+          "messages": [
+            "他威胁我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "threat_intimidate",
+          "messages": [
+            "对方一直恐吓我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "threat_afraid",
+          "messages": [
+            "对方威胁我，我很害怕，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "threat_legal_control",
+          "messages": [
+            "他威胁我要起诉，朋友欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "threat_plain_control",
+          "messages": [
+            "朋友欠我3万元，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Treat a bare personal threat as a safety signal",
+      "verification": {
+        "before_fix": "3 failed (他威胁我 / 对方一直恐吓我 produced no safety action)",
+        "core_suite": "1424 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "16 passed (tests/test_safety_urgency.py)"
+      }
     }
   ]
 }

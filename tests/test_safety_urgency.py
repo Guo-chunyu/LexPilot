@@ -16,6 +16,9 @@ from backend.legal_domain.consultation.intake import SAFETY_SIGNAL, _has_asserte
         '我老公打我，我身上有伤',
         '对方一直跟踪我',
         '他持刀威胁我',
+        # Round-52: a bare personal threat.
+        '他威胁我',
+        '对方一直恐吓我',
     ],
 )
 def test_safety_signal_is_detected(text):
@@ -30,6 +33,9 @@ def test_safety_signal_is_detected(text):
         '我明天给他打电话',
         '公司被打击后裁员',
         '朋友欠我3万元',
+        # A legal threat is not a safety event.
+        '他威胁我要起诉',
+        '对方威胁我去告我',
     ],
 )
 def test_non_safety_is_not_detected(text):
