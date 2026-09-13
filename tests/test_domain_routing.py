@@ -36,6 +36,19 @@ def test_colloquial_traffic_phrasings_route_to_traffic(text):
     assert identify_domains(text)[0] == 'traffic'
 
 
+@pytest.mark.parametrize(
+    'text',
+    [
+        # Round-35: rent disputes previously lost to debt's generic "欠我".
+        '租客拖欠我两个月租金，请给我方案。',
+        '对方拖欠租金一直不给，请给我方案。',
+        '租客欠我租金还赖着不走，请给我方案。',
+    ],
+)
+def test_rent_arrears_phrasings_route_to_housing(text):
+    assert identify_domains(text)[0] == 'housing'
+
+
 def test_public_benchmark_queries_route_without_given_domain():
     benchmark = Path(__file__).parents[1] / "eval" / "consultation_benchmark.json"
     cases = json.loads(benchmark.read_text(encoding="utf-8"))

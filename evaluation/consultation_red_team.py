@@ -251,6 +251,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtytwo_variants(),
         *generate_round_thirtythree_variants(),
         *generate_round_thirtyfour_variants(),
+        *generate_round_thirtyfive_variants(),
     ]
 
 
@@ -2287,6 +2288,67 @@ def generate_round_thirtyfour_variants(seed: int = 20260978) -> list[RedTeamCase
             ),
             'debt', '',
             expected_facts=(('procedure', '起诉'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtyfive_variants(seed: int = 20260979) -> list[RedTeamCase]:
+    """Five unseen variants over rent-arrears domain classification.
+
+    Round 35 locks the fix for "租客/租金" missing from the housing keywords, so
+    a rent dispute ("租客拖欠我两个月租金") was scored 0 for housing and lost to
+    debt's generic "欠我", misrouting the case.
+    """
+    return [
+        RedTeamCase(
+            'housing_tenant_rent_owing',
+            ('housing', 'classification', 'domain_routing'),
+            (
+                '租客拖欠我两个月租金，请给我方案。',
+            ),
+            'housing', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'housing_rent_owing',
+            ('housing', 'classification', 'domain_routing'),
+            (
+                '对方拖欠租金一直不给，请给我方案。',
+            ),
+            'housing', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'housing_tenant_owe_rent',
+            ('housing', 'classification', 'domain_routing'),
+            (
+                '租客欠我租金还赖着不走，请给我方案。',
+            ),
+            'housing', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'housing_tenant_overstay',
+            ('housing', 'classification', 'domain_routing'),
+            (
+                '租客到期不搬走还欠着租金，请给我方案。',
+            ),
+            'housing', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'housing_landlord_deposit_control',
+            ('housing', 'classification', 'domain_routing'),
+            (
+                '房东不退我押金，请给我方案。',
+            ),
+            'housing', '',
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

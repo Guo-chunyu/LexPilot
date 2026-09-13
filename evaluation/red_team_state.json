@@ -2801,6 +2801,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "4 passed (tests/test_procedure_outcomes.py)"
       }
+    },
+    {
+      "round_id": "round-035-rent-arrears-classification",
+      "generator": "generate_round_thirtyfive_variants",
+      "seed": 20260979,
+      "status": "completed",
+      "root_cause": "房产与租赁 profile 关键词表缺“租客/租金”。租金欠付句（“租客拖欠我两个月租金”）对 housing 得 0 分，反而被 debt 的通用词“欠我”命中，误判为债务纠纷。",
+      "failures_before_fix": [
+        "housing_tenant_rent_owing",
+        "housing_rent_owing",
+        "housing_tenant_owe_rent",
+        "housing_tenant_overstay"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "rent_arrears_classification",
+          "before_fix": "round-35 探针 H1 显示“租客拖欠我两个月租金”被判为 debt（应为 housing）",
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py"
+          ],
+          "commit_subject": "Route rent arrears to the housing domain",
+          "verification": "5 round-35 cases, 12 domain-routing unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "housing_tenant_rent_owing",
+        "housing_rent_owing",
+        "housing_tenant_owe_rent",
+        "housing_tenant_overstay",
+        "housing_landlord_deposit_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "housing_tenant_rent_owing",
+          "messages": [
+            "租客拖欠我两个月租金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "housing_rent_owing",
+          "messages": [
+            "对方拖欠租金一直不给，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "housing_tenant_owe_rent",
+          "messages": [
+            "租客欠我租金还赖着不走，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "housing_tenant_overstay",
+          "messages": [
+            "租客到期不搬走还欠着租金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "housing_landlord_deposit_control",
+          "messages": [
+            "房东不退我押金，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Route rent arrears to the housing domain",
+      "verification": {
+        "before_fix": "4 failed (租客/租金 phrases misrouted to debt or general)",
+        "core_suite": "1159 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "12 passed (tests/test_domain_routing.py)"
+      }
     }
   ]
 }
