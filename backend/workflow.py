@@ -6,7 +6,12 @@ from dataclasses import dataclass
 import re
 
 from backend.agents.ask_fact import ask_fact_node
-from backend.agents.dialogue import compose_evidence_follow_up, compose_fact_follow_up
+from backend.agents.dialogue import (
+    compose_evidence_follow_up,
+    compose_fact_follow_up,
+    wants_multiple_questions,
+    NATURAL_FACT_QUESTIONS,
+)
 from backend.agents.judge import evaluate_case_state
 from backend.agents.opponent import simulate_opponent
 from backend.agents.report import build_final_report
@@ -41,7 +46,9 @@ def execute_action(
     state.pending_evidence_requests = []
 
     if action == LegalAction.ASK_FACT:
-        questions = ask_fact_node(state, limit=1)
+        # The user may ask to be asked several things at once ("一次说两条").
+        question_limit = 2 if wants_multiple_questions(latest_user_message) else 1
+        questions = ask_fact_node(state, limit=question_limit)
         reply = compose_fact_follow_up(
             state,
             questions,
@@ -190,9 +197,14 @@ class LexPilotEngine:
         if uses_general_consultation(case, message):
             return process_consultation(message, case)
         case = prepare_labor_turn(message, case)
-        from backend.legal_domain.consultation.intake import wants_plan
+        from backend.legal_domain.consultation.intake import wants_plan, wants_next_step_only
+        # A request for only the first step must win over a full plan: a message
+        # such as "不用重复完整方案，只告诉我第一步该做什么" contains both keywords,
+        # and answering it with the whole plan repeats what the user refused.
+        if wants_next_step_only(message):
+            return labor_single_step(case)
         if wants_plan(message):
-            return labor_stage_plan(case)
+            return labor_stage_plan(case, message)
         reply = ""
         execution = ActionExecution(result="")
         for _ in range(self.max_auto_steps):
@@ -216,7 +228,7 @@ class LexPilotEngine:
         }
 
 
-def labor_stage_plan(state: CaseState) -> dict:
+def labor_stage_plan(state: CaseState, message: str = "") -> dict:
     """An explicit request may obtain a provisional plan before the stop gate."""
     report = build_final_report(state)
     state.pending_questions = []
@@ -230,10 +242,96 @@ def labor_stage_plan(state: CaseState) -> dict:
         f'{i}. **{step["title"]}**：{step["instructions"][0]}'
         for i, step in enumerate(report.action_plan, 1)
     )
+    limit = 2 if wants_multiple_questions(message) else 1
+    follow_up = _proactive_information_block(state, limit=limit)
     reply = (
-        f'{composer.stage_plan_intro()}\n\n{steps_text}\n\n{composer.stage_plan_outro()}'
+        f'{composer.stage_plan_intro()}\n\n{steps_text}\n\n'
+        f'{composer.stage_plan_outro()}\n\n{follow_up}'
     )
     return {"case_state": state, "reply": reply, "requires_user": True}
+
+
+def labor_single_step(state: CaseState) -> dict:
+    """Answer a request for only the current first step, not the whole plan."""
+    if not state.final_report:
+        build_final_report(state)
+    report = state.final_report or {}
+    steps = report.get('action_plan', []) if report else []
+    state.pending_questions = []
+    state.pending_fact_ids = []
+    state.pending_evidence_requests = []
+    state.done = False
+    state.record_action(
+        LegalAction.GENERATE_DOCUMENT,
+        "用户只问当前第一步，给出聚焦的单步答案。",
+        "generate_document",
+        "已给出当前最优先的一步。",
+    )
+    if not steps:
+        return {
+            "case_state": state,
+            "reply": (
+                "现在最先做的是把已知事实和手头材料固定下来："
+                "导出工资流水、保存工作群聊天和考勤截图，并记清入职日期和离职日期。\n\n"
+                + _proactive_information_block(state, limit=1)
+            ),
+            "requires_user": True,
+        }
+    step = steps[0]
+    lines = [f'现在最先做这一步：**{step.get("title", "")}**']
+    if step.get('instructions'):
+        lines.append(f'- 具体操作：{step["instructions"][0]}')
+    if step.get('channel'):
+        lines.append(f'- 办理渠道：{step["channel"]}')
+    return {
+        "case_state": state,
+        "reply": "\n".join(lines) + "\n\n" + _proactive_information_block(state, limit=1),
+        "requires_user": True,
+    }
+
+
+def _proactive_information_block(state: CaseState, limit: int = 1) -> str:
+    """Close a plan / report reply by either asking for the next missing facts or
+    telling the user the report is already complete enough.
+
+    The user report showed two gaps: (1) after handing back a plan the system
+    never asked for the still-missing facts, so the user had to ask themselves;
+    (2) when the report was already usable the user was never told. This block
+    owns both behaviours.
+    """
+    missing = [
+        fact_id for fact_id in state.missing_facts
+        if fact_id not in state.consultation.declined_slots
+    ]
+    complete_head = (
+        '现有信息已经比较完整，可以形成较完整的阶段性报告；'
+        '后续拿到新材料可以继续补充，报告会同步更新。'
+    )
+    if not missing:
+        return complete_head
+    questions = _rank_missing_questions(state, limit)
+    if not questions:
+        return complete_head
+    body = '\n'.join(f'{index}. {question}' for index, question in enumerate(questions, 1))
+    if state.fact_completeness >= 0.8:
+        return f'{complete_head}\n\n如方便，也可再补充：\n{body}'
+    return f'为了把报告补完整，还想请你补充：\n{body}'
+
+
+def _rank_missing_questions(state: CaseState, limit: int = 1) -> list[str]:
+    """Rank the highest-value missing facts and naturalise their wording.
+
+    ``select_questions`` also stores ``pending_fact_ids`` / ``pending_questions``,
+    so the user's next message is matched to the answer.
+    """
+    if not state.missing_facts:
+        return []
+    from backend.legal_domain.labor.inquiry import select_questions
+    questions = select_questions(state, limit=limit)
+    return [
+        NATURAL_FACT_QUESTIONS.get(fact_id, question)
+        for fact_id, question in zip(state.pending_fact_ids, questions)
+    ]
 
 
 def _select_evidence_requests(state: CaseState, limit: int = 2) -> list[str]:
@@ -295,4 +393,6 @@ def _report_reply(state: CaseState) -> str:
         f"- 法律确定性：{state.legal_confidence:.0%}\n"
         f"- 总体置信度：{state.overall_confidence:.0%}\n\n"
         + "\n".join(f"- {item}" for item in report.get("recommended_actions", []))
+        + "\n\n"
+        + _proactive_information_block(state, limit=1)
     )

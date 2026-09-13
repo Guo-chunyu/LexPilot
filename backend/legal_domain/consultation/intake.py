@@ -134,6 +134,10 @@ NEXT_STEP_ONLY_PATTERN = (
     r'|(?:不用|不要|别).{0,6}(?:重复|再说|列举).{0,6}(?:完整|全部|方案|步骤)'
     r'|(?:现在|目前|眼下).{0,4}(?:最先|先|只).{0,4}(?:做|走).{0,4}哪一步'
     r'|先(?:告诉|说|给).{0,4}(?:我)?(?:现在)?(?:做|走)?哪一步'
+    # The user asks only for the single first step ("我现在第一步应该干什么").
+    r'|第(?:一|1)步'
+    r'|(?:应该|该|要|需要|现在).{0,6}先(?:做|干|办|处理)'
+    r'|最先(?:做|干|办|处理)'
 )
 
 
@@ -843,8 +847,21 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     if counterparty_update:
         value = counterparty_update.group(1).strip('，,。；; ')
         put('details', value, value, assertor='counterparty')
+    # A bare amount that answers a pending question about a different slot (e.g.
+    # "2万" answering "解除前一年的平均月工资大概是多少") is that slot's value, not
+    # a restatement of the dispute amount. Without this guard the labour interview
+    # recorded "2万" as a conflicting 金额陈述 against the arrears total
+    # "共18000元" — two facts that do not actually conflict (user report).
+    bare_amount_answer = (
+        scoped_inventory
+        and not contextual
+        and bool(state.pending_fact_ids)
+        and 'amount' not in state.pending_fact_ids
+        and bool(re.search(AMOUNT_PATTERN, message))
+        and not re.sub(AMOUNT_PATTERN, '', message).strip(' ，,。；;.、')
+    )
     amount_sentences = [sentence for sentence in sentences if re.search(AMOUNT_PATTERN, sentence)]
-    if amount_sentences and not counterparty_update:
+    if amount_sentences and not counterparty_update and not bare_amount_answer:
         put('amount', '；'.join(amount_sentences), '；'.join(amount_sentences))
     if contextual and pending and not unknown and not wants_plan(message) and not says_evidence_exhausted(message):
         # A short answer belongs to the previous question only when it is not

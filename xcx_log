@@ -897,6 +897,22 @@ decision_delta 可审计链路。只改表达层。
   交通关键词可能缺"开车/撞了/被车撞"这类口语表述。
 - 租金欠付（`租客拖欠我两个月租金`）因含"欠我"被判为 `debt` 而非 `housing`。
 
+## 2026-09-13 — 用户报告的一次真实劳动咨询 5 个问题修复（批次修复，非轮次）
+
+用户重放了一整段真实劳动咨询（欠薪 18000、无劳动合同、追问与查看报告），指出 5 个问题，全部修复：
+
+| # | 问题 | 根因 | 修复 |
+| - | --- | --- | --- |
+| 1 | 先说的欠薪总额"共18000元"，被后来回答月工资的"2万"当成**更正/冲突** | 共享 `intake` 对每条消息都做 `amount` 抽取，"2万"命中 `AMOUNT_PATTERN` 被写成冲突的"金额陈述" | `intake.ingest_text` 增加 `bare_amount_answer` 守卫：在劳动访谈"回答态"（`scoped_inventory and not contextual`）且 pending 槽非 `amount` 时，纯数字答案不写 `amount` |
+| 2 | 用户说"一次说两条"，仍只问了一条 | `execute_action` 里 `ask_fact_node(state, limit=1)` 写死 1；`compose_fact_follow_up` 只渲染 `pending_fact_ids[0]` | 新增 `dialogue.wants_multiple_questions`；`limit=2`；`compose_fact_follow_up` 新增 `_compose_multiple_questions` 一次问两条 |
+| 3 | 问"我现在第一步应该干什么"，返回的不是单步 | `NEXT_STEP_ONLY_PATTERN` 不认"第一步"；劳动入口只看 `wants_plan` | 模式补 `第(?:一\|1)步` 等；`LexPilotEngine.process` 先判 `wants_next_step_only` → 新增 `labor_single_step` 给出聚焦单步 |
+| 4 | 给完方案后不主动追问缺失事实 | `labor_stage_plan` 只回方案，不追问 | 新增 `_proactive_information_block`：`labor_stage_plan` / `_report_reply` 末尾按缺失事实追问 |
+| 5 | 报告已够完整却不告知用户 | 无完整度告知逻辑 | 同上块：`fact_completeness >= 0.8` 或无需补充时输出"现有信息已经比较完整，可以形成较完整的阶段性报告…" |
+
+- 关键文件：`backend/legal_domain/consultation/intake.py`、`backend/agents/dialogue.py`、`backend/workflow.py`。
+- 回归测试：新增 `tests/test_consultation_user_report.py`（5 项，逐条对应上述问题，重放整段对话断言）。
+- 验证：核心全量 **1058 项通过**（1053 → 1058）。
+
 
 
 

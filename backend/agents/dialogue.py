@@ -2,9 +2,24 @@
 
 from __future__ import annotations
 
+import re
+
 from backend.legal_rl.actions import LegalAction
 from backend.legal_rl.state import CaseState
 from backend.legal_domain.consultation.wording import WordingComposer
+
+
+# The user may ask to be asked several things at once ("一次说两条"). The
+# interview defaults to one question per turn, so this has to be read off the
+# latest message instead of assumed.
+MULTIPLE_QUESTIONS_PATTERN = re.compile(
+    r'(?:一次|每次|这回|单次).{0,4}(?:两|2)\s*(?:条|个|项|点)'
+    r'|(?:两|2)\s*(?:条|个|项)\s*(?:一起|一次)'
+)
+
+
+def wants_multiple_questions(message: str) -> bool:
+    return bool(MULTIPLE_QUESTIONS_PATTERN.search(message))
 
 
 NATURAL_FACT_QUESTIONS = {
@@ -79,7 +94,11 @@ def compose_fact_follow_up(
 ) -> str:
     """Turn a ranked fact request into a contextual, conversational reply."""
 
-    fact_id = state.pending_fact_ids[0] if state.pending_fact_ids else ""
+    fact_ids = list(state.pending_fact_ids)
+    if len(fact_ids) >= 2:
+        return _compose_multiple_questions(state, fallback_questions, previous_pending_fact_ids)
+
+    fact_id = fact_ids[0] if fact_ids else ""
     fallback = fallback_questions[0] if fallback_questions else "请再补充一下相关情况。"
     question = NATURAL_FACT_QUESTIONS.get(fact_id, fallback)
     repeated = bool(fact_id and fact_id in previous_pending_fact_ids)
@@ -100,6 +119,34 @@ def compose_fact_follow_up(
     # Store exactly what the user saw so older serialized sessions remain recoverable.
     state.pending_questions = [question] if fact_id else fallback_questions
     return reply
+
+
+def _compose_multiple_questions(
+    state: CaseState,
+    fallback_questions: list[str],
+    previous_pending_fact_ids: list[str],
+) -> str:
+    """Ask the two selected facts together (user asked for more than one)."""
+
+    fact_ids = list(state.pending_fact_ids)[:2]
+    questions = []
+    for index, fact_id in enumerate(fact_ids):
+        fallback = fallback_questions[index] if index < len(fallback_questions) else "请补充相关情况。"
+        questions.append(NATURAL_FACT_QUESTIONS.get(fact_id, fallback))
+    # Only treat it as a re-ask when *both* questions were already on the table;
+    # a user who explicitly asked for "一次两条" should not be told their answer
+    # was not recognised.
+    repeated = all(fact_id in previous_pending_fact_ids for fact_id in fact_ids)
+    if repeated:
+        lead = '刚才这两点我没有完全识别准确，我换成两个问题一起确认：'
+    elif not any(record.action == LegalAction.ASK_FACT for record in state.action_history):
+        lead = '好，我先和你一起把情况理清，一次确认两点：'
+    else:
+        lead = '好的，那我把要确认的两点一起问：'
+    body = '\n'.join(f'{index}. {question}' for index, question in enumerate(questions, 1))
+    # Store exactly what the user saw so the next turn can be matched to answers.
+    state.pending_questions = questions
+    return f'{lead}\n\n{body}'
 
 
 def compose_evidence_follow_up(
