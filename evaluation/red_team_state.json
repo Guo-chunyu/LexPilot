@@ -3834,6 +3834,81 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "5 passed (tests/test_urgent_retraction.py)"
       }
+    },
+    {
+      "round_id": "round-049-coordination-negation-scope",
+      "generator": "generate_round_fortynine_variants",
+      "seed": 20260993,
+      "status": "completed",
+      "root_cause": "否定作用域过宽：否定词会一直管到子句末尾，并列连接词不打断它。\"房东不退我押金还打人\"里的\"打人\"被前面的\"不退\"否定掉，安全提示不触发（\"还打人\"单独则正常）。执行措施同理：\"不解除查封还要冻结\"只看得到被否定的\"查封\"。",
+      "failures_before_fix": [
+        "scope_coord_housing_beat",
+        "scope_coord_labor_beat",
+        "scope_coord_enforcement"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/_spans.py",
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "coordination_negation_scope",
+          "before_fix": "round-47/49 探针显示\"房东不退我押金还打人\"的 urgent_actions 为空",
+          "fix_files": [
+            "backend/legal_domain/consultation/_spans.py",
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "End a negation at a coordinating conjunction",
+          "verification": "5 round-49 cases, 6 negation-scope unit tests and the full core suite passed; \"他没有把我打伤\"仍被否定"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "scope_coord_housing_beat",
+        "scope_coord_labor_beat",
+        "scope_coord_enforcement",
+        "scope_negated_assault_control",
+        "scope_plain_deposit_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "scope_coord_housing_beat",
+          "messages": [
+            "房东不退我押金还打人，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "scope_coord_labor_beat",
+          "messages": [
+            "公司扣我工资还打我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "scope_coord_enforcement",
+          "messages": [
+            "法院不解除查封还要冻结我的账户，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "scope_negated_assault_control",
+          "messages": [
+            "他没有把我打伤，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "scope_plain_deposit_control",
+          "messages": [
+            "房东不退我押金，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "End a negation at a coordinating conjunction",
+      "verification": {
+        "before_fix": "3 failed (打人/打我/冻结 negated by an earlier 不退/不解除)",
+        "core_suite": "1384 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "6 passed (tests/test_negation_scope_urgency.py)"
+      }
     }
   ]
 }

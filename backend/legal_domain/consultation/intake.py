@@ -11,6 +11,7 @@ from ._spans import (
     EVIDENCE_EXHAUSTED,
     EXCLUSIVE_INVENTORY,
     SENTENCE_BROAD,
+    URGENT_SCOPE,
     find_asserted,
     first_asserted,
     has_asserted,
@@ -1014,14 +1015,17 @@ def refresh_evidence(state: CaseState) -> None:
 
 def urgent_actions(message: str, state: CaseState) -> list[str]:
     actions = []
-    if _has_asserted_signal(message, SAFETY_SIGNAL):
+    # Round-49: urgent signals use URGENT_SCOPE, where a coordinating conjunction
+    # ("还/又/也/并且") ends a negation's reach — "房东不退我押金还打人" is a safety
+    # event, not a negated one.
+    if _has_asserted_signal(message, SAFETY_SIGNAL, URGENT_SCOPE):
         actions.append(SAFETY_URGENT_ACTION)
     # The enforcement signal anchors on the subject ("法院"), so a negation
     # between subject and measure ("法院没有查封") is invisible to it; check the
     # measure separately.
     if (
-        _has_asserted_signal(message, ENFORCEMENT_SIGNAL)
-        and not _has_negated_signal(message, ENFORCEMENT_MEASURE_PATTERN)
+        _has_asserted_signal(message, ENFORCEMENT_SIGNAL, URGENT_SCOPE)
+        and _has_asserted_signal(message, ENFORCEMENT_MEASURE_PATTERN, URGENT_SCOPE)
     ):
         actions.append(ENFORCEMENT_URGENT_ACTION)
     if state.case_type == 'criminal' and _has_asserted_signal(message, r'拘留|逮捕|被抓|看守所'):
@@ -1052,24 +1056,28 @@ def _signal_states(message: str, pattern: str) -> list[bool]:
     return [state for state in _signal_state_iter(message, pattern)]
 
 
-def _signal_state_iter(message: str, pattern: str) -> list[bool]:
+def _signal_state_iter(message: str, pattern: str, policy=None) -> list[bool]:
     compiled = re.compile(pattern)
-    return [_DEFAULT_POLICY.is_asserted(message, m.start()) for m in compiled.finditer(message)]
+    active = policy or _DEFAULT_POLICY
+    return [active.is_asserted(message, m.start()) for m in compiled.finditer(message)]
 
 
-def _has_asserted_signal(message: str, pattern: str) -> bool:
-    return any(_signal_state_iter(message, pattern))
+def _has_asserted_signal(message: str, pattern: str, policy=None) -> bool:
+    return any(_signal_state_iter(message, pattern, policy))
 
 
-def _has_negated_signal(message: str, pattern: str) -> bool:
-    return any(not state for state in _signal_state_iter(message, pattern))
+def _has_negated_signal(message: str, pattern: str, policy=None) -> bool:
+    return any(not state for state in _signal_state_iter(message, pattern, policy))
 
 
 def retracted_urgent_actions(message: str) -> set[str]:
     retracted = set()
     # Round-48: reuse the single SAFETY_SIGNAL definition. A stale inline copy had
     # drifted from it, so "他不会再打我了" never retracted the safety action.
-    if _has_negated_signal(message, SAFETY_SIGNAL) and not _has_asserted_signal(message, SAFETY_SIGNAL):
+    if (
+        _has_negated_signal(message, SAFETY_SIGNAL, URGENT_SCOPE)
+        and not _has_asserted_signal(message, SAFETY_SIGNAL, URGENT_SCOPE)
+    ):
         retracted.add(SAFETY_URGENT_ACTION)
     criminal_pattern = r'拘留|逮捕|被抓|看守所'
     if _has_negated_signal(message, criminal_pattern) and not _has_asserted_signal(message, criminal_pattern):
@@ -1078,8 +1086,8 @@ def retracted_urgent_actions(message: str) -> set[str]:
     # retraction check anchors on the *measure* (not on the subject "法院"), so a
     # negation between subject and measure ("法院没有查封") is visible.
     if (
-        _has_negated_signal(message, ENFORCEMENT_MEASURE_PATTERN)
-        and not _has_asserted_signal(message, ENFORCEMENT_MEASURE_PATTERN)
+        _has_negated_signal(message, ENFORCEMENT_MEASURE_PATTERN, URGENT_SCOPE)
+        and not _has_asserted_signal(message, ENFORCEMENT_MEASURE_PATTERN, URGENT_SCOPE)
     ):
         retracted.add(ENFORCEMENT_URGENT_ACTION)
     if retracts_urgent_deadline(message):

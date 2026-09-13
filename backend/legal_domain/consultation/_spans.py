@@ -67,6 +67,13 @@ _CORRECTION_IDENTITY: re.Pattern[str] = re.compile(
 _CLAUSE_BREAKS: re.Pattern[str] = re.compile(r'[，。；;\n,]')
 _SENTENCE_BREAKS: re.Pattern[str] = re.compile(r'[。，；\n,.!?！？]')
 
+# Round-49: a coordinating conjunction starts a *new* predicate, so a negation
+# before it does not reach past it. "房东不退我押金还打人" must not treat "打人"
+# as negated (the 不退 governs 押金 only), while "没有把我打伤" must stay negated.
+_COORDINATION_RESET: re.Pattern[str] = re.compile(
+    r'[，,]?\s*(?:还|又|也|并|而且|并且|同时|另外|加上|反倒|反而)'
+)
+
 
 @dataclass(frozen=True)
 class NegationPolicy:
@@ -89,6 +96,8 @@ class NegationPolicy:
     scope_breaks: re.Pattern[str] = _CLAUSE_BREAKS
     window: int = 12
     name: str = 'unnamed'
+    # Optional: a match after the negation that ends the negation's reach.
+    scope_reset_pattern: Optional[re.Pattern[str]] = None
 
     def upstream_span(self, text: str, match_start: int) -> tuple[int, int]:
         """Return ``(start, end)`` absolute indexes for the upstream scope."""
@@ -111,6 +120,11 @@ class NegationPolicy:
         negation = self.negation_pattern.search(scope)
         if not negation:
             return True
+        if self.scope_reset_pattern is not None:
+            # A coordinating conjunction after the negation opens a new predicate
+            # that the negation no longer governs.
+            if self.scope_reset_pattern.search(scope[negation.end():]):
+                return True
         # Narrow end-anchored policies do not reset: their negation pattern
         # already anchors to the end of the upstream scope (``\\s*$``), so a
         # candidate "材料我并非没有更多" with scope "材料我并非" is correctly
@@ -140,6 +154,15 @@ SENTENCE_BROAD = NegationPolicy(
     scope_breaks=_SENTENCE_BREAKS,
     window=24,
     name='SENTENCE_BROAD',
+)
+# Round-49: urgent signals (safety / enforcement). Same broad negation, but a
+# coordinating conjunction after the negation ends its scope.
+URGENT_SCOPE = NegationPolicy(
+    negation_pattern=_CLAUSE_BROAD_NEGATION,
+    scope_breaks=_CLAUSE_BREAKS,
+    window=24,
+    name='URGENT_SCOPE',
+    scope_reset_pattern=_COORDINATION_RESET,
 )
 # Narrow end-anchored policies. The negation pattern itself anchors to the
 # end of the upstream (``\\s*$``), so the double-negative reset is disabled

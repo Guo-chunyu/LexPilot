@@ -1519,6 +1519,48 @@ decision_delta 可审计链路。只改表达层。
   并列连接词处收束；影响面较大，留待后续轮次用独立策略处理。
 - 多域 `domain_ids` 对劳动类混合案件为空。
 
+## 2026-09-13 — 20 轮批次第 2 轮（总第 49 轮）：并列连接词不打断否定作用域（seed 20260993）
+
+新增 `generate_round_fortynine_variants`，5 个案例覆盖否定作用域：
+房东不退押金还打人、公司扣工资还打我、法院不解除查封还要冻结账户、
+"他没有把我打伤"（负向对照）、"房东不退我押金"（负向对照）。
+
+### 根因：否定一直管到子句末尾
+
+- 复现：`房东不退我押金还打人` → `urgent_actions` 为空——"打人"被前面的"不退"否定掉；
+  而 `还打人` 单独出现时正常触发安全提示。执行措施同理：`法院不解除查封还要冻结我的账户`
+  只看得到被否定的"查封"。
+- 根因：`NegationPolicy.is_asserted` 只要上游作用域里出现否定词就判为被否定，
+  并列连接词（还/又/也/并/并且/同时）不会为否定划界。
+- 修复：
+  1. `_spans.py` 的 `NegationPolicy` 新增可选字段 `scope_reset_pattern`：
+     若否定词之后出现该模式，否定即不再往后管。
+  2. 新增 `_COORDINATION_RESET`（`还|又|也|并|而且|并且|同时|另外|加上|反倒|反而`）与
+     `URGENT_SCOPE` 策略（仅在紧急信号上启用，避免影响面扩大）。
+  3. `intake.py` 的 `_signal_state_iter` / `_has_asserted_signal` / `_has_negated_signal`
+     增加可选 `policy` 参数（默认不变）；`urgent_actions` 与 `retracted_urgent_actions`
+     的安全/执行判定改用 `URGENT_SCOPE`。
+  4. 执行措施的存在性判定改为"**至少有一个**措施被断言"（`_has_asserted_signal(measure)`），
+     这样"不解除查封还要冻结账户"仍会触发。
+
+### 配套回归：定点单元测试
+
+- 新增 `tests/test_negation_scope_urgency.py`（6 项）：3 类并列句必须判为已断言；
+  3 类直接否定（"他没有把我打伤"/"对方没有打我"/"没有人威胁我"）仍须判为被否定。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_fortynine_variants`。
+- `evaluation/red_team_state.json` 追加 `round-049-coordination-negation-scope`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 6 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1384 项通过**（1 个既有第三方弃用警告，无回归）。
+
+### 仍待处理（xcx_log 已记）
+
+- 多域 `domain_ids` 对劳动类混合案件为空。
+- 裸"威胁我"不在安全信号内（"威胁要打/杀/砍"才命中）——需谨慎，避免把"威胁起诉"误判。
+
 
 
 

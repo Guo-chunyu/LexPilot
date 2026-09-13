@@ -265,6 +265,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortysix_variants(),
         *generate_round_fortyseven_variants(),
         *generate_round_fortyeight_variants(),
+        *generate_round_fortynine_variants(),
     ]
 
 
@@ -3199,6 +3200,71 @@ def generate_round_fortyeight_variants(seed: int = 20260992) -> list[RedTeamCase
                 '法院说没有期限要求，不着急。',
             ),
             'general', '',
+            expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortynine_variants(seed: int = 20260993) -> list[RedTeamCase]:
+    """Five unseen variants over coordination ending a negation's scope.
+
+    Round 49 locks the fix for "房东不退我押金还打人" (the 不退 governs 押金, not
+    打人) while "他没有把我打伤" must stay negated.
+    """
+    return [
+        RedTeamCase(
+            'scope_coord_housing_beat',
+            ('housing', 'urgent', 'negation_scope'),
+            (
+                '房东不退我押金还打人，请给我方案。',
+            ),
+            'housing', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'scope_coord_labor_beat',
+            ('labor_dispute', 'urgent', 'negation_scope'),
+            (
+                '公司扣我工资还打我，请给我方案。',
+            ),
+            'labor_dispute', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'scope_coord_enforcement',
+            ('general', 'urgent', 'negation_scope'),
+            (
+                '法院不解除查封还要冻结我的账户，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'scope_negated_assault_control',
+            ('tort', 'negation_scope_control'),
+            (
+                '他没有把我打伤，请给我方案。',
+            ),
+            'tort', '',
+            expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'scope_plain_deposit_control',
+            ('housing', 'negation_scope_control'),
+            (
+                '房东不退我押金，请给我方案。',
+            ),
+            'housing', '',
             expected_urgent=False,
             origin='auto_variant',
             max_followup_similarity=0.65,
