@@ -2358,6 +2358,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "10 passed (tests/test_amount_colloquial.py)"
       }
+    },
+    {
+      "round_id": "round-029-debt-classification-keyword-gap",
+      "generator": "generate_round_twentynine_variants",
+      "seed": 20260973,
+      "status": "completed",
+      "root_cause": "借贷 profile 的关键词表缺常见口语表述“没还 / 借出去 / 要不回来”。identify_domains 按子串长度累加评分，这些句子对借贷得 0 分，直接落到 general，导致用错领域方案。",
+      "failures_before_fix": [
+        "debt_classify_jie_wo_meihuan",
+        "debt_classify_borrow_out",
+        "debt_classify_meihuan",
+        "debt_classify_borrow_out_amount"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "debt_classification_keyword_gap",
+          "before_fix": "round-29 探针显示“朋友2019年借我3万元一直没还”“朋友借我5万元…没还”“我借出去的钱要不回来”均被判为 general（应为 debt）",
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py"
+          ],
+          "commit_subject": "Route common spoken debt phrasings to the debt domain",
+          "verification": "5 round-29 cases, 4 domain-routing unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "debt_classify_jie_wo_meihuan",
+        "debt_classify_borrow_out",
+        "debt_classify_meihuan",
+        "debt_classify_control",
+        "debt_classify_borrow_out_amount"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "debt_classify_jie_wo_meihuan",
+          "messages": [
+            "朋友借我5万元，到现在都没还，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_classify_borrow_out",
+          "messages": [
+            "我借出去的钱要不回来，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_classify_meihuan",
+          "messages": [
+            "朋友拿了我的钱一直没还，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_classify_control",
+          "messages": [
+            "朋友欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_classify_borrow_out_amount",
+          "messages": [
+            "我把钱借出去3万元，对方赖着不给，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Route common spoken debt phrasings to the debt domain",
+      "verification": {
+        "before_fix": "4 failed (借我…没还 / 借出去要不回来 routed to general)",
+        "core_suite": "1053 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "4 passed (tests/test_domain_routing.py)"
+      }
     }
   ]
 }

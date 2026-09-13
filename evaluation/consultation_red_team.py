@@ -245,6 +245,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentysix_variants(),
         *generate_round_twentyseven_variants(),
         *generate_round_twentyeight_variants(),
+        *generate_round_twentynine_variants(),
     ]
 
 
@@ -1896,6 +1897,67 @@ def generate_round_twentyeight_variants(seed: int = 20260972) -> list[RedTeamCas
             ),
             'debt', '',
             expected_facts=(('amount', '1万'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentynine_variants(seed: int = 20260973) -> list[RedTeamCase]:
+    """Five unseen variants over debt domain classification.
+
+    Round 29 locks the fix for common spoken debt phrasings ("借我…没还",
+    "借出去的钱要不回来") that previously produced a zero keyword score and
+    were routed to ``general``.
+    """
+    return [
+        RedTeamCase(
+            'debt_classify_jie_wo_meihuan',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '朋友借我5万元，到现在都没还，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_classify_borrow_out',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '我借出去的钱要不回来，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_classify_meihuan',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '朋友拿了我的钱一直没还，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_classify_control',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '朋友欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_classify_borrow_out_amount',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '我把钱借出去3万元，对方赖着不给，请给我方案。',
+            ),
+            'debt', '',
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
