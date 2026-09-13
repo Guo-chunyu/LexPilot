@@ -17,6 +17,9 @@ from backend.legal_rl.state import CaseState
         '前几天对方把我的车撞了',
         '3天前对方把货拉走了',
         '3个月前借给朋友2万元',
+        # Round-55: the year before last.
+        '朋友前年借我3万元',
+        '朋友大前年借我3万元',
     ],
 )
 def test_relative_date_is_extracted(text):
@@ -25,7 +28,7 @@ def test_relative_date_is_extracted(text):
     assert state.facts.get('event_time'), text
 
 
-@pytest.mark.parametrize('text', ['上周', '这个月', '前几天', '3天前', '3个月前'])
+@pytest.mark.parametrize('text', ['上周', '这个月', '前几天', '3天前', '3个月前', '前年', '大前年'])
 def test_relative_date_matches_pattern(text):
     assert re.search(DATE_PATTERN, text)
 

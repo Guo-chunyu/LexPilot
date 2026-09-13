@@ -4285,6 +4285,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "5 passed (tests/test_labor_question_during_interview.py)"
       }
+    },
+    {
+      "round_id": "round-055-year-before-last-date",
+      "generator": "generate_round_fiftyfive_variants",
+      "seed": 20260999,
+      "status": "completed",
+      "root_cause": "DATE_PATTERN 缺\"前年/大前年\"。因此\"朋友前年借我3万元\"不产生 event_time，而且多轮更正\"更正：是前年借的，不是去年\"也无效——负值根本抽不出来，更正系统无法比对。",
+      "failures_before_fix": [
+        "date_year_before_last",
+        "date_two_years_before",
+        "date_year_before_last_contract"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "year_before_last_date",
+          "before_fix": "round-55 探针 C4 显示\"更正：是前年借的\"后 event_time 仍是\"去年\"",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Extract 前年 and 大前年 as event_time",
+          "verification": "5 round-55 cases, 16 relative-date unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "date_year_before_last",
+        "date_two_years_before",
+        "date_year_before_last_contract",
+        "date_last_year_control",
+        "date_months_ago_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "date_year_before_last",
+          "messages": [
+            "朋友前年欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_two_years_before",
+          "messages": [
+            "朋友大前年欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_year_before_last_contract",
+          "messages": [
+            "前年签的合同对方一直不履行，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_last_year_control",
+          "messages": [
+            "朋友去年欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_months_ago_control",
+          "messages": [
+            "3个月前借给朋友2万元现在不还，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Extract 前年 and 大前年 as event_time",
+      "verification": {
+        "before_fix": "3 failed (前年 / 大前年 / 前年签的合同 produced no event_time)",
+        "core_suite": "1473 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "16 passed (tests/test_relative_date_extraction.py)"
+      }
     }
   ]
 }

@@ -271,6 +271,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fiftytwo_variants(),
         *generate_round_fiftythree_variants(),
         *generate_round_fiftyfour_variants(),
+        *generate_round_fiftyfive_variants(),
     ]
 
 
@@ -3601,6 +3602,71 @@ def generate_round_fiftyfour_variants(seed: int = 20260998) -> list[RedTeamCase]
             ),
             'labor_dispute', '',
             expected_facts=(('employment_duration_months', '60'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fiftyfive_variants(seed: int = 20260999) -> list[RedTeamCase]:
+    """Five unseen variants over 前年 / 大前年 in DATE_PATTERN.
+
+    Round 55 locks the fix for "前年 / 大前年" missing from the date pattern, which
+    also made a later correction ("更正：是前年借的") a no-op.
+    """
+    return [
+        RedTeamCase(
+            'date_year_before_last',
+            ('debt', 'relative_date', 'event_time'),
+            (
+                '朋友前年欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '前年'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_two_years_before',
+            ('debt', 'relative_date', 'event_time'),
+            (
+                '朋友大前年欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '大前年'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_year_before_last_contract',
+            ('contract', 'relative_date', 'event_time'),
+            (
+                '前年签的合同对方一直不履行，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('event_time', '前年'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_last_year_control',
+            ('debt', 'relative_date_control'),
+            (
+                '朋友去年欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '去年'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_months_ago_control',
+            ('debt', 'relative_date_control'),
+            (
+                '3个月前借给朋友2万元现在不还，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '3个月前'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

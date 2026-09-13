@@ -87,7 +87,10 @@ DATE_PATTERN = (
     # Round-33: `_plausible_pending_answer` already accepted these relative dates
     # for an `event_time` answer, but the extraction pattern did not, so
     # "上周我们签了合同，对方一直不履行" never produced an `event_time`.
-    r'|上周|本周|这周|这个月|本月|前几天|几天前|\d+\s*(?:天|周|个月|年)前)'
+    r'|上周|本周|这周|这个月|本月|前几天|几天前|\d+\s*(?:天|周|个月|年)前'
+    # Round-55: "前年 / 大前年" were missing, so both the date and a later
+    # correction ("更正：是前年借的") were dropped.
+    r'|大前年|前年)'
 )
 AMOUNT_PATTERN = (
     r'(?:[0-9零一二两三四五六七八九十百千万点.,]+\s*(?:多|余)?\s*(?:万元|元|块钱|块|万)'
