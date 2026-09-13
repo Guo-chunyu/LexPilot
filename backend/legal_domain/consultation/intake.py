@@ -764,6 +764,12 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'驳回|不予受理|不予立案|不受理|不成立|未受理|撤销|撤回|终结'
             r'|没有成功|未成功|没能成功|无果|不了了之'
             r'|拒绝(?:协商|调解|沟通|配合)'
+            # Round-34: "调解不成" (a failed mediation) and a procedural action
+            # followed by a passive refusal ("申请调解被拒绝了") are outcomes too,
+            # but the earlier verbs only matched "拒绝" immediately before the
+            # procedural object.
+            r'|调解不成|调解失败|调解无果|协商不成|协商失败'
+            r'|(?:协商|调解|沟通|投诉|申诉|申请|请求).{0,8}(?:被)?(?:拒绝|驳回|不受理|不予受理|无果|不成)'
         )
         outcome_procedure = (
             has_asserted(sentence, outcome_token, policy=SENTENCE_BROAD)

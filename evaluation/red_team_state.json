@@ -2727,6 +2727,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "12 passed (tests/test_relative_date_extraction.py)"
       }
+    },
+    {
+      "round_id": "round-034-procedure-outcome-vocabulary",
+      "generator": "generate_round_thirtyfour_variants",
+      "seed": 20260978,
+      "status": "completed",
+      "root_cause": "程序结果词表缺“调解不成/协商不成/调解失败”，且只认“拒绝”紧跟程序对象的形状（拒绝(?:协商|调解|沟通|配合)），无法识别被动式“申请调解被拒绝了”。",
+      "failures_before_fix": [
+        "procedure_mediation_failed",
+        "procedure_mediation_refused",
+        "procedure_negotiation_failed",
+        "procedure_complaint_rejected"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "procedure_outcome_vocabulary",
+          "before_fix": "round-34 探针 P1/P2/P4/P5 显示“调解不成”“申请调解被拒绝了”等未写入 procedure",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Record failed mediation and passive refusals as procedure",
+          "verification": "5 round-34 cases, 4 procedure-outcome unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "procedure_mediation_failed",
+        "procedure_mediation_refused",
+        "procedure_negotiation_failed",
+        "procedure_complaint_rejected",
+        "procedure_control_filed"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "procedure_mediation_failed",
+          "messages": [
+            "我起诉了，法院说调解不成让我等判决，对方欠我3万，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "procedure_mediation_refused",
+          "messages": [
+            "我申请调解被拒绝了，对方欠我3万，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "procedure_negotiation_failed",
+          "messages": [
+            "我和对方协商不成，对方欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "procedure_complaint_rejected",
+          "messages": [
+            "我向消协投诉被驳回了，商家欠我退款，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "procedure_control_filed",
+          "messages": [
+            "我已经起诉了，对方欠我3万元，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Record failed mediation and passive refusals as procedure",
+      "verification": {
+        "before_fix": "4 failed (调解不成 / 申请调解被拒绝 / 协商不成 / 投诉被驳回 dropped)",
+        "core_suite": "1146 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "4 passed (tests/test_procedure_outcomes.py)"
+      }
     }
   ]
 }

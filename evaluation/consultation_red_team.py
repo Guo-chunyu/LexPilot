@@ -250,6 +250,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtyone_variants(),
         *generate_round_thirtytwo_variants(),
         *generate_round_thirtythree_variants(),
+        *generate_round_thirtyfour_variants(),
     ]
 
 
@@ -2220,6 +2221,72 @@ def generate_round_thirtythree_variants(seed: int = 20260977) -> list[RedTeamCas
             ),
             'debt', '',
             expected_facts=(('event_time', '上个月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtyfour_variants(seed: int = 20260978) -> list[RedTeamCase]:
+    """Five unseen variants over procedural outcomes.
+
+    Round 34 locks the fix for "调解不成" and a procedural action followed by a
+    passive refusal ("申请调解被拒绝了"), neither of which the earlier outcome
+    vocabulary recognised.
+    """
+    return [
+        RedTeamCase(
+            'procedure_mediation_failed',
+            ('debt', 'procedure_outcome'),
+            (
+                '我起诉了，法院说调解不成让我等判决，对方欠我3万，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('procedure', '调解不成'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'procedure_mediation_refused',
+            ('debt', 'procedure_outcome'),
+            (
+                '我申请调解被拒绝了，对方欠我3万，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('procedure', '调解'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'procedure_negotiation_failed',
+            ('debt', 'procedure_outcome'),
+            (
+                '我和对方协商不成，对方欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('procedure', '协商不成'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'procedure_complaint_rejected',
+            ('consumer', 'procedure_outcome'),
+            (
+                '我向消协投诉被驳回了，商家欠我退款，请给我方案。',
+            ),
+            'consumer', '',
+            expected_facts=(('procedure', '投诉'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'procedure_control_filed',
+            ('debt', 'procedure_outcome'),
+            (
+                '我已经起诉了，对方欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('procedure', '起诉'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
