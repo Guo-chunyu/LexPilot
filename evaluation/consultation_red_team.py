@@ -246,6 +246,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentyseven_variants(),
         *generate_round_twentyeight_variants(),
         *generate_round_twentynine_variants(),
+        *generate_round_thirty_variants(),
     ]
 
 
@@ -1958,6 +1959,67 @@ def generate_round_twentynine_variants(seed: int = 20260973) -> list[RedTeamCase
                 '我把钱借出去3万元，对方赖着不给，请给我方案。',
             ),
             'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirty_variants(seed: int = 20260974) -> list[RedTeamCase]:
+    """Five unseen variants over traffic domain classification.
+
+    Round 30 locks the fix for colloquial collision phrasings ("开车把人撞了",
+    "被车撞了", "车停路边被撞了") that previously scored zero and fell to
+    ``general``.
+    """
+    return [
+        RedTeamCase(
+            'traffic_driver_hit_pedestrian',
+            ('traffic', 'classification', 'domain_routing'),
+            (
+                '我开车把人撞了，对方要求赔偿，请给我方案。',
+            ),
+            'traffic', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_victim_hit',
+            ('traffic', 'classification', 'domain_routing'),
+            (
+                '我被车撞了，对方不赔医药费，请给我方案。',
+            ),
+            'traffic', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_parked_scrape',
+            ('traffic', 'classification', 'domain_routing'),
+            (
+                '我的车停在路边被撞了，找不到人，请给我方案。',
+            ),
+            'traffic', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_control_accident',
+            ('traffic', 'classification', 'domain_routing'),
+            (
+                '发生交通事故，对方全责但不赔，请给我方案。',
+            ),
+            'traffic', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_rear_end',
+            ('traffic', 'classification', 'domain_routing'),
+            (
+                '我被追尾了，对方不赔，请给我方案。',
+            ),
+            'traffic', '',
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

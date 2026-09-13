@@ -2432,6 +2432,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "4 passed (tests/test_domain_routing.py)"
       }
+    },
+    {
+      "round_id": "round-030-traffic-classification-keyword-gap",
+      "generator": "generate_round_thirty_variants",
+      "seed": 20260974,
+      "status": "completed",
+      "root_cause": "交通 profile 关键词表缺口语碰撞表述“撞了 / 被撞 / 追尾 / 剐蹭 / 酒驾 / 闯红灯”。identify_domains 按子串长度累加评分，这些句子得 0 分，落到 general。",
+      "failures_before_fix": [
+        "traffic_driver_hit_pedestrian",
+        "traffic_victim_hit",
+        "traffic_parked_scrape",
+        "traffic_rear_end"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "traffic_classification_keyword_gap",
+          "before_fix": "round-30 探针显示“我开车把人撞了”“我被车撞了”“我的车停在路边被撞了”均被判为 general（应为 traffic）",
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py"
+          ],
+          "commit_subject": "Route colloquial collision phrasings to the traffic domain",
+          "verification": "5 round-30 cases, 4 traffic domain-routing tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "traffic_driver_hit_pedestrian",
+        "traffic_victim_hit",
+        "traffic_parked_scrape",
+        "traffic_control_accident",
+        "traffic_rear_end"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "traffic_driver_hit_pedestrian",
+          "messages": [
+            "我开车把人撞了，对方要求赔偿，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "traffic_victim_hit",
+          "messages": [
+            "我被车撞了，对方不赔医药费，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "traffic_parked_scrape",
+          "messages": [
+            "我的车停在路边被撞了，找不到人，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "traffic_control_accident",
+          "messages": [
+            "发生交通事故，对方全责但不赔，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "traffic_rear_end",
+          "messages": [
+            "我被追尾了，对方不赔，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Route colloquial collision phrasings to the traffic domain",
+      "verification": {
+        "before_fix": "4 failed (开车撞了 / 被车撞 / 车被撞 / 被追尾 routed to general)",
+        "core_suite": "1072 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "4 passed (tests/test_domain_routing.py)"
+      }
     }
   ]
 }

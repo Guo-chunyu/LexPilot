@@ -913,6 +913,37 @@ decision_delta 可审计链路。只改表达层。
 - 回归测试：新增 `tests/test_consultation_user_report.py`（5 项，逐条对应上述问题，重放整段对话断言）。
 - 验证：核心全量 **1058 项通过**（1053 → 1058）。
 
+## 2026-09-13 — 红队第 30 轮：口语碰撞表述被判为 general（seed 20260974）
+
+新增 `generate_round_thirty_variants`，5 个匿名案例覆盖交通领域分类：
+开车把人撞了、被车撞了、车停路边被撞了、发生交通事故全责不赔（正向对照）、被追尾了。
+
+### 根因：交通关键词表缺口语碰撞表述
+
+- 复现：`我开车把人撞了`、`我被车撞了`、`我的车停在路边被撞了` 均被判为 `general`
+  （应为 `traffic`），导致用错领域方案。
+- 根因：交通关键词表为 `('交通事故','车祸','撞伤','汽车撞','事故认定','肇事','交警')`。
+  `identify_domains` 按子串长度累加评分——上述句子只含"撞了/被撞"，一个关键词都不命中，得 0 分。
+- 修复：交通关键词表补入 `'撞了', '被撞', '追尾', '剐蹭', '酒驾', '闯红灯'`（高精度碰撞表述）。
+
+### 配套回归：领域路由单元测试
+
+- `tests/test_domain_routing.py` 新增 `test_colloquial_traffic_phrasings_route_to_traffic`（4 项参数化）。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_thirty_variants`（import + 轮次状态生成器表）。
+- `evaluation/red_team_state.json` 追加 `round-030-traffic-classification-keyword-gap`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；领域路由单元测试 4 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1072 项通过**（1 个既有第三方弃用警告）。
+
+### 流程修复：轮次追加脚本改为幂等
+
+- 第 29 轮曾出现 `round-029` 重复条目（追加脚本被 shell 执行了两次）。
+  从第 30 轮起，`_add_roundNN.py` 先查 `round_id` 是否已存在，存在则跳过，并断言
+  `len(rounds) == len(set(round_id))`。
+
 
 
 
