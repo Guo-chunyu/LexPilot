@@ -969,10 +969,13 @@ def urgent_actions(message: str, state: CaseState) -> list[str]:
 
 
 def _has_asserted_urgent_deadline(message: str) -> bool:
+    # Round-36: a court deadline is often said as "15天内上诉", not the formal
+    # "15日内"; and appeal / review / payment deadlines are as urgent as filing.
+    # The earlier pattern only accepted "日内" and missed "上诉".
     pattern = (
         r'(?:今天|明天|后天|本周|这周).{0,16}(?:开庭|补正|提交|举证|答辩|到期|截止)'
-        r'|(?:要求|须|需|应).{0,10}(?:\d+|[一二两三四五六七八九十]+)(?:个)?(?:工作)?日内'
-        r'.{0,16}(?:开庭|补正|提交|举证|答辩|办理|回复)'
+        r'|(?:要求|须|需|应).{0,10}(?:\d+|[一二两三四五六七八九十]+)(?:个)?(?:工作)?(?:日|天)内'
+        r'.{0,16}(?:开庭|补正|提交|举证|答辩|办理|回复|上诉|起诉|申请再审|再审|复议|仲裁|缴纳|出席)'
     )
     return _has_asserted_signal(message, pattern)
 

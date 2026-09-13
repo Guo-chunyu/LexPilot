@@ -2875,6 +2875,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "12 passed (tests/test_domain_routing.py)"
       }
+    },
+    {
+      "round_id": "round-036-urgent-deadline-vocabulary",
+      "generator": "generate_round_thirtysix_variants",
+      "seed": 20260980,
+      "status": "completed",
+      "root_cause": "_has_asserted_urgent_deadline 只认正式书面语“日内”，不认口语“天内”；且收尾动词表缺“上诉/起诉/申请再审/复议/仲裁/缴纳”。因此“法院判决下来了，要求我15天内上诉”不触发 DEADLINE_URGENT_ACTION。",
+      "failures_before_fix": [
+        "deadline_appeal_days",
+        "deadline_submit_days",
+        "deadline_reconsider_days"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "urgent_deadline_vocabulary",
+          "before_fix": "round-36 探针 U2 显示“要求我15天内上诉”的 urgent_actions 为空（上诉期限属紧急事项）",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Recognise spoken legal deadlines as urgent",
+          "verification": "5 round-36 cases, 8 deadline unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "deadline_appeal_days",
+        "deadline_submit_days",
+        "deadline_reconsider_days",
+        "deadline_control_hearing_today",
+        "deadline_no_urgency_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "deadline_appeal_days",
+          "messages": [
+            "法院判决下来了，要求我15天内上诉，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deadline_submit_days",
+          "messages": [
+            "法院要求我10天内提交材料，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deadline_reconsider_days",
+          "messages": [
+            "行政机关要求我15天内申请复议，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deadline_control_hearing_today",
+          "messages": [
+            "法院通知我今天去开庭，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deadline_no_urgency_control",
+          "messages": [
+            "朋友欠我3万元，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Recognise spoken legal deadlines as urgent",
+      "verification": {
+        "before_fix": "3 failed (天内上诉 / 天内提交 / 天内申请复议 produced no urgent action)",
+        "core_suite": "1177 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "8 passed (tests/test_urgent_deadline.py)"
+      }
     }
   ]
 }

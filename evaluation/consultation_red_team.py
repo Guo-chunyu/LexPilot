@@ -252,6 +252,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtythree_variants(),
         *generate_round_thirtyfour_variants(),
         *generate_round_thirtyfive_variants(),
+        *generate_round_thirtysix_variants(),
     ]
 
 
@@ -2349,6 +2350,71 @@ def generate_round_thirtyfive_variants(seed: int = 20260979) -> list[RedTeamCase
                 '房东不退我押金，请给我方案。',
             ),
             'housing', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtysix_variants(seed: int = 20260980) -> list[RedTeamCase]:
+    """Five unseen variants over imminent legal deadlines.
+
+    Round 36 locks the fix for spoken deadlines ("15天内上诉") that used 天 not
+    日 and appeal/review verbs the earlier pattern did not list.
+    """
+    return [
+        RedTeamCase(
+            'deadline_appeal_days',
+            ('general', 'urgent', 'deadline'),
+            (
+                '法院判决下来了，要求我15天内上诉，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deadline_submit_days',
+            ('general', 'urgent', 'deadline'),
+            (
+                '法院要求我10天内提交材料，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deadline_reconsider_days',
+            ('general', 'urgent', 'deadline'),
+            (
+                '行政机关要求我15天内申请复议，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deadline_control_hearing_today',
+            ('general', 'urgent', 'deadline'),
+            (
+                '法院通知我今天去开庭，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deadline_no_urgency_control',
+            ('debt', 'deadline_control'),
+            (
+                '朋友欠我3万元，请给我方案。',
+            ),
+            'debt', '',
+            expected_urgent=False,
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
