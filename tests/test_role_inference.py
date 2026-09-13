@@ -38,3 +38,28 @@ def test_non_debtor_is_not_matched(text):
 @pytest.mark.parametrize('text', ['他欠我3万元', '朋友欠我3万元'])
 def test_creditor_role_is_detected(text):
     assert re.search(ROLE_PATTERNS['creditor'][1], text), text
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        # Round-46: the counterparty wrote the IOU to the user.
+        '对方给我写了欠条',
+        '他给我打了欠条',
+        '对方出具了欠条',
+    ],
+)
+def test_counterparty_written_iou_is_creditor(text):
+    assert re.search(ROLE_PATTERNS['creditor'][1], text), text
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        # The user is the writer → not a creditor signal.
+        '给他写了欠条',
+        '我给他打了欠条',
+    ],
+)
+def test_user_written_iou_is_not_creditor(text):
+    assert not re.search(ROLE_PATTERNS['creditor'][1], text), text

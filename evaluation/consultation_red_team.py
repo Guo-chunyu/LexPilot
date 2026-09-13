@@ -262,6 +262,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortythree_variants(),
         *generate_round_fortyfour_variants(),
         *generate_round_fortyfive_variants(),
+        *generate_round_fortysix_variants(),
     ]
 
 
@@ -3001,6 +3002,66 @@ def generate_round_fortyfive_variants(seed: int = 20260989) -> list[RedTeamCase]
             ),
             'debt', 'creditor',
             expected_facts=(('parties', '欠我'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortysix_variants(seed: int = 20260990) -> list[RedTeamCase]:
+    """Five unseen variants over the debt instrument as a role signal.
+
+    Round 46 locks the fix for "对方给我写了欠条" leaving the role unconfirmed,
+    while "给他写了欠条" (the user is the writer) must stay the debtor.
+    """
+    return [
+        RedTeamCase(
+            'role_creditor_written_iou',
+            ('debt', 'role_inference'),
+            (
+                '对方给我写了欠条，现在不认账，请给我方案。',
+            ),
+            'debt', 'creditor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_creditor_stamped_iou',
+            ('debt', 'role_inference'),
+            (
+                '他给我打了欠条，现在不还钱，请给我方案。',
+            ),
+            'debt', 'creditor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_creditor_issued_iou',
+            ('debt', 'role_inference'),
+            (
+                '对方出具了欠条，请给我方案。',
+            ),
+            'debt', 'creditor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_debtor_wrote_iou_control',
+            ('debt', 'role_inference'),
+            (
+                '我欠他3万元，给他写了欠条，请给我方案。',
+            ),
+            'debt', 'debtor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_creditor_lent_control',
+            ('debt', 'role_inference'),
+            (
+                '我借给朋友3万元，他有欠条，请给我方案。',
+            ),
+            'debt', 'creditor',
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
