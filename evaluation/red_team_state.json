@@ -3170,6 +3170,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "12 passed (tests/test_evidence_unavailability.py)"
       }
+    },
+    {
+      "round_id": "round-040-debtor-side-classification",
+      "generator": "generate_round_forty_variants",
+      "seed": 20260984,
+      "status": "completed",
+      "root_cause": "借贷关键词只有债权人视角的“欠我”，缺债务人视角的“我欠/欠他/欠对方”。“我欠他3万元，他要起诉我”对借贷得 0 分，被判为 general。",
+      "failures_before_fix": [
+        "debt_debtor_side_him",
+        "debt_debtor_side_counterparty",
+        "debt_debtor_side_named"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "debtor_side_classification",
+          "before_fix": "round-41 探针 R6 显示“我欠他3万元”被判为 general（应为 debt）",
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py"
+          ],
+          "commit_subject": "Route the debtor side to the debt domain",
+          "verification": "5 round-40 cases, 15 domain-routing unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "debt_debtor_side_him",
+        "debt_debtor_side_counterparty",
+        "debt_debtor_side_named",
+        "debt_creditor_control",
+        "debt_creditor_named_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "debt_debtor_side_him",
+          "messages": [
+            "我欠他3万元，他要起诉我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_debtor_side_counterparty",
+          "messages": [
+            "我欠对方钱，对方催得紧，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_debtor_side_named",
+          "messages": [
+            "我欠张三3万元，他现在要起诉我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_creditor_control",
+          "messages": [
+            "他欠我3万元不还，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_creditor_named_control",
+          "messages": [
+            "朋友欠我3万元，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Route the debtor side to the debt domain",
+      "verification": {
+        "before_fix": "3 failed (我欠他 / 我欠对方 / 我欠张三 routed to general)",
+        "core_suite": "1230 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "15 passed (tests/test_domain_routing.py)"
+      }
     }
   ]
 }

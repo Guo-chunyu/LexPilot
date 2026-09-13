@@ -1218,6 +1218,29 @@ decision_delta 可审计链路。只改表达层。
 证据可得性、目标、程序结果、紧急期限、金额等 8 个定点单元测试文件与 45 个红队案例。
 `evaluation/red_team_state.json` 现共 **39 轮**，全部 `round_id` 唯一。
 
+## 2026-09-13 — 第二批"再跑 5 轮"第 40 轮：债务人视角未判为借贷（seed 20260984）
+
+新增 `generate_round_forty_variants`，5 个匿名案例覆盖债务人视角：
+我欠他3万元、我欠对方钱、我欠张三3万、他欠我3万元（正向对照）、朋友欠我3万元（正向对照）。
+
+### 根因：借贷关键词只有债权人视角的"欠我"
+
+- 复现：`我欠他3万元，他要起诉我` 被判为 **general**（应为 debt）——用户是债务人的情形完全没覆盖。
+- 根因：借贷关键词表含"欠我""欠钱"等债权人视角词，缺债务人视角的"欠他/欠对方/我欠"。
+- 修复：借贷关键词表补入 `'我欠', '欠他', '欠对方'`。
+
+### 配套回归：领域路由单元测试
+
+- `tests/test_domain_routing.py` 新增 `test_debtor_side_phrasings_route_to_debt`（3 项参数化）。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_forty_variants`（import + 轮次状态生成器表）。
+- `evaluation/red_team_state.json` 追加 `round-040-debtor-side-classification`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；领域路由单元测试 15 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1230 项通过**（1 个既有第三方弃用警告）。
+
 
 
 

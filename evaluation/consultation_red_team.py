@@ -256,6 +256,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtyseven_variants(),
         *generate_round_thirtyeight_variants(),
         *generate_round_thirtynine_variants(),
+        *generate_round_forty_variants(),
     ]
 
 
@@ -2614,6 +2615,66 @@ def generate_round_thirtynine_variants(seed: int = 20260983) -> list[RedTeamCase
             ),
             'debt', 'creditor',
             expected_unavailable_evidence=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_forty_variants(seed: int = 20260984) -> list[RedTeamCase]:
+    """Five unseen variants over debtor-side debt classification.
+
+    Round 40 locks the fix for the debtor side ("我欠他3万元"), which scored 0
+    because only the creditor keyword "欠我" existed.
+    """
+    return [
+        RedTeamCase(
+            'debt_debtor_side_him',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '我欠他3万元，他要起诉我，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_debtor_side_counterparty',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '我欠对方钱，对方催得紧，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_debtor_side_named',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '我欠张三3万元，他现在要起诉我，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_creditor_control',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '他欠我3万元不还，请给我方案。',
+            ),
+            'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_creditor_named_control',
+            ('debt', 'classification', 'domain_routing'),
+            (
+                '朋友欠我3万元，请给我方案。',
+            ),
+            'debt', '',
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

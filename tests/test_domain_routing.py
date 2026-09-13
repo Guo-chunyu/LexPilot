@@ -49,6 +49,19 @@ def test_rent_arrears_phrasings_route_to_housing(text):
     assert identify_domains(text)[0] == 'housing'
 
 
+@pytest.mark.parametrize(
+    'text',
+    [
+        # Round-40: the debtor side previously scored 0 (only "欠我" existed).
+        '我欠他3万元',
+        '我欠对方钱',
+        '我欠张三3万',
+    ],
+)
+def test_debtor_side_phrasings_route_to_debt(text):
+    assert identify_domains(text)[0] == 'debt'
+
+
 def test_public_benchmark_queries_route_without_given_domain():
     benchmark = Path(__file__).parents[1] / "eval" / "consultation_benchmark.json"
     cases = json.loads(benchmark.read_text(encoding="utf-8"))
