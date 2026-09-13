@@ -3983,6 +3983,81 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "16 passed (tests/test_goal_extraction.py)"
       }
+    },
+    {
+      "round_id": "round-051-dingjin-vocabulary",
+      "generator": "generate_round_fiftyone_variants",
+      "seed": 20260995,
+      "status": "completed",
+      "root_cause": "合同关键词只有\"定金\"，缺日常写法\"订金\"；goal 的救济词表同样没有\"订金\"。\"我要退订金\"因此被判为 general 且不产生 goal。",
+      "failures_before_fix": [
+        "deposit_dingjin_return",
+        "deposit_dingjin_not_performed",
+        "deposit_dingjin_amount"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/profiles.py",
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "dingjin_vocabulary",
+          "before_fix": "round-50 探针 C4 显示\"我要退订金\" 判为 general 且 goal 为空",
+          "fix_files": [
+            "backend/legal_domain/consultation/profiles.py",
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Recognise 订金 as a contract deposit",
+          "verification": "5 round-51 cases, 18 domain-routing unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "deposit_dingjin_return",
+        "deposit_dingjin_not_performed",
+        "deposit_dingjin_merchant",
+        "deposit_dingjin_amount",
+        "deposit_dingjin_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "deposit_dingjin_return",
+          "messages": [
+            "我要退订金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deposit_dingjin_not_performed",
+          "messages": [
+            "我交了订金对方不履行，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deposit_dingjin_merchant",
+          "messages": [
+            "商家收了我订金不发货，我要退订金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deposit_dingjin_amount",
+          "messages": [
+            "我交了5000元订金，对方不履行也不退，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "deposit_dingjin_control",
+          "messages": [
+            "我要退定金，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Recognise 订金 as a contract deposit",
+      "verification": {
+        "before_fix": "3 failed (我要退订金 / 交了订金不履行 routed to general)",
+        "core_suite": "1410 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "18 passed (tests/test_domain_routing.py)"
+      }
     }
   ]
 }

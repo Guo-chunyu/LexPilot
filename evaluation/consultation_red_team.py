@@ -267,6 +267,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortyeight_variants(),
         *generate_round_fortynine_variants(),
         *generate_round_fifty_variants(),
+        *generate_round_fiftyone_variants(),
     ]
 
 
@@ -3332,6 +3333,70 @@ def generate_round_fifty_variants(seed: int = 20260994) -> list[RedTeamCase]:
             ),
             'debt', '',
             expected_facts=(('goal', '追回'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fiftyone_variants(seed: int = 20260995) -> list[RedTeamCase]:
+    """Five unseen variants over 订金 (the everyday spelling of 定金).
+
+    Round 51 locks the fix for 订金 missing from the contract keywords and the
+    goal remedy list, so "我要退订金" fell to general with no goal.
+    """
+    return [
+        RedTeamCase(
+            'deposit_dingjin_return',
+            ('contract', 'domain_routing', 'goal_extraction'),
+            (
+                '我要退订金，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '订金'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deposit_dingjin_not_performed',
+            ('contract', 'domain_routing'),
+            (
+                '我交了订金对方不履行，请给我方案。',
+            ),
+            'contract', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deposit_dingjin_merchant',
+            ('consumer', 'domain_routing', 'goal_extraction'),
+            (
+                '商家收了我订金不发货，我要退订金，请给我方案。',
+            ),
+            'consumer', '',
+            expected_facts=(('goal', '订金'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deposit_dingjin_amount',
+            ('contract', 'domain_routing'),
+            (
+                '我交了5000元订金，对方不履行也不退，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('amount', '5000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'deposit_dingjin_control',
+            ('contract', 'domain_routing_control'),
+            (
+                '我要退定金，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '定金'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

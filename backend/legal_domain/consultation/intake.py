@@ -785,7 +785,9 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'(?:还钱|还款|还给我|把钱还|退还|退款|退货|退我|赔偿|赔礼道歉|道歉'
             r'|继续履行|履行|修好|维修|恢复原状|消除影响|停止侵害|停止侵权|解除'
             # Round-41: further common contract-tort remedies.
-            r'|违约金|支付违约金|双倍返还|返还|排除妨害)',
+            r'|违约金|支付违约金|双倍返还|返还|排除妨害'
+            # Round-51: 订金 is the everyday spelling alongside 定金.
+            r'|订金|定金)',
             sentence,
         )
         if goal_request and not wants_plan(sentence):

@@ -62,6 +62,19 @@ def test_debtor_side_phrasings_route_to_debt(text):
     assert identify_domains(text)[0] == 'debt'
 
 
+@pytest.mark.parametrize(
+    'text',
+    [
+        # Round-51: 订金 is the everyday spelling alongside 定金.
+        '我要退订金',
+        '我交了订金对方不履行',
+        '我交了5000元订金对方不退',
+    ],
+)
+def test_dingjin_phrasings_route_to_contract(text):
+    assert identify_domains(text)[0] == 'contract'
+
+
 def test_public_benchmark_queries_route_without_given_domain():
     benchmark = Path(__file__).parents[1] / "eval" / "consultation_benchmark.json"
     cases = json.loads(benchmark.read_text(encoding="utf-8"))
