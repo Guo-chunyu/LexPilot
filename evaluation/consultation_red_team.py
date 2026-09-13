@@ -261,6 +261,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortytwo_variants(),
         *generate_round_fortythree_variants(),
         *generate_round_fortyfour_variants(),
+        *generate_round_fortyfive_variants(),
     ]
 
 
@@ -2935,6 +2936,71 @@ def generate_round_fortyfour_variants(seed: int = 20260988) -> list[RedTeamCase]
                 '我向朋友借了3万元，他要起诉我，请给我方案。',
             ),
             'debt', 'debtor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortyfive_variants(seed: int = 20260989) -> list[RedTeamCase]:
+    """Five unseen variants over the party record holding real names.
+
+    Round 45 locks the fix for `party_record_holds_inference_signal`: a role
+    signal no longer displaces the user's own party description, so names survive.
+    """
+    return [
+        RedTeamCase(
+            'party_self_and_other_names',
+            ('debt', 'party_record'),
+            (
+                '我叫张三，对方是我朋友李四，他欠我3万元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('parties', '张三'), ('parties', '李四')),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'party_counterparty_name',
+            ('debt', 'party_record'),
+            (
+                '对方叫王五，欠我3万元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('parties', '王五'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'party_counterparty_description',
+            ('debt', 'party_record'),
+            (
+                '对方是我朋友李四，他欠我3万元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('parties', '李四'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'party_role_label_control',
+            ('debt', 'party_record'),
+            (
+                '我是出借人，他欠我3万元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('parties', '出借人'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'party_signal_only_control',
+            ('debt', 'party_record'),
+            (
+                '他欠我3万元不还，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('parties', '欠我'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

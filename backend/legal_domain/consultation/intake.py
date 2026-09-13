@@ -215,17 +215,31 @@ def has_explicit_question(text: str) -> bool:
     )
 
 
+# A self-description that is only a role label adds nothing over the role signal
+# ("我是出借人" → the role slot already carries "我是出借人"). Only names and
+# other descriptions are worth recording separately.
+ROLE_LABEL_WORDS = frozenset({
+    '出借人', '借款人', '债权人', '债务人', '出租人', '承租人', '房东', '租客',
+    '员工', '劳动者', '职工', '用人单位', '公司老板', '公司负责人', '企业负责人', '单位负责人',
+})
+
+
 def _party_answer_summary(message: str) -> str:
     """Extract party assertions without storing uncertainty or questions verbatim."""
     parts: list[str] = []
+    # Round-45: "我叫张三" (a name, not a service/identity) was not captured; only
+    # "我是/我作为" was.
     self_match = re.search(
-        r'(?:^|[，,。；;\n])\s*(?:我|本人)(?:是|作为)\s*'
+        r'(?:^|[，,。；;\n])\s*(?:我|本人)(?:是|作为|叫)\s*'
         r'([^，,。；;？?\n]{1,20})',
         message,
     )
     if self_match:
         description = self_match.group(1).strip()
-        if not re.search(r'不知道|不清楚|怎么|如何|什么|是否', description):
+        if (
+            not re.search(r'不知道|不清楚|怎么|如何|什么|是否', description)
+            and description not in ROLE_LABEL_WORDS
+        ):
             parts.append(f'本人：{description}')
 
     counterpart_unknown = bool(
@@ -256,6 +270,15 @@ def _party_answer_summary(message: str) -> str:
         )
         if counterpart:
             parts.append(f'对方经营主体：{counterpart.group(1)}')
+        else:
+            # Round-45: keep the user's own words for the counterparty when they
+            # are not a standard business entity ("对方是我朋友李四").
+            counterpart_desc = re.search(
+                r'(?:对方|商家)(?:是|为|叫)\s*([^，,。；;？?\n]{1,20})',
+                message,
+            )
+            if counterpart_desc:
+                parts.append(f'对方：{counterpart_desc.group(1).strip()}')
 
     surname = re.search(
         r'(?:他|她|对方|联系人)(?:应该|可能|大概|好像)?姓([\u4e00-\u9fff])',
@@ -681,18 +704,18 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
 
     if source_type == 'user_message':
         role = client_perspective(state, message)
+        role_signal = ''
         if role['id'] != 'unconfirmed' and role['basis'].removeprefix('对话陈述：') in message:
-            quote = role['basis'].removeprefix('对话陈述：')
-            # A role can be inferred from a bare verb phrase ("欠我"), which is a
-            # reliable *signal* but not a description of who the user is. The
-            # party record still holds it because `client_perspective` reads this
-            # slot back to re-derive the role on later turns; see the pending
-            # root cause `party_record_holds_inference_signal` in red_team_state.
-            put('parties', quote, quote)
-        if 'parties' not in extracted:
-            party_summary = _party_answer_summary(message)
-            if party_summary:
-                put('parties', party_summary, party_summary)
+            role_signal = role['basis'].removeprefix('对话陈述：')
+        # A role inferred from a bare verb phrase ("欠我") is a reliable *signal*
+        # but not a description of who the user is. It must stay inside `parties`
+        # because `client_perspective` reads this slot back on later turns — but
+        # it must no longer *displace* the user's own party description
+        # (Round-45: "我叫张三，对方是我朋友李四，他欠我3万元" lost both names).
+        party_summary = _party_answer_summary(message)
+        combined = '；'.join(part for part in (party_summary, role_signal) if part)
+        if combined:
+            put('parties', combined, combined)
 
     # Keep a location phrase small. Never infer a particular court from a city.
     location = re.search(r'(?:我在|发生在|位于|地点[是：:]?)([^，。；\n]{2,35})', message)

@@ -3537,6 +3537,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "10 passed (tests/test_role_inference.py)"
       }
+    },
+    {
+      "round_id": "round-045-party-record-holds-names",
+      "generator": "generate_round_fortyfive_variants",
+      "seed": 20260989,
+      "status": "completed",
+      "root_cause": "party_record_holds_inference_signal：角色推断信号（\"欠我\"）直接写入 parties 并占据该槽，用户自报的姓名/身份（\"我叫张三\"\"对方叫王五\"\"对方是我朋友李四\"）全部丢失；_party_answer_summary 也只认\"我是/我作为\"，不认\"我叫\"。",
+      "failures_before_fix": [
+        "party_self_and_other_names",
+        "party_counterparty_name",
+        "party_counterparty_description"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "party_record_holds_inference_signal",
+          "before_fix": "\"我叫张三，对方是我朋友李四，他欠我3万元\" 的 parties 只有 \"欠我\"，两个人名都没记录",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Keep real names in the party record alongside the role signal",
+          "verification": "5 round-45 cases, 7 party-record unit tests and the full core suite passed; 角色标签（\"我是出借人/房东\"）不产生冗余"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "party_self_and_other_names",
+        "party_counterparty_name",
+        "party_counterparty_description",
+        "party_role_label_control",
+        "party_signal_only_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "party_self_and_other_names",
+          "messages": [
+            "我叫张三，对方是我朋友李四，他欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "party_counterparty_name",
+          "messages": [
+            "对方叫王五，欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "party_counterparty_description",
+          "messages": [
+            "对方是我朋友李四，他欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "party_role_label_control",
+          "messages": [
+            "我是出借人，他欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "party_signal_only_control",
+          "messages": [
+            "他欠我3万元不还，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Keep real names in the party record alongside the role signal",
+      "verification": {
+        "before_fix": "3 failed (我叫张三 / 对方叫王五 / 对方是我朋友李四 names dropped)",
+        "core_suite": "1323 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "7 passed (tests/test_party_record.py)"
+      }
     }
   ]
 }
