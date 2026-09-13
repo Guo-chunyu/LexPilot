@@ -148,6 +148,17 @@ SAFETY_SIGNAL = (
 )
 CRIMINAL_URGENT_ACTION = '尽快联系当地刑事律师或法律援助机构，带上通知书核实措施类型、起算日期、办案单位和依法会见途径；不要找关系、串供或删记录。'
 DEADLINE_URGENT_ACTION = '先核对文书载明的截止日期与送达凭证，今天就向受理机关或当地律师确认提交和补正方式；不要等材料全部齐了才处理期限。'
+# Round-43: an imminent enforcement measure (查封/冻结/拍卖/强制腾退) also has a
+# short objection window, but no urgent action fired for it at all.
+ENFORCEMENT_URGENT_ACTION = (
+    '先核对执行文书的案号、标的、送达日期和异议/复议期限，今天就向执行法院确认异议、'
+    '担保或暂缓执行的办理方式；不要转移或隐匿财产。'
+)
+ENFORCEMENT_SIGNAL = (
+    r'(?:法院|执行局|执行法官).{0,8}(?:查封|冻结|扣押|扣划|拍卖|强制腾退|强制执行|腾退)'
+    r'|(?:查封|冻结|扣押|扣划|拍卖|强制腾退).{0,8}(?:我的|我(?:的)?(?:房子|房产|车|账户|存款|工资卡|财产))'
+    r'|(?:要|即将|马上|明天|下周).{0,6}(?:查封|冻结|拍卖|腾退|强制搬走)'
+)
 
 
 def wants_plan(text: str) -> bool:
@@ -981,6 +992,8 @@ def urgent_actions(message: str, state: CaseState) -> list[str]:
     actions = []
     if _has_asserted_signal(message, SAFETY_SIGNAL):
         actions.append(SAFETY_URGENT_ACTION)
+    if _has_asserted_signal(message, ENFORCEMENT_SIGNAL):
+        actions.append(ENFORCEMENT_URGENT_ACTION)
     if state.case_type == 'criminal' and _has_asserted_signal(message, r'拘留|逮捕|被抓|看守所'):
         actions.append(CRIMINAL_URGENT_ACTION)
     imminent_document_deadline = (

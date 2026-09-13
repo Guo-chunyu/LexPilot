@@ -259,6 +259,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_forty_variants(),
         *generate_round_fortyone_variants(),
         *generate_round_fortytwo_variants(),
+        *generate_round_fortythree_variants(),
     ]
 
 
@@ -2806,6 +2807,71 @@ def generate_round_fortytwo_variants(seed: int = 20260986) -> list[RedTeamCase]:
                 '朋友欠我3万元，请给我方案。',
             ),
             'debt', '',
+            expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortythree_variants(seed: int = 20260987) -> list[RedTeamCase]:
+    """Five unseen variants over imminent enforcement measures.
+
+    Round 43 locks the fix for 查封 / 冻结 / 拍卖 / 强制腾退 producing no urgent
+    action, even though each has a short objection window.
+    """
+    return [
+        RedTeamCase(
+            'enforcement_seal_house',
+            ('general', 'urgent', 'enforcement'),
+            (
+                '法院要来查封我的房子，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'enforcement_freeze_account',
+            ('general', 'urgent', 'enforcement'),
+            (
+                '法院冻结了我的银行账户，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'enforcement_forced_eviction',
+            ('enforcement', 'urgent', 'enforcement'),
+            (
+                '法院要强制执行让我搬走，请给我方案。',
+            ),
+            'enforcement', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'enforcement_auction_house',
+            ('general', 'urgent', 'enforcement'),
+            (
+                '我的房子要被法院拍卖了，请给我方案。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'enforcement_control_creditor_seeks',
+            ('enforcement', 'enforcement_control'),
+            (
+                '对方欠我3万元，我打算申请强制执行，请给我方案。',
+            ),
+            'enforcement', '',
             expected_urgent=False,
             origin='auto_variant',
             max_followup_similarity=0.65,

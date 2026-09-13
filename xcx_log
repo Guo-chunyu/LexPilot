@@ -1293,6 +1293,36 @@ decision_delta 可审计链路。只改表达层。
 验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 12 项通过；
 无需 Torch/Gymnasium 的核心全量测试 **1266 项通过**（1 个既有第三方弃用警告）。
 
+## 2026-09-13 — 第二批第 43 轮：即将被强制执行没有紧急提示（seed 20260987）
+
+新增 `generate_round_fortythree_variants`，5 个匿名案例覆盖强制执行：
+查封房产、冻结账户、强制腾退、拍卖房产、自己申请执行（负向对照）。
+
+### 根因：紧急动作只有安全/刑事/文书期限三类
+
+- 复现：`法院要来查封我的房子`、`法院冻结了我的银行账户`、`法院要强制执行让我搬走`、
+  `我的房子要被法院拍卖了` 的 `urgent_actions` 全为空——这些措施各有很短的异议/复议期限，
+  用户却看不到"今天就向执行法院确认异议、担保或暂缓执行"的提示。
+- 根因：`urgent_actions` 只挂载 `SAFETY_URGENT_ACTION` / `CRIMINAL_URGENT_ACTION` / `DEADLINE_URGENT_ACTION`，
+  缺少执行异议类紧急动作。
+- 修复：新增 `ENFORCEMENT_URGENT_ACTION` 与 `ENFORCEMENT_SIGNAL`
+  （`(?:法院|执行局|执行法官).{0,8}(?:查封|冻结|扣押|扣划|拍卖|强制腾退|强制执行)`
+  `|(?:查封|冻结|扣押|扣划|拍卖|强制腾退).{0,8}(?:我的…财产)` 等）。
+  以"法院/执行局"或"我的财产"锚定，避免把用户**自己申请**执行（非紧急）误判。
+
+### 配套回归：定点单元测试
+
+- 新增 `tests/test_enforcement_urgency.py`（10 项参数化）：6 类执行措施必须命中，
+  3 类非紧急（"我打算申请强制执行对方"等）必须不命中，并验证能进入 `state.consultation.urgent_actions`。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_fortythree_variants`（import + 轮次状态生成器表）。
+- `evaluation/red_team_state.json` 追加 `round-043-enforcement-urgency`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 10 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1286 项通过**（1 个既有第三方弃用警告）。
+
 
 
 

@@ -3391,6 +3391,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "12 passed (tests/test_safety_urgency.py)"
       }
+    },
+    {
+      "round_id": "round-043-enforcement-urgency",
+      "generator": "generate_round_fortythree_variants",
+      "seed": 20260987,
+      "status": "completed",
+      "root_cause": "只有安全/刑事/文书期限三类紧急动作，没有任何\"即将被强制执行\"的紧急动作。法院查封、冻结、拍卖、强制腾退都不触发提示，而它们各有很短的异议/复议期限。",
+      "failures_before_fix": [
+        "enforcement_seal_house",
+        "enforcement_freeze_account",
+        "enforcement_forced_eviction",
+        "enforcement_auction_house"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "enforcement_urgency",
+          "before_fix": "round-42 探针 E1-E4 显示\"法院要来查封我的房子/冻结账户/强制腾退/拍卖房产\"均无 urgent_actions",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Warn about imminent enforcement measures",
+          "verification": "5 round-43 cases, 10 enforcement-signal unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "enforcement_seal_house",
+        "enforcement_freeze_account",
+        "enforcement_forced_eviction",
+        "enforcement_auction_house",
+        "enforcement_control_creditor_seeks"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "enforcement_seal_house",
+          "messages": [
+            "法院要来查封我的房子，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "enforcement_freeze_account",
+          "messages": [
+            "法院冻结了我的银行账户，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "enforcement_forced_eviction",
+          "messages": [
+            "法院要强制执行让我搬走，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "enforcement_auction_house",
+          "messages": [
+            "我的房子要被法院拍卖了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "enforcement_control_creditor_seeks",
+          "messages": [
+            "对方欠我3万元，我打算申请强制执行，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Warn about imminent enforcement measures",
+      "verification": {
+        "before_fix": "4 failed (查封 / 冻结 / 强制腾退 / 拍卖 produced no urgent action)",
+        "core_suite": "1286 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "10 passed (tests/test_enforcement_urgency.py)"
+      }
     }
   ]
 }
