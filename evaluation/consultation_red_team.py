@@ -247,6 +247,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentyeight_variants(),
         *generate_round_twentynine_variants(),
         *generate_round_thirty_variants(),
+        *generate_round_thirtyone_variants(),
     ]
 
 
@@ -2020,6 +2021,72 @@ def generate_round_thirty_variants(seed: int = 20260974) -> list[RedTeamCase]:
                 '我被追尾了，对方不赔，请给我方案。',
             ),
             'traffic', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtyone_variants(seed: int = 20260975) -> list[RedTeamCase]:
+    """Five unseen variants over "lost / misplaced material" unavailability.
+
+    Round 31 locks the fix for loss verbs ("弄丢了 / 遗失了 / 丢了") that were not
+    recognised as an unavailable evidence frame, so the material stayed silently
+    requested instead of being recorded as unobtainable.
+    """
+    return [
+        RedTeamCase(
+            'debt_iou_note_lost',
+            ('debt', 'evidence_unavailable', 'availability_frame'),
+            (
+                '对方欠我3万元，借条弄丢了，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_unavailable_evidence=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_iou_note_misplaced',
+            ('debt', 'evidence_unavailable', 'availability_frame'),
+            (
+                '对方欠我3万元，借条遗失了，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_unavailable_evidence=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_transfer_record_lost',
+            ('debt', 'evidence_unavailable', 'availability_frame'),
+            (
+                '对方欠我3万元，转账记录丢了，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_unavailable_evidence=('转账记录',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_iou_note_held_by_counterparty',
+            ('debt', 'evidence_unavailable', 'availability_frame'),
+            (
+                '对方欠我3万元，借条在对方手里，我拿不到，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_unavailable_evidence=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_iou_note_held_control',
+            ('debt', 'evidence_unavailable', 'availability_frame'),
+            (
+                '对方欠我3万元，有借条，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_evidence_names=('借条',),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

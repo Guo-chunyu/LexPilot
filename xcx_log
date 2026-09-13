@@ -944,6 +944,34 @@ decision_delta 可审计链路。只改表达层。
   从第 30 轮起，`_add_roundNN.py` 先查 `round_id` 是否已存在，存在则跳过，并断言
   `len(rounds) == len(set(round_id))`。
 
+## 2026-09-13 — 红队第 31 轮：丢失的材料未记为"不可得"（seed 20260975）
+
+新增 `generate_round_thirtyone_variants`，5 个匿名案例覆盖材料丢失/在对方手里：
+借条弄丢了、借条遗失了、转账记录丢了、借条在对方手里拿不到（正向对照）、有借条（正向对照）。
+
+### 根因：证据不可得词表缺"丢失"类动词
+
+- 复现：`对方欠我3万元，借条弄丢了` 的 `unavailable_evidence` 为**空**（应含"借条"），
+  系统会继续追问已经丢失的材料。
+- 根因：`_evidence_mention` 的三个不可得判定（前置否定 `before`、后置否定 `after`、
+  跨句 `POSTPOSED_UNAVAILABLE`）只认"没有/找不到/拿不到/无法提供"等，
+  不认"弄丢/丢了/遗失/丢失/不见了"。
+- 修复：三处不可得词表统一补入 `弄丢(?:了)?|丢了|遗失(?:了)?|丢失(?:了)?|不见(?:了)?`；
+  同时把后置判定的收尾虚词类 `[啊呀呢吧]?` 扩为 `[了啊呀呢吧]?`，以覆盖"找不到了"。
+
+### 配套回归：定点单元测试
+
+- 新增 `tests/test_evidence_unavailability.py`（9 项参数化）：7 类丢失/不可得表述必须记为不可得，
+  2 类"仍在/有"必须不误判。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_thirtyone_variants`（import + 轮次状态生成器表）。
+- `evaluation/red_team_state.json` 追加 `round-031-lost-material-unavailability`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 9 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1091 项通过**（1 个既有第三方弃用警告）。
+
 
 
 

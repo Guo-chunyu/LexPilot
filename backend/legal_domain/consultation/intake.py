@@ -257,7 +257,8 @@ def _plausible_pending_answer(slot: str, message: str) -> bool:
 
 POSTPOSED_UNAVAILABLE = re.compile(
     r'(?:(?:我|本人|我们|这边|手头|目前|现在|暂时|一时|都|也|还)\s*)*'
-    r'(?:拿不到|拿不到手|拿不着|没拿到|没有拿到|没法拿|拿不出|要不?到|不给我|无法取得)'
+    r'(?:拿不到|拿不到手|拿不着|没拿到|没有拿到|没法拿|拿不出|要不?到|不给我|无法取得'
+    r'|弄丢(?:了)?|丢了|遗失(?:了)?|丢失(?:了)?|不见(?:了)?)'
     r'\s*[了啊呀呢吧]?\s*$'
 )
 
@@ -282,7 +283,8 @@ def _evidence_mention(text: str, name: str, siblings: tuple[str, ...] = ()) -> t
             # A negation before the material must stay inside the same clause
             # and may only contain a short modifier, not another evidence name.
             before = re.search(
-                rf'(?:没有|找不到|无法提供|没(?:有|找到|拿到|保存|留住)?|无)'
+                rf'(?:没有|找不到|无法提供|没(?:有|找到|拿到|保存|留住)?|无'
+                rf'|弄丢(?:了)?|丢了|遗失(?:了)?|丢失(?:了)?)'
                 rf'\s*(?:(?:任何|相关|完整|原始)(?:的)?\s*)?{escaped}',
                 clause,
             )
@@ -296,8 +298,9 @@ def _evidence_mention(text: str, name: str, siblings: tuple[str, ...] = ()) -> t
                 r'(?:(?:我|本人|我们|这边|手头|目前|现在)\s*){0,2}'
                 r'(?:(?:都|也|还|暂时|一时)\s*)?'
                 r'(?:没有(?!问题)|没(?:有|了|找到|拿到|保存|留住)?|找不到|无法提供|无(?!问题|异议)'
-                r'|拿不到|拿不着|没法拿|拿不出|要不?到)'
-                r'[啊呀呢吧]?',
+                r'|拿不到|拿不着|没法拿|拿不出|要不?到'
+                r'|弄丢(?:了)?|丢了|遗失(?:了)?|丢失(?:了)?|不见(?:了)?)'
+                r'[了啊呀呢吧]?',
                 tail,
             )
             # Natural speech often names the material first and only says “now I

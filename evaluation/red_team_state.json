@@ -2506,6 +2506,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "4 passed (tests/test_domain_routing.py)"
       }
+    },
+    {
+      "round_id": "round-031-lost-material-unavailability",
+      "generator": "generate_round_thirtyone_variants",
+      "seed": 20260975,
+      "status": "completed",
+      "root_cause": "证据不可得的词表缺“丢失”类动词（弄丢 / 丢了 / 遗失 / 丢失 / 不见了）。_evidence_mention 的 before/after 与 POSTPOSED_UNAVAILABLE 只认“没有/找不到/拿不到”，“借条弄丢了”被判为可得，材料被继续追问而不是记为不可得。",
+      "failures_before_fix": [
+        "debt_iou_note_lost",
+        "debt_iou_note_misplaced",
+        "debt_transfer_record_lost"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "lost_material_unavailability",
+          "before_fix": "round-31 探针 E2 显示“借条弄丢了”的 unavailable_evidence 为空（应含借条）",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Record lost materials as unobtainable evidence",
+          "verification": "5 round-31 cases, 9 evidence-availability unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "debt_iou_note_lost",
+        "debt_iou_note_misplaced",
+        "debt_transfer_record_lost",
+        "debt_iou_note_held_by_counterparty",
+        "debt_iou_note_held_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "debt_iou_note_lost",
+          "messages": [
+            "对方欠我3万元，借条弄丢了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_iou_note_misplaced",
+          "messages": [
+            "对方欠我3万元，借条遗失了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_transfer_record_lost",
+          "messages": [
+            "对方欠我3万元，转账记录丢了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_iou_note_held_by_counterparty",
+          "messages": [
+            "对方欠我3万元，借条在对方手里，我拿不到，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "debt_iou_note_held_control",
+          "messages": [
+            "对方欠我3万元，有借条，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Record lost materials as unobtainable evidence",
+      "verification": {
+        "before_fix": "3 failed (弄丢 / 遗失 / 丢了 produced no unavailable evidence)",
+        "core_suite": "1091 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "9 passed (tests/test_evidence_unavailability.py)"
+      }
     }
   ]
 }
