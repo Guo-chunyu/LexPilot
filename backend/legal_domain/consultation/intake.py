@@ -802,7 +802,11 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             r'(?:请)?不要再.{0,12}(?:联系|接触|沟通|协商|打电话)|人在外地|'
             r'不能.{0,6}(?:去)?(?:现场|到场)|费用.{0,5}(?:很少|有限)|'
             r'优先免费渠道|只接受书面沟通|书面沟通优先|不进行电话交涉|'
-            r'(?:必须|希望).{0,4}尽快|不能长期拖延',
+            r'(?:必须|希望).{0,4}尽快|不能长期拖延|'
+            # Round-53: colloquial time / money limits ("我只有3个月时间处理",
+            # "我请不起律师") were dropped.
+            r'(?:只有|仅有|就剩|只剩|只剩下).{0,6}时间|时间.{0,4}(?:不多|紧张|有限|紧)|'
+            r'请不起|付不起|承担不起|负担不起|没预算|(?:无力|难以)承担',
             sentence,
         ):
             constraint_sentences.append(sentence)

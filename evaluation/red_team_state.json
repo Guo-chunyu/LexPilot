@@ -4131,6 +4131,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "16 passed (tests/test_safety_urgency.py)"
       }
+    },
+    {
+      "round_id": "round-053-colloquial-constraints",
+      "generator": "generate_round_fiftythree_variants",
+      "seed": 20260997,
+      "status": "completed",
+      "root_cause": "约束(constraints)词表只有书面说法\"时间有限/预算/费用…有限\"，缺口语的\"我只有3个月时间处理\"\"我时间不多/时间紧\"\"我请不起律师\"\"承担不起诉讼费\"。",
+      "failures_before_fix": [
+        "constraint_time_budget",
+        "constraint_afford_lawyer",
+        "constraint_time_tight",
+        "constraint_afford_fee"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "colloquial_constraints",
+          "before_fix": "round-53 探针 C2/C4 显示\"我只有3个月时间处理\"\"我请不起律师\"不产生 constraints",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Capture colloquial time and money constraints",
+          "verification": "5 round-53 cases, 10 constraints unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "constraint_time_budget",
+        "constraint_afford_lawyer",
+        "constraint_time_tight",
+        "constraint_afford_fee",
+        "constraint_budget_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "constraint_time_budget",
+          "messages": [
+            "朋友欠我3万元，我只有3个月时间处理，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "constraint_afford_lawyer",
+          "messages": [
+            "朋友欠我3万元，我请不起律师，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "constraint_time_tight",
+          "messages": [
+            "朋友欠我3万元，我时间不多，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "constraint_afford_fee",
+          "messages": [
+            "朋友欠我3万元，我承担不起诉讼费，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "constraint_budget_control",
+          "messages": [
+            "朋友欠我3万元，我预算有限，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Capture colloquial time and money constraints",
+      "verification": {
+        "before_fix": "4 failed (只有…时间 / 请不起 / 时间不多 / 承担不起 produced no constraints)",
+        "core_suite": "1444 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "10 passed (tests/test_constraints_extraction.py)"
+      }
     }
   ]
 }

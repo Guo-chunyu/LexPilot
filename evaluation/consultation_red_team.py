@@ -269,6 +269,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fifty_variants(),
         *generate_round_fiftyone_variants(),
         *generate_round_fiftytwo_variants(),
+        *generate_round_fiftythree_variants(),
     ]
 
 
@@ -3463,6 +3464,71 @@ def generate_round_fiftytwo_variants(seed: int = 20260996) -> list[RedTeamCase]:
             ),
             'debt', '',
             expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fiftythree_variants(seed: int = 20260997) -> list[RedTeamCase]:
+    """Five unseen variants over colloquial time / money constraints.
+
+    Round 53 locks the fix for "我只有3个月时间处理" and "我请不起律师", which the
+    constraint vocabulary did not cover.
+    """
+    return [
+        RedTeamCase(
+            'constraint_time_budget',
+            ('debt', 'constraints'),
+            (
+                '朋友欠我3万元，我只有3个月时间处理，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '3个月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_afford_lawyer',
+            ('debt', 'constraints'),
+            (
+                '朋友欠我3万元，我请不起律师，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '请不起'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_time_tight',
+            ('debt', 'constraints'),
+            (
+                '朋友欠我3万元，我时间不多，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '时间不多'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_afford_fee',
+            ('debt', 'constraints'),
+            (
+                '朋友欠我3万元，我承担不起诉讼费，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '承担不起'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_budget_control',
+            ('debt', 'constraints_control'),
+            (
+                '朋友欠我3万元，我预算有限，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '预算'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
