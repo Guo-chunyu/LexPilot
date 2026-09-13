@@ -134,6 +134,18 @@ EVIDENCE_ALIASES = {
 }
 
 SAFETY_URGENT_ACTION = '先到安全地点并联系当地警方；正在遭受伤害时优先求助和就医，不要为了取证单独接触对方。'
+# Round-42: the safety signal required the progressive "正在" before 打/威胁 or a
+# literal "家暴", so common direct phrasings ("威胁要打我", "我老公打我",
+# "一直骚扰我", "到家里来闹") produced no safety action at all.
+SAFETY_SIGNAL = (
+    r'家暴|家庭暴力|打死|人身安全|持刀|跟踪'
+    r'|正在.{0,4}(?:打|威胁)'
+    r'|威胁要(?:打|杀|砍|伤害|弄死)'
+    r'|打了我|打我(?!电话|手机)|打伤|殴打|挨打|打人'
+    r'|被.{0,4}打(?:了|伤|成)|被打(?:了|伤|成|得)'
+    r'|骚扰我|被骚扰|持续骚扰'
+    r'|上门.{0,4}(?:闹|威胁|骚扰|打)|到(?:我)?家(?:里|中)?.{0,6}(?:闹|威胁|骚扰)'
+)
 CRIMINAL_URGENT_ACTION = '尽快联系当地刑事律师或法律援助机构，带上通知书核实措施类型、起算日期、办案单位和依法会见途径；不要找关系、串供或删记录。'
 DEADLINE_URGENT_ACTION = '先核对文书载明的截止日期与送达凭证，今天就向受理机关或当地律师确认提交和补正方式；不要等材料全部齐了才处理期限。'
 
@@ -967,7 +979,7 @@ def refresh_evidence(state: CaseState) -> None:
 
 def urgent_actions(message: str, state: CaseState) -> list[str]:
     actions = []
-    if _has_asserted_signal(message, r'家暴|正在.{0,4}(?:打|威胁)|打死|人身安全|持刀|跟踪'):
+    if _has_asserted_signal(message, SAFETY_SIGNAL):
         actions.append(SAFETY_URGENT_ACTION)
     if state.case_type == 'criminal' and _has_asserted_signal(message, r'拘留|逮捕|被抓|看守所'):
         actions.append(CRIMINAL_URGENT_ACTION)

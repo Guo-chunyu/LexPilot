@@ -3317,6 +3317,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "13 passed (tests/test_goal_extraction.py)"
       }
+    },
+    {
+      "round_id": "round-042-safety-urgency-vocabulary",
+      "generator": "generate_round_fortytwo_variants",
+      "seed": 20260986,
+      "status": "completed",
+      "root_cause": "人身安全紧急信号要求\"正在\"在\"打/威胁\"之前，或字面\"家暴/持刀/跟踪\"。直接说法\"威胁要打我\"\"我老公打我\"\"到家里来闹\"\"被对方打了\"\"骚扰我\"都不触发安全提示。",
+      "failures_before_fix": [
+        "safety_threat_to_beat",
+        "safety_beaten",
+        "safety_domestic_violence",
+        "safety_coming_home"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "safety_urgency_vocabulary",
+          "before_fix": "round-42 探针 S1-S5 显示\"威胁要打我/我被对方打了/我老公打我/到家里来闹/骚扰我\"均无 urgent_actions",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Detect direct personal-safety phrasings as urgent",
+          "verification": "5 round-42 cases, 12 safety-signal unit tests and the full core suite passed; \"打我电话\"/\"被打击\" 等不误判"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "safety_threat_to_beat",
+        "safety_beaten",
+        "safety_domestic_violence",
+        "safety_coming_home",
+        "safety_control_no_threat"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "safety_threat_to_beat",
+          "messages": [
+            "对方威胁要打我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "safety_beaten",
+          "messages": [
+            "我被对方打了，受了伤，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "safety_domestic_violence",
+          "messages": [
+            "我老公打我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "safety_coming_home",
+          "messages": [
+            "对方说要到我家里来闹，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "safety_control_no_threat",
+          "messages": [
+            "朋友欠我3万元，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Detect direct personal-safety phrasings as urgent",
+      "verification": {
+        "before_fix": "4 failed (威胁要打我 / 被打了 / 老公打我 / 到家里来闹 produced no safety action)",
+        "core_suite": "1266 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "12 passed (tests/test_safety_urgency.py)"
+      }
     }
   ]
 }
