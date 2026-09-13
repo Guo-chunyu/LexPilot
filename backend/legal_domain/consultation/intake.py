@@ -80,7 +80,14 @@ QUESTIONS = {
     'amount': '争议金额是多少？请区分原始金额、已经支付或返还的部分和目前主张金额。',
 }
 LABELS = {'location': '适用地区', 'event_time': '关键时间', 'goal': '希望结果', 'parties': '双方身份', 'details': '争议细节', 'procedure': '当前进展', 'evidence_inventory': '材料自述', 'constraints': '时间与预算', 'amount': '金额陈述'}
-DATE_PATTERN = r'(?:\d{4}年\d{1,2}月(?:\d{1,2}日)?|\d{4}[-./]\d{1,2}[-./]\d{1,2}|今年\d{1,2}月|去年\d{1,2}月|今天|昨天|前天|上个月|去年)'
+DATE_PATTERN = (
+    r'(?:\d{4}年\d{1,2}月(?:\d{1,2}日)?|\d{4}[-./]\d{1,2}[-./]\d{1,2}|今年\d{1,2}月|去年\d{1,2}月'
+    r'|今天|昨天|前天|上个月|去年'
+    # Round-33: `_plausible_pending_answer` already accepted these relative dates
+    # for an `event_time` answer, but the extraction pattern did not, so
+    # "上周我们签了合同，对方一直不履行" never produced an `event_time`.
+    r'|上周|本周|这周|这个月|本月|前几天|几天前|\d+\s*(?:天|周|个月|年)前)'
+)
 AMOUNT_PATTERN = r'[0-9零一二两三四五六七八九十百千万点.,]+\s*(?:多|余)?\s*(?:万元|元|块钱|块|万)'
 PLAN_PATTERN = r'方案|步骤|怎么做|怎么办理|起草|写.{0,4}(?:函|申请|诉状)|报告|行动清单|先给我|直接告诉'
 UNKNOWN_PATTERN = r'^(?:我也?|这个|现在|目前)?(?:不清楚|不知道|不确定|记不清|忘了|不方便说|不想说|无法提供)[。！!\s]*$'

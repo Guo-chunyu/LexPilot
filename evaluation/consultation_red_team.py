@@ -249,6 +249,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirty_variants(),
         *generate_round_thirtyone_variants(),
         *generate_round_thirtytwo_variants(),
+        *generate_round_thirtythree_variants(),
     ]
 
 
@@ -2153,6 +2154,72 @@ def generate_round_thirtytwo_variants(seed: int = 20260976) -> list[RedTeamCase]
             ),
             'consumer', '',
             expected_facts=(('goal', '退款'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtythree_variants(seed: int = 20260977) -> list[RedTeamCase]:
+    """Five unseen variants over spoken relative dates as ``event_time``.
+
+    Round 33 locks the fix for relative dates (上周 / 这个月 / 前几天 / N天前)
+    that ``_plausible_pending_answer`` already accepted but the extraction
+    ``DATE_PATTERN`` did not.
+    """
+    return [
+        RedTeamCase(
+            'date_last_week',
+            ('contract', 'relative_date', 'event_time'),
+            (
+                '上周我们签了合同，对方一直不履行，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('event_time', '上周'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_this_month',
+            ('debt', 'relative_date', 'event_time'),
+            (
+                '这个月他把我拉黑了，欠我3万不还，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '这个月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_few_days_ago',
+            ('traffic', 'relative_date', 'event_time'),
+            (
+                '前几天对方把我的车撞了，请给我方案。',
+            ),
+            'traffic', '',
+            expected_facts=(('event_time', '前几天'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_n_months_ago',
+            ('debt', 'relative_date', 'event_time'),
+            (
+                '3个月前借给朋友2万元现在不还，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '3个月前'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'date_control_last_month',
+            ('debt', 'relative_date', 'event_time'),
+            (
+                '上个月对方欠我3万元不还，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('event_time', '上个月'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

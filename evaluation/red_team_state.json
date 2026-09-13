@@ -2653,6 +2653,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "9 passed (tests/test_goal_extraction.py)"
       }
+    },
+    {
+      "round_id": "round-033-relative-date-extraction",
+      "generator": "generate_round_thirtythree_variants",
+      "seed": 20260977,
+      "status": "completed",
+      "root_cause": "DATE_PATTERN 缺口语相对日期“上周/本周/这个月/本月/前几天/N天前”，而 _plausible_pending_answer 已接受这些词——两处不一致，“上周我们签了合同，对方一直不履行”不产生 event_time。",
+      "failures_before_fix": [
+        "date_last_week",
+        "date_this_month",
+        "date_few_days_ago",
+        "date_n_months_ago"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "relative_date_extraction",
+          "before_fix": "round-33 探针 R1-R5 显示“上周/这个月/前几天/3天前/3个月前”均不产生 event_time",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Extract spoken relative dates as event_time",
+          "verification": "5 round-33 cases, 12 relative-date unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "date_last_week",
+        "date_this_month",
+        "date_few_days_ago",
+        "date_n_months_ago",
+        "date_control_last_month"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "date_last_week",
+          "messages": [
+            "上周我们签了合同，对方一直不履行，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_this_month",
+          "messages": [
+            "这个月他把我拉黑了，欠我3万不还，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_few_days_ago",
+          "messages": [
+            "前几天对方把我的车撞了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_n_months_ago",
+          "messages": [
+            "3个月前借给朋友2万元现在不还，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "date_control_last_month",
+          "messages": [
+            "上个月对方欠我3万元不还，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Extract spoken relative dates as event_time",
+      "verification": {
+        "before_fix": "4 failed (上周 / 这个月 / 前几天 / 3个月前 produced no event_time)",
+        "core_suite": "1132 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "12 passed (tests/test_relative_date_extraction.py)"
+      }
     }
   ]
 }

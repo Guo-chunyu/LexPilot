@@ -1008,6 +1008,34 @@ decision_delta 可审计链路。只改表达层。
 - 程序结果词表缺"调解不成"，且"申请调解被拒绝"（拒绝在"被"后）也未识别为程序进展。
 - 借条/欠条证据别名、housing 租金欠付分类（含"欠我"被判 debt）。
 
+## 2026-09-13 — 红队第 33 轮：口语相对日期未抽取为 event_time（seed 20260977）
+
+新增 `generate_round_thirtythree_variants`，5 个匿名案例覆盖相对日期：
+上周、这个月、前几天、3个月前、上个月（正向对照）。
+
+### 根因：DATE_PATTERN 与 _plausible_pending_answer 对相对日期的认知不一致
+
+- 复现：`上周我们签了合同，对方一直不履行`、`这个月他把我拉黑了`、`前几天对方把我的车撞了`、
+  `3个月前借给朋友2万元` 均**不产生 `event_time`**。
+- 根因：`_plausible_pending_answer('event_time', …)` 已接受 `上周|本周|这个月|本月|前几天|几天前|\d+\s*(?:天|个月|年)前`，
+  但真正负责抽取的 `DATE_PATTERN` 只认 `今天|昨天|前天|上个月|去年` 与具体年月日——两处不一致，
+  导致"能作为问答答案，却抽不出来"。
+- 修复：`DATE_PATTERN` 补入 `上周|本周|这周|这个月|本月|前几天|几天前|\d+\s*(?:天|周|个月|年)前`。
+  刻意不加"下个月"等未来表述（未来不是事件发生时间，探针 R7 验证不产生 event_time）。
+
+### 配套回归：定点单元测试
+
+- 新增 `tests/test_relative_date_extraction.py`（12 项参数化）：6 类相对日期必须抽取、5 类必须匹配模式、
+  1 类未来表述必须不产生 event_time。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_thirtythree_variants`（import + 轮次状态生成器表）。
+- `evaluation/red_team_state.json` 追加 `round-033-relative-date-extraction`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 12 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1132 项通过**（1 个既有第三方弃用警告）。
+
 
 
 
