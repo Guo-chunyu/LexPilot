@@ -221,6 +221,16 @@ class LexPilotEngine:
             return labor_single_step(case)
         if wants_plan(message):
             return labor_stage_plan(case, message)
+        # Round-54: while the interview is waiting for an answer, a question the
+        # user asks ("我需要准备什么材料？") was swallowed — the policy loop just
+        # re-asked the pending fact. Answer with the plan instead.
+        if (
+            case.pending_questions
+            and _asks_a_question(message)
+            and not _asks_what_to_provide(message)
+            and not _answers_pending_labor_fact(message, case)
+        ):
+            return labor_answer_question(case, message)
         reply = ""
         execution = ActionExecution(result="")
         for _ in range(self.max_auto_steps):
@@ -242,6 +252,42 @@ class LexPilotEngine:
             "reply": reply or execution.result,
             "requires_user": execution.requires_user,
         }
+
+
+def _asks_a_question(message: str) -> bool:
+    """Whether the user is asking something rather than answering."""
+    return bool(re.search(
+        r'[？?]|(?:什么|怎么|如何|哪些|哪一步|需要准备|要不要|能不能|可以吗|行不行)',
+        message,
+    ))
+
+
+def _asks_what_to_provide(message: str) -> bool:
+    """Whether the user is asking *for the interview's questions*.
+
+    "你还需要我补充什么信息？" is a request for the next questions, not a question
+    to answer — it must still reach the ASK_FACT path.
+    """
+    return bool(re.search(
+        r'(?:还需要|需要|要|让)我?.{0,6}(?:补充|提供|说明|说清)什么'
+        r'|补充什么(?:信息|资料|情况|内容)'
+        r'|还有(?:什么|哪些).{0,6}(?:要|需要)?(?:补充|提供)'
+        r'|要问什么|问我什么',
+        message,
+    ))
+
+
+def _answers_pending_labor_fact(message: str, state: CaseState) -> bool:
+    """Whether this turn plausibly answers the fact the interview asked about."""
+    pending = state.pending_fact_ids[0] if state.pending_fact_ids else ''
+    if not pending:
+        return False
+    from backend.legal_domain.consultation.intake import (
+        _pending_answer_value,
+        _plausible_pending_answer,
+    )
+    value = _pending_answer_value(pending, message)
+    return bool(value) and _plausible_pending_answer(pending, message)
 
 
 def labor_stage_plan(state: CaseState, message: str = "") -> dict:
@@ -267,6 +313,69 @@ def labor_stage_plan(state: CaseState, message: str = "") -> dict:
         f'{composer.stage_plan_outro()}\n\n{follow_up}'
     )
     return {"case_state": state, "reply": reply, "requires_user": True}
+
+
+def _most_relevant_step(message: str, steps: list[dict]) -> dict:
+    """Pick one grounded action for a question asked mid-interview."""
+    if not steps:
+        return {}
+    if re.search(r'材料|证据|准备什么|怎么准备', message) and len(steps) > 1:
+        return steps[1]
+    if re.search(r'仲裁|起诉|正式程序|提交|下一步', message):
+        return next(
+            (step for step in steps if re.search(r'正式|提交|仲裁|起诉', step.get('title', ''))),
+            steps[min(2, len(steps) - 1)],
+        )
+    if re.search(r'对方|抗辩|回应|回复|拒绝|否认|不承认|不认可', message):
+        return steps[-1]
+    return steps[0]
+
+
+def labor_answer_question(state: CaseState, message: str) -> dict:
+    """Answer a question asked while the interview is waiting for an answer.
+
+    Distinct from `labor_stage_plan`: it returns the *one* step the question maps
+    to, so the reply is a real answer rather than a repeat of the whole plan.
+    """
+    if not state.final_report:
+        build_final_report(state)
+    report = state.final_report or {}
+    steps = report.get('action_plan', []) if report else []
+    state.pending_questions = []
+    state.pending_fact_ids = []
+    state.pending_evidence_requests = []
+    state.done = False
+    state.record_action(
+        LegalAction.GENERATE_DOCUMENT,
+        "用户在追问期间提问，按问题给出对应步骤。",
+        "generate_document",
+        "已回答用户本轮提问。",
+    )
+    urgent = _urgent_block(state)
+    prefix = urgent + '\n' if urgent else ''
+    step = _most_relevant_step(message, steps)
+    if not step:
+        return {
+            "case_state": state,
+            "reply": (
+                prefix
+                + "你问的这一点需要先把基本事实补上，我再按你的情况说具体怎么办。\n\n"
+                + _proactive_information_block(state, limit=1)
+            ),
+            "requires_user": True,
+        }
+    lines = [f'你问的这一点，对应的是这一步：**{step.get("title", "")}**']
+    for instruction in step.get('instructions', [])[:2]:
+        lines.append(f'- {instruction}')
+    if step.get('channel'):
+        lines.append(f'- 办理渠道：{step["channel"]}')
+    if step.get('completion'):
+        lines.append(f'- 做到什么程度算完成：{step["completion"]}')
+    return {
+        "case_state": state,
+        "reply": prefix + '\n'.join(lines) + '\n\n' + _proactive_information_block(state, limit=1),
+        "requires_user": True,
+    }
 
 
 def labor_single_step(state: CaseState) -> dict:

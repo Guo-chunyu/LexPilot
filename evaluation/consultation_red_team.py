@@ -270,6 +270,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fiftyone_variants(),
         *generate_round_fiftytwo_variants(),
         *generate_round_fiftythree_variants(),
+        *generate_round_fiftyfour_variants(),
     ]
 
 
@@ -3529,6 +3530,77 @@ def generate_round_fiftythree_variants(seed: int = 20260997) -> list[RedTeamCase
             ),
             'debt', '',
             expected_facts=(('constraints', '预算'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fiftyfour_variants(seed: int = 20260998) -> list[RedTeamCase]:
+    """Five unseen variants over a question asked during the labour interview.
+
+    Round 54 locks the fix for the policy loop swallowing the user's question and
+    just re-asking the pending fact.
+    """
+    return [
+        RedTeamCase(
+            'labor_question_materials',
+            ('labor_dispute', 'labor_path', 'reply_mode'),
+            (
+                '公司拖欠我工资，请给我方案。',
+                '我需要准备什么材料？',
+            ),
+            'labor_dispute', '',
+            expected_reply_fragments=('整理材料',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_question_next_step',
+            ('labor_dispute', 'labor_path', 'reply_mode'),
+            (
+                '公司拖欠我工资，请给我方案。',
+                '接下来我该走哪一步？',
+            ),
+            'labor_dispute', '',
+            expected_reply_fragments=('核对时间节点',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_question_opponent',
+            ('labor_dispute', 'labor_path', 'reply_mode'),
+            (
+                '公司拖欠我工资，请给我方案。',
+                '公司说我自己离职的，我怎么回应？',
+            ),
+            'labor_dispute', '',
+            expected_reply_fragments=('抗辩',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_question_arbitration',
+            ('labor_dispute', 'labor_path', 'reply_mode'),
+            (
+                '公司拖欠我工资，请给我方案。',
+                '怎么去仲裁？需要什么手续？',
+            ),
+            'labor_dispute', '',
+            expected_reply_fragments=('仲裁',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'labor_answer_still_recorded_control',
+            ('labor_dispute', 'labor_path_control'),
+            (
+                '公司拖欠我工资，请给我方案。',
+                '我在公司干了5年。',
+                '只告诉我当前这一步',
+            ),
+            'labor_dispute', '',
+            expected_facts=(('employment_duration_months', '60'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

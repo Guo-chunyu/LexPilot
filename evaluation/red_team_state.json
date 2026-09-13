@@ -4205,6 +4205,86 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "10 passed (tests/test_constraints_extraction.py)"
       }
+    },
+    {
+      "round_id": "round-054-question-during-labor-interview",
+      "generator": "generate_round_fiftyfour_variants",
+      "seed": 20260998,
+      "status": "completed",
+      "root_cause": "劳动访谈等待回答期间，用户提的问题被策略循环吞掉：policy 只看到\"待补事实仍未填\"，于是再次复述同一个问题（\"再说一次年限：入职到结束一共多长时间？\"），用户问的\"我需要准备什么材料\"\"怎么去仲裁\"完全得不到回答。",
+      "failures_before_fix": [
+        "labor_question_materials",
+        "labor_question_next_step",
+        "labor_question_opponent",
+        "labor_question_arbitration"
+      ],
+      "fix_files": [
+        "backend/workflow.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "question_during_labor_interview",
+          "before_fix": "round-54 探针 D3/D4 显示追问期间的问题只得到 19 字的重新提问",
+          "fix_files": [
+            "backend/workflow.py"
+          ],
+          "commit_subject": "Answer a question asked during the labour interview",
+          "verification": "5 round-54 cases, 5 unit tests and the full core suite passed; 回答仍能入库；\"你还需要我补充什么信息\"仍走 ASK_FACT（回归已修）"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "labor_question_materials",
+        "labor_question_next_step",
+        "labor_question_opponent",
+        "labor_question_arbitration",
+        "labor_answer_still_recorded_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "labor_question_materials",
+          "messages": [
+            "公司拖欠我工资，请给我方案。",
+            "我需要准备什么材料？"
+          ]
+        },
+        {
+          "case_id": "labor_question_next_step",
+          "messages": [
+            "公司拖欠我工资，请给我方案。",
+            "接下来我该走哪一步？"
+          ]
+        },
+        {
+          "case_id": "labor_question_opponent",
+          "messages": [
+            "公司拖欠我工资，请给我方案。",
+            "公司说我自己离职的，我怎么回应？"
+          ]
+        },
+        {
+          "case_id": "labor_question_arbitration",
+          "messages": [
+            "公司拖欠我工资，请给我方案。",
+            "怎么去仲裁？需要什么手续？"
+          ]
+        },
+        {
+          "case_id": "labor_answer_still_recorded_control",
+          "messages": [
+            "公司拖欠我工资，请给我方案。",
+            "我在公司干了5年。",
+            "只告诉我当前这一步"
+          ]
+        }
+      ],
+      "commit_subject": "Answer a question asked during the labour interview",
+      "verification": {
+        "before_fix": "4 failed (追问期间提问只得到重复提问，且无报告)",
+        "core_suite": "1459 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "5 passed (tests/test_labor_question_during_interview.py)"
+      }
     }
   ]
 }
