@@ -260,6 +260,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortyone_variants(),
         *generate_round_fortytwo_variants(),
         *generate_round_fortythree_variants(),
+        *generate_round_fortyfour_variants(),
     ]
 
 
@@ -2873,6 +2874,67 @@ def generate_round_fortythree_variants(seed: int = 20260987) -> list[RedTeamCase
             ),
             'enforcement', '',
             expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortyfour_variants(seed: int = 20260988) -> list[RedTeamCase]:
+    """Five unseen variants over debtor role inference.
+
+    Round 44 locks the fix for "我欠他3万元" / "我欠他5万" leaving the consulting
+    role unconfirmed, because the debtor pattern only accepted a clause ending in
+    "钱".
+    """
+    return [
+        RedTeamCase(
+            'role_debtor_yuan',
+            ('debt', 'role_inference'),
+            (
+                '我欠他3万元，他要起诉我，请给我方案。',
+            ),
+            'debt', 'debtor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_debtor_wan',
+            ('debt', 'role_inference'),
+            (
+                '我欠他5万，他要起诉我，请给我方案。',
+            ),
+            'debt', 'debtor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_debtor_kua',
+            ('debt', 'role_inference'),
+            (
+                '我欠他3万块钱，请给我方案。',
+            ),
+            'debt', 'debtor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_creditor_control',
+            ('debt', 'role_inference'),
+            (
+                '他欠我3万元不还，请给我方案。',
+            ),
+            'debt', 'creditor',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'role_debtor_borrow_control',
+            ('debt', 'role_inference'),
+            (
+                '我向朋友借了3万元，他要起诉我，请给我方案。',
+            ),
+            'debt', 'debtor',
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

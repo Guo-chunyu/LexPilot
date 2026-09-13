@@ -3465,6 +3465,78 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "10 passed (tests/test_enforcement_urgency.py)"
       }
+    },
+    {
+      "round_id": "round-044-debtor-role-inference",
+      "generator": "generate_round_fortyfour_variants",
+      "seed": 20260988,
+      "status": "completed",
+      "root_cause": "ROLE_PATTERNS[\"debtor\"] 的\"我欠…\"分支要求子句以\"钱\"结尾（我欠[^，。；]{0,12}钱），因此\"我欠他3万元\"\"我欠他5万\"推不出债务人身份，role 停在 unconfirmed，抗辩方向无法确定。",
+      "failures_before_fix": [
+        "role_debtor_yuan",
+        "role_debtor_wan"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/perspective.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "debtor_role_inference",
+          "before_fix": "round-44 探针 R1/R8 显示\"我欠他3万元\"/\"我欠他5万\"的 role 为 unconfirmed",
+          "fix_files": [
+            "backend/legal_domain/consultation/perspective.py"
+          ],
+          "commit_subject": "Infer the debtor role from any amount unit",
+          "verification": "5 round-44 cases, 10 role-inference unit tests and the full core suite passed; \"我欠考虑\" 不误判"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "role_debtor_yuan",
+        "role_debtor_wan",
+        "role_debtor_kua",
+        "role_creditor_control",
+        "role_debtor_borrow_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "role_debtor_yuan",
+          "messages": [
+            "我欠他3万元，他要起诉我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "role_debtor_wan",
+          "messages": [
+            "我欠他5万，他要起诉我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "role_debtor_kua",
+          "messages": [
+            "我欠他3万块钱，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "role_creditor_control",
+          "messages": [
+            "他欠我3万元不还，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "role_debtor_borrow_control",
+          "messages": [
+            "我向朋友借了3万元，他要起诉我，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Infer the debtor role from any amount unit",
+      "verification": {
+        "before_fix": "2 failed (我欠他3万元 / 我欠他5万 left the role unconfirmed)",
+        "core_suite": "1306 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "10 passed (tests/test_role_inference.py)"
+      }
     }
   ]
 }
