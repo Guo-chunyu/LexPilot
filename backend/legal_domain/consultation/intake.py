@@ -732,8 +732,10 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         goal_request = re.search(
             r'想.{0,10}(?:要回|追回|拿回|退|离婚|解决|申请|查)|希望|我要(?:离婚|追回|退款)|要求(?:退|赔)'
             r'|我(?:要|要求|想要|希望).{0,12}'
-            r'(?:还钱|还款|还给我|把钱还|退还|退款|退货|赔偿|赔礼道歉|道歉'
-            r'|继续履行|履行|修好|维修|恢复原状|消除影响|停止侵害|解除)',
+            r'(?:还钱|还款|还给我|把钱还|退还|退款|退货|退我|赔偿|赔礼道歉|道歉'
+            r'|继续履行|履行|修好|维修|恢复原状|消除影响|停止侵害|停止侵权|解除'
+            # Round-41: further common contract-tort remedies.
+            r'|违约金|支付违约金|双倍返还|返还|排除妨害)',
             sentence,
         )
         if goal_request and not wants_plan(sentence):

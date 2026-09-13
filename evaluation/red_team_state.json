@@ -3243,6 +3243,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "15 passed (tests/test_domain_routing.py)"
       }
+    },
+    {
+      "round_id": "round-041-remedy-goal-vocabulary",
+      "generator": "generate_round_fortyone_variants",
+      "seed": 20260985,
+      "status": "completed",
+      "root_cause": "goal 的救济词表（第 32 轮新增）仍缺“支付违约金/违约金/停止侵权/双倍返还/返还/退我/排除妨害”，“我要求他支付违约金”“我要求他停止侵权”“我要他退我定金”等诉求句不产生 goal。",
+      "failures_before_fix": [
+        "goal_remedy_penalty",
+        "goal_remedy_stop_infringement",
+        "goal_remedy_double_deposit",
+        "goal_remedy_deposit_back"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "remedy_goal_vocabulary",
+          "before_fix": "round-41 探针 G1/G2/G5/G7 显示“退我定金/支付违约金/停止侵权/双倍返还定金”的 goal 为空",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Capture further remedy phrasings as the user goal",
+          "verification": "5 round-41 cases, 13 goal-extraction unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "goal_remedy_penalty",
+        "goal_remedy_stop_infringement",
+        "goal_remedy_double_deposit",
+        "goal_remedy_deposit_back",
+        "goal_remedy_compensate_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "goal_remedy_penalty",
+          "messages": [
+            "对方违约，我要求他支付违约金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_remedy_stop_infringement",
+          "messages": [
+            "对方一直在网上骂我，我要求他停止侵权，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_remedy_double_deposit",
+          "messages": [
+            "对方收了定金不履行，我要求他双倍返还定金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_remedy_deposit_back",
+          "messages": [
+            "我交了定金对方不发货，我要他退我定金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_remedy_compensate_control",
+          "messages": [
+            "对方违约，我要求赔偿损失，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Capture further remedy phrasings as the user goal",
+      "verification": {
+        "before_fix": "4 failed (支付违约金 / 停止侵权 / 双倍返还定金 / 退我定金 goals dropped)",
+        "core_suite": "1244 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "13 passed (tests/test_goal_extraction.py)"
+      }
     }
   ]
 }

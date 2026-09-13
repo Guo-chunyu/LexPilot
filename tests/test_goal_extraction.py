@@ -16,6 +16,11 @@ from backend.legal_rl.state import CaseState
         '我要他修好',
         '商家卖假货，我要求退货退款',
         '我希望对方尽快还钱',
+        # Round-41: further contract / tort remedies.
+        '我要求他支付违约金',
+        '我要求他停止侵权',
+        '我要求他双倍返还定金',
+        '我要他退我定金',
     ],
 )
 def test_user_goal_phrasings_are_captured(text):

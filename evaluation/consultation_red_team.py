@@ -257,6 +257,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtyeight_variants(),
         *generate_round_thirtynine_variants(),
         *generate_round_forty_variants(),
+        *generate_round_fortyone_variants(),
     ]
 
 
@@ -2675,6 +2676,71 @@ def generate_round_forty_variants(seed: int = 20260984) -> list[RedTeamCase]:
                 '朋友欠我3万元，请给我方案。',
             ),
             'debt', '',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortyone_variants(seed: int = 20260985) -> list[RedTeamCase]:
+    """Five unseen variants over further remedy phrasings in the user's goal.
+
+    Round 41 locks the fix for "支付违约金 / 停止侵权 / 双倍返还 / 退我定金",
+    which the Round-32 remedy list did not contain.
+    """
+    return [
+        RedTeamCase(
+            'goal_remedy_penalty',
+            ('contract', 'goal_extraction'),
+            (
+                '对方违约，我要求他支付违约金，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '违约金'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_remedy_stop_infringement',
+            ('general', 'goal_extraction'),
+            (
+                '对方一直在网上骂我，我要求他停止侵权，请给我方案。',
+            ),
+            'general', '',
+            expected_facts=(('goal', '停止侵权'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_remedy_double_deposit',
+            ('contract', 'goal_extraction'),
+            (
+                '对方收了定金不履行，我要求他双倍返还定金，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '双倍返还'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_remedy_deposit_back',
+            ('contract', 'goal_extraction'),
+            (
+                '我交了定金对方不发货，我要他退我定金，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '退我'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_remedy_compensate_control',
+            ('contract', 'goal_extraction'),
+            (
+                '对方违约，我要求赔偿损失，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '赔偿'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
