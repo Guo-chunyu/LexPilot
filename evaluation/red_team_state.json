@@ -2579,6 +2579,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "9 passed (tests/test_evidence_unavailability.py)"
       }
+    },
+    {
+      "round_id": "round-032-goal-extraction-coverage",
+      "generator": "generate_round_thirtytwo_variants",
+      "seed": 20260976,
+      "status": "completed",
+      "root_cause": "目标(goal)抽取正则过窄，只认“想要回/希望/我要离婚·追回·退款/要求退·赔”，漏掉“我要他把钱还给我”“我要求他继续履行合同”“我要他公开道歉并还钱”“我要他修好”等常见表达。",
+      "failures_before_fix": [
+        "goal_apology_and_money",
+        "goal_money_back",
+        "goal_continue_performance",
+        "goal_repair_control"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "goal_extraction_coverage",
+          "before_fix": "round-32 探针 G1-G4/G6 显示“我要他把钱还给我”等目标句的 facts 里没有 goal",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Capture the user's own stated goal",
+          "verification": "5 round-32 cases, 9 goal-extraction unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "goal_apology_and_money",
+        "goal_money_back",
+        "goal_continue_performance",
+        "goal_repair_control",
+        "goal_refund_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "goal_apology_and_money",
+          "messages": [
+            "对方欠我3万元，我要他公开道歉并还钱，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_money_back",
+          "messages": [
+            "朋友欠我3万元，我要他把钱还给我，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_continue_performance",
+          "messages": [
+            "供应商不发货，我要求他继续履行合同，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_repair_control",
+          "messages": [
+            "房东不修家电，我要他修好，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_refund_control",
+          "messages": [
+            "商家卖假货，我要求退货退款，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Capture the user's own stated goal",
+      "verification": {
+        "before_fix": "4 failed (还钱给我 / 继续履行 / 道歉 / 修好 goals dropped)",
+        "core_suite": "1110 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "9 passed (tests/test_goal_extraction.py)"
+      }
     }
   ]
 }

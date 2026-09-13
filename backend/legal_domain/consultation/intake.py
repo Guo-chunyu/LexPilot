@@ -707,7 +707,19 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
             entry = TimelineEntry(date_text=date_match.group(0), description=sentence[:600], source_ref=source_ref, source_type=source_type, status='材料记载，待核实' if source_type == 'uploaded_file' else '用户陈述，待核实')
             if not any(item.description == entry.description and item.source_ref == source_ref for item in dossier.timeline):
                 dossier.timeline.append(entry)
-        if re.search(r'想.{0,10}(?:要回|追回|拿回|退|离婚|解决|申请|查)|希望|我要(?:离婚|追回|退款)|要求(?:退|赔)', sentence) and not wants_plan(sentence):
+        # The user's own stated request. Round-32 probe showed the original
+        # pattern (想要回|希望|我要离婚/追回/退款|要求退/赔) silently dropped
+        # common goals such as "我要他把钱还给我", "我要求他继续履行合同",
+        # "我要他公开道歉并还钱" and "我要他修好". Anchoring on ``我`` as the
+        # subject keeps "对方要求我赔偿" (the other party's demand) out.
+        goal_request = re.search(
+            r'想.{0,10}(?:要回|追回|拿回|退|离婚|解决|申请|查)|希望|我要(?:离婚|追回|退款)|要求(?:退|赔)'
+            r'|我(?:要|要求|想要|希望).{0,12}'
+            r'(?:还钱|还款|还给我|把钱还|退还|退款|退货|赔偿|赔礼道歉|道歉'
+            r'|继续履行|履行|修好|维修|恢复原状|消除影响|停止侵害|解除)',
+            sentence,
+        )
+        if goal_request and not wants_plan(sentence):
             put('goal', sentence, sentence)
         if re.search(
             r'低成本|预算|不想打官司|不想再.{0,8}(?:催款|协商|调解)|'

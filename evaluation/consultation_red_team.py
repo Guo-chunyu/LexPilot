@@ -248,6 +248,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentynine_variants(),
         *generate_round_thirty_variants(),
         *generate_round_thirtyone_variants(),
+        *generate_round_thirtytwo_variants(),
     ]
 
 
@@ -2087,6 +2088,71 @@ def generate_round_thirtyone_variants(seed: int = 20260975) -> list[RedTeamCase]
             ),
             'debt', 'creditor',
             expected_evidence_names=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtytwo_variants(seed: int = 20260976) -> list[RedTeamCase]:
+    """Five unseen variants over the user's own stated goal.
+
+    Round 32 locks the fix for goals the original pattern dropped: "我要他把钱
+    还给我", "我要求他继续履行合同", "我要他公开道歉并还钱", "我要他修好".
+    """
+    return [
+        RedTeamCase(
+            'goal_apology_and_money',
+            ('debt', 'goal_extraction'),
+            (
+                '对方欠我3万元，我要他公开道歉并还钱，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('goal', '道歉'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_money_back',
+            ('debt', 'goal_extraction'),
+            (
+                '朋友欠我3万元，我要他把钱还给我，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('goal', '还给我'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_continue_performance',
+            ('contract', 'goal_extraction'),
+            (
+                '供应商不发货，我要求他继续履行合同，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '继续履行'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_repair_control',
+            ('housing', 'goal_extraction'),
+            (
+                '房东不修家电，我要他修好，请给我方案。',
+            ),
+            'housing', '',
+            expected_facts=(('goal', '修好'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_refund_control',
+            ('consumer', 'goal_extraction'),
+            (
+                '商家卖假货，我要求退货退款，请给我方案。',
+            ),
+            'consumer', '',
+            expected_facts=(('goal', '退款'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

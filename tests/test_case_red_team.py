@@ -47,6 +47,7 @@ from evaluation.consultation_red_team import (
     generate_round_twentynine_variants,
     generate_round_thirty_variants,
     generate_round_thirtyone_variants,
+    generate_round_thirtytwo_variants,
     generate_red_team_cases,
 )
 from tests.test_streamlit_app import APP_PATH
@@ -1890,6 +1891,7 @@ def test_red_team_round_state_persists_seed_and_exact_anonymous_case_list():
         'generate_round_twentynine_variants': generate_round_twentynine_variants,
         'generate_round_thirty_variants': generate_round_thirty_variants,
         'generate_round_thirtyone_variants': generate_round_thirtyone_variants,
+        'generate_round_thirtytwo_variants': generate_round_thirtytwo_variants,
     }
     generated = generators[active_round['generator']](active_round['seed'])
 
