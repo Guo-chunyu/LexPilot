@@ -313,7 +313,10 @@ def _evidence_mention(text: str, name: str, siblings: tuple[str, ...] = ()) -> t
                 r'(?:(?:都|也|还|暂时|一时)\s*)?'
                 r'(?:没有(?!问题)|没(?:有|了|找到|拿到|保存|留住)?|找不到|无法提供|无(?!问题|异议)'
                 r'|拿不到|拿不着|没法拿|拿不出|要不?到'
-                r'|弄丢(?:了)?|丢了|遗失(?:了)?|丢失(?:了)?|不见(?:了)?)'
+                r'|弄丢(?:了)?|丢了|遗失(?:了)?|丢失(?:了)?|不见(?:了)?'
+                # Round-39: "借条还没写" means the material does not exist yet, so
+                # it must not be recorded as held.
+                r'|还没写|没写|尚未写|还没打|没打)'
                 r'[了啊呀呢吧]?',
                 tail,
             )

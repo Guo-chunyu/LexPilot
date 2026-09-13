@@ -36,3 +36,18 @@ def test_held_material_is_available(text):
     mentioned, unavailable = _evidence_mention(text, '借条', SIBLINGS)
     assert mentioned, text
     assert not unavailable, text
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        # Round-39: the instrument was never written, so it is not held.
+        '对方欠我3万元，借条还没写',
+        '对方欠我3万元，欠条没写',
+        '对方欠我3万元，借条还没打',
+    ],
+)
+def test_not_yet_written_material_is_unavailable(text):
+    mentioned, unavailable = _evidence_mention(text, '借条', SIBLINGS)
+    assert mentioned, text
+    assert unavailable, text

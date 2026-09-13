@@ -3097,6 +3097,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "13 passed (tests/test_amount_colloquial.py)"
       }
+    },
+    {
+      "round_id": "round-039-not-yet-written-material",
+      "generator": "generate_round_thirtynine_variants",
+      "seed": 20260983,
+      "status": "completed",
+      "root_cause": "证据不可得词表缺“尚未写/还没写/没写/还没打”这类“材料尚不存在”的框架，“借条还没写”被当成用户已持有借条，材料清单与实际不符。",
+      "failures_before_fix": [
+        "evidence_iou_not_written",
+        "evidence_iou_note_not_written",
+        "evidence_iou_not_stamped"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "not_yet_written_material",
+          "before_fix": "round-36 探针 E2 显示“借条还没写”的 evidence 含借条、unavailable 为空",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Treat a not-yet-written material as unobtainable",
+          "verification": "5 round-39 cases, 12 evidence-availability unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "evidence_iou_not_written",
+        "evidence_iou_note_not_written",
+        "evidence_iou_not_stamped",
+        "evidence_iou_held_control",
+        "evidence_iou_lost_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "evidence_iou_not_written",
+          "messages": [
+            "对方欠我3万元，借条还没写，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_note_not_written",
+          "messages": [
+            "对方欠我3万元，欠条没写，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_not_stamped",
+          "messages": [
+            "对方欠我3万元，借条还没打，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_held_control",
+          "messages": [
+            "对方欠我3万元，有借条，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_lost_control",
+          "messages": [
+            "对方欠我3万元，借条弄丢了，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Treat a not-yet-written material as unobtainable",
+      "verification": {
+        "before_fix": "3 failed (借条还没写 / 欠条没写 / 借条还没打 recorded as held)",
+        "core_suite": "1217 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "12 passed (tests/test_evidence_unavailability.py)"
+      }
     }
   ]
 }
