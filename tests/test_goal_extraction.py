@@ -21,6 +21,10 @@ from backend.legal_rl.state import CaseState
         '我要求他停止侵权',
         '我要求他双倍返还定金',
         '我要他退我定金',
+        # Round-50: plain "我想…" prefix.
+        '我想解除合同',
+        '我想退还定金',
+        '我想让他赔偿损失',
     ],
 )
 def test_user_goal_phrasings_are_captured(text):

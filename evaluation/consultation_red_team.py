@@ -266,6 +266,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortyseven_variants(),
         *generate_round_fortyeight_variants(),
         *generate_round_fortynine_variants(),
+        *generate_round_fifty_variants(),
     ]
 
 
@@ -3266,6 +3267,71 @@ def generate_round_fortynine_variants(seed: int = 20260993) -> list[RedTeamCase]
             ),
             'housing', '',
             expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fifty_variants(seed: int = 20260994) -> list[RedTeamCase]:
+    """Five unseen variants over the plain "我想…" goal prefix.
+
+    Round 50 locks the fix for "我想解除合同" / "我想让他赔偿损失" — the goal
+    prefix only accepted the two-character "想要".
+    """
+    return [
+        RedTeamCase(
+            'goal_want_rescind',
+            ('contract', 'goal_extraction'),
+            (
+                '我想解除合同，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '解除'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_want_refund_deposit',
+            ('contract', 'goal_extraction'),
+            (
+                '我想退还定金，请给我方案。',
+            ),
+            'contract', '',
+            expected_facts=(('goal', '退还'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_want_compensation',
+            ('debt', 'goal_extraction'),
+            (
+                '对方欠我3万元，我想让他赔偿损失，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('goal', '赔偿'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_want_rescind_refund',
+            ('consumer', 'goal_extraction'),
+            (
+                '我想解除合同并退款，请给我方案。',
+            ),
+            'consumer', '',
+            expected_facts=(('goal', '退款'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'goal_want_recover_control',
+            ('debt', 'goal_extraction'),
+            (
+                '对方欠我3万元，我想追回欠款，请给我方案。',
+            ),
+            'debt', '',
+            expected_facts=(('goal', '追回'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

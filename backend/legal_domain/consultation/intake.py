@@ -779,7 +779,9 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         # subject keeps "对方要求我赔偿" (the other party's demand) out.
         goal_request = re.search(
             r'想.{0,10}(?:要回|追回|拿回|退|离婚|解决|申请|查)|希望|我要(?:离婚|追回|退款)|要求(?:退|赔)'
-            r'|我(?:要|要求|想要|希望).{0,12}'
+            # Round-50: plain "我想…" ("我想解除合同") was not a prefix — only
+            # the two-character "想要" was.
+            r'|我(?:要|要求|想要|希望|想).{0,12}'
             r'(?:还钱|还款|还给我|把钱还|退还|退款|退货|退我|赔偿|赔礼道歉|道歉'
             r'|继续履行|履行|修好|维修|恢复原状|消除影响|停止侵害|停止侵权|解除'
             # Round-41: further common contract-tort remedies.

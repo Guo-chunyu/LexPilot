@@ -3909,6 +3909,80 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "6 passed (tests/test_negation_scope_urgency.py)"
       }
+    },
+    {
+      "round_id": "round-050-plain-want-goal-prefix",
+      "generator": "generate_round_fifty_variants",
+      "seed": 20260994,
+      "status": "completed",
+      "root_cause": "goal 的主语前缀只认两字\"想要\"，不认最常见的一字\"我想\"。\"我想解除合同\"\"我想退还定金\"\"我想让他赔偿损失\"因此完全不产生 goal。",
+      "failures_before_fix": [
+        "goal_want_rescind",
+        "goal_want_refund_deposit",
+        "goal_want_compensation",
+        "goal_want_rescind_refund"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "plain_want_goal_prefix",
+          "before_fix": "round-50 探针 C1/C6 显示\"我想解除合同\"的 goal 为空",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Accept the plain \"我想…\" goal prefix",
+          "verification": "5 round-50 cases, 16 goal-extraction unit tests and the full core suite passed; \"我想问一下怎么办\"不误判"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "goal_want_rescind",
+        "goal_want_refund_deposit",
+        "goal_want_compensation",
+        "goal_want_rescind_refund",
+        "goal_want_recover_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "goal_want_rescind",
+          "messages": [
+            "我想解除合同，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_want_refund_deposit",
+          "messages": [
+            "我想退还定金，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_want_compensation",
+          "messages": [
+            "对方欠我3万元，我想让他赔偿损失，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_want_rescind_refund",
+          "messages": [
+            "我想解除合同并退款，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "goal_want_recover_control",
+          "messages": [
+            "对方欠我3万元，我想追回欠款，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Accept the plain \"我想…\" goal prefix",
+      "verification": {
+        "before_fix": "4 failed (我想解除合同 / 退还定金 / 赔偿损失 / 解除并退款 goals dropped)",
+        "core_suite": "1397 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "16 passed (tests/test_goal_extraction.py)"
+      }
     }
   ]
 }
