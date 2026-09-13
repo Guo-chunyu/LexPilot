@@ -225,6 +225,20 @@ def test_user_withdrawal_keeps_other_active_constraints():
     assert '人在外地' in constraints or '不能到场' in constraints
 
 
+def test_litigation_reversal_withdraws_only_litigation_constraint():
+    """Round-26: '算了，可以打官司' lifts the earlier '不想打官司' limit but must
+    leave an unrelated active constraint ('不想影响关系') untouched."""
+    state = _state('debt')
+    _run(
+        state,
+        '朋友欠我3万元，我不想打官司，也不想影响关系，请给我方案。',
+        '算了，可以打官司。',
+    )
+    constraints = str(state.facts.get('constraints', ''))
+    assert '打官司' not in constraints, constraints
+    assert '影响关系' in constraints, constraints
+
+
 def test_constraint_lifecycle_allows_new_active_assertion_after_withdrawal():
     state = _state('debt')
     _run(

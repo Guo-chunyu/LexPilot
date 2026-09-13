@@ -88,6 +88,12 @@ WITHDRAWAL_PROBES: tuple[WithdrawalProbe, ...] = (
     WithdrawalProbe('wd|negate-no-longer', '不再拒绝协商', True),
     WithdrawalProbe('wd|explicit-revoke', '撤销不要再联系对方', True),
     WithdrawalProbe('wd|generic-retract-with-tail', '我改变主意了，还是想再试试', True),
+    # Round-26: a direct litigation reversal lifts the "不想打官司" limit.
+    WithdrawalProbe('wd|litigation-reversal|suanle-ke', '算了，可以打官司', True),
+    WithdrawalProbe('wd|litigation-reversal|suanle-yuan', '算了，愿意起诉对方', True),
+    WithdrawalProbe('wd|litigation-reversal|walk-law', '算了，可以走法律程序', True),
+    # Negative: "算了" followed by *re-affirming* the constraint is not a reversal.
+    WithdrawalProbe('wd|noise|suanle-reaffirm', '算了，我不想打官司', False),
     # Negative examples — these must NOT trigger withdrawal (they are not
     # constraint-related retractions)
     WithdrawalProbe('wd|noise|hello', '你好吗', False),

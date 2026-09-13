@@ -242,6 +242,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentythree_variants(),
         *generate_round_twentyfour_variants(),
         *generate_round_twentyfive_variants(),
+        *generate_round_twentysix_variants(),
     ]
 
 
@@ -1684,6 +1685,80 @@ def generate_round_twentyfive_variants(seed: int = 20260969) -> list[RedTeamCase
             'debt', '',
             expected_facts=(('location', '深圳市南山区'),),
             forbidden_facts=(('location', '广州'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentysix_variants(seed: int = 20260970) -> list[RedTeamCase]:
+    """Five unseen variants over lifting a litigation-avoidance constraint.
+
+    Round 26 locks the fix for a direct litigation reversal such as
+    "算了，可以打官司". It is neither a contact re-affirmation nor the generic
+    "改变主意" + tail, so the "不想打官司" limit stayed active and kept steering
+    routing. The reversal must drop only the litigation clause.
+    """
+    return [
+        RedTeamCase(
+            'constraint_litigation_reversal_keeps_relationship',
+            ('debt', 'multiturn', 'constraint_withdrawal'),
+            (
+                '朋友欠我3万元，我不想打官司，也不想影响关系，请给我方案。',
+                '算了，可以打官司。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '影响关系'),),
+            forbidden_facts=(('constraints', '打官司'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_litigation_reversal_single_drop',
+            ('debt', 'multiturn', 'constraint_withdrawal'),
+            (
+                '朋友欠我3万元，我不想打官司，请给我方案。',
+                '算了，愿意起诉对方了。',
+            ),
+            'debt', '',
+            forbidden_facts=(('constraints', '打官司'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_litigation_reversal_law_suite',
+            ('contract', 'multiturn', 'constraint_withdrawal'),
+            (
+                '供应商延期交货并拒绝说明原因，我不想打官司，请给我方案。',
+                '算了，可以走法律程序。',
+            ),
+            'contract', '',
+            forbidden_facts=(('constraints', '打官司'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_litigation_reversal_keeps_attendance',
+            ('debt', 'multiturn', 'constraint_withdrawal'),
+            (
+                '朋友欠我3万元，我不想打官司，人在外地不能到场，请给我方案。',
+                '算了，还是想打官司。',
+            ),
+            'debt', '',
+            expected_facts=(('constraints', '人在外地'),),
+            forbidden_facts=(('constraints', '打官司'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'constraint_litigation_reversal_arbitration',
+            ('debt', 'multiturn', 'constraint_withdrawal'),
+            (
+                '公司拖欠我货款8万元，我不想打官司，请给我方案。',
+                '算了，可以仲裁。',
+            ),
+            'debt', '',
+            forbidden_facts=(('constraints', '打官司'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

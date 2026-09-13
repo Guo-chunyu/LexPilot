@@ -2127,6 +2127,87 @@
         "selected_cases_after_fix": "5 passed",
         "slot_lifecycle_suite": "1 passed"
       }
+    },
+    {
+      "round_id": "round-026-litigation-reversal-not-a-withdrawal",
+      "generator": "generate_round_twentysix_variants",
+      "seed": 20260970,
+      "status": "completed",
+      "root_cause": "用户直接反转“不想打官司”这一处理限制（“算了，可以打官司”“算了，愿意起诉对方”“算了，可以走法律程序”“算了，可以仲裁”）时，既没有命中 contact 类撤回（_NEGATE_NO_CONTACT_PATTERN 面向“愿意再协商/重新联系”），也没有命中通用撤回（_GENERIC_RETRACTION_PATTERN 不含“算了”，_REAFFIRM_TAIL_PATTERN 也不认“可以打官司”这类非沟通型再确认），因此限制仍然 active 并继续影响路线选择。",
+      "failures_before_fix": [
+        "constraint_litigation_reversal_keeps_relationship",
+        "constraint_litigation_reversal_single_drop",
+        "constraint_litigation_reversal_law_suite",
+        "constraint_litigation_reversal_keeps_attendance",
+        "constraint_litigation_reversal_arbitration"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "litigation_reversal_not_a_withdrawal",
+          "before_fix": "round-26 五个案例里“不想打官司”在用户改口“算了，可以打官司”后仍保留在 facts[constraints]，且未把该子句标记 withdrawn",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Recognise a litigation reversal as constraint withdrawal",
+          "verification": "5 round-26 cases, 1 slot-lifecycle test, 4 withdrawal coverage probes and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "constraint_litigation_reversal_keeps_relationship",
+        "constraint_litigation_reversal_single_drop",
+        "constraint_litigation_reversal_law_suite",
+        "constraint_litigation_reversal_keeps_attendance",
+        "constraint_litigation_reversal_arbitration"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "constraint_litigation_reversal_keeps_relationship",
+          "messages": [
+            "朋友欠我3万元，我不想打官司，也不想影响关系，请给我方案。",
+            "算了，可以打官司。"
+          ]
+        },
+        {
+          "case_id": "constraint_litigation_reversal_single_drop",
+          "messages": [
+            "朋友欠我3万元，我不想打官司，请给我方案。",
+            "算了，愿意起诉对方了。"
+          ]
+        },
+        {
+          "case_id": "constraint_litigation_reversal_law_suite",
+          "messages": [
+            "供应商延期交货并拒绝说明原因，我不想打官司，请给我方案。",
+            "算了，可以走法律程序。"
+          ]
+        },
+        {
+          "case_id": "constraint_litigation_reversal_keeps_attendance",
+          "messages": [
+            "朋友欠我3万元，我不想打官司，人在外地不能到场，请给我方案。",
+            "算了，还是想打官司。"
+          ]
+        },
+        {
+          "case_id": "constraint_litigation_reversal_arbitration",
+          "messages": [
+            "公司拖欠我货款8万元，我不想打官司，请给我方案。",
+            "算了，可以仲裁。"
+          ]
+        }
+      ],
+      "commit_subject": "Recognise a litigation reversal as constraint withdrawal",
+      "verification": {
+        "before_fix": "5 failed (litigation constraint still active)",
+        "core_suite": "996 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "slot_lifecycle_suite": "1 passed",
+        "constraint_coverage_probes": "4 withdrawal probes added (3 positive, 1 negative)"
+      }
     }
   ]
 }

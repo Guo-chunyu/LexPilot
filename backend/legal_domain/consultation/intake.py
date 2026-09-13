@@ -50,6 +50,22 @@ _GENERIC_RETRACTION_PATTERN = re.compile(
 _REAFFIRM_TAIL_PATTERN = re.compile(
     r'愿意|可以.{0,4}了|也可以|还是想.{0,6}(?:试试|再|重新)|还是.{0,4}(?:可以|愿意|想)'
 )
+# Round-26: a direct reversal of a litigation-avoidance constraint. The user says
+# "算了，可以打官司" / "算了，愿意起诉对方" to lift the earlier "不想打官司" limit.
+# It is neither a contact re-affirmation (``_NEGATE_NO_CONTACT_PATTERN``) nor the
+# generic "改变主意" + tail, so it needs its own shape. The acceptance verb is
+# required so a *re-affirmation* of the constraint ("算了，我不想打官司") does not
+# match, and the subject regex targets only the litigation clause.
+_LITIGATION_REVERSAL_PATTERN = re.compile(
+    r'(?:算了|不坚持|改变主意|收回)'
+    r'[^。；\n]{0,12}'
+    r'(?:可以|愿意|同意|接受|决定|还是(?:要|想))'
+    r'[^，。；\n]{0,4}'
+    r'(?:打官司|起诉|诉讼|走法律程序|走程序|仲裁|告他|告对方)'
+)
+_LITIGATION_SUBJECT_PATTERN = re.compile(
+    r'打官司|起诉|诉讼|法律程序|走程序|仲裁'
+)
 
 
 QUESTIONS = {
@@ -378,6 +394,10 @@ def _withdrawal_subject(message: str):
     ``None`` if the message does not specifically target a constraint."""
     if _NEGATE_NO_CONTACT_PATTERN.search(message):
         return re.compile(r'不要再.{0,6}(?:联系|沟通|协商|见面)|不要(?:见面|联系|协商)')
+    if _LITIGATION_REVERSAL_PATTERN.search(message):
+        # Target only the litigation clause; unrelated constraints (e.g.
+        # "不想影响关系") must survive the reversal.
+        return _LITIGATION_SUBJECT_PATTERN
     if _GENERIC_RETRACTION_PATTERN.search(message) and _REAFFIRM_TAIL_PATTERN.search(message):
         # ``我改变主意了`` plus a re-affirmation. Target only the most recent
         # constraint; downstream code (recompute) already drops the slot if
@@ -419,6 +439,11 @@ def is_constraint_withdrawal(message: str) -> bool:
        "改变主意了，电话沟通也可以" where the reaffirmation reads "也可以".
     """
     if _NEGATE_NO_CONTACT_PATTERN.search(message):
+        return True
+    if _LITIGATION_REVERSAL_PATTERN.search(message):
+        # Round-26: "算了，可以打官司" lifts the earlier "不想打官司" limit. The
+        # generic retraction path misses it because "算了" is not a cue and
+        # "可以打官司" is not a contact-oriented re-affirmation.
         return True
     if _GENERIC_RETRACTION_PATTERN.search(message) and _REAFFIRM_TAIL_PATTERN.search(message):
         return True

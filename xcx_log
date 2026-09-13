@@ -736,6 +736,58 @@ decision_delta 可审计链路。只改表达层。
   （否则 `corrections` 为空，触发 `fact_correction` 标签断言）。重新定向与全量回归
   **985 项通过，0 失败**。
 
+## 2026-09-13 — 红队第 26 轮：直接反转"不想打官司"未被识别为约束撤回（seed 20260970）
+
+新增 `generate_round_twentysix_variants`，5 个匿名案例覆盖"诉讼回避"约束的反转：
+债务"算了，可以打官司"（保留"不想影响关系"）、债务"算了，愿意起诉对方了"、
+合同"算了，可以走法律程序"、债务"算了，还是想打官司"（保留"人在外地"）、
+债务"算了，可以仲裁"。
+
+### 根因：诉讼回避约束的直接反转既不命中沟通型撤回，也不命中通用撤回
+
+- 复现：债务对话"朋友欠我3万元，我不想打官司，也不想影响关系，请给我方案。"+
+  "算了，可以打官司。"后，`facts['constraints']` **仍含"我不想打官司"**，约束未撤回，
+  方案仍按不诉讼方向走。
+- 根因：`is_constraint_withdrawal` 只认两条路径——① `_NEGATE_NO_CONTACT_PATTERN`
+  （面向"愿意再协商/重新联系"这类**沟通型**再确认）；② `_GENERIC_RETRACTION_PATTERN`
+  \+ `_REAFFIRM_TAIL_PATTERN`（面向"改变主意…也可以/愿意"）。用户"算了，可以打官司"里
+  "算了"不在通用撤回词表，"可以打官司"也不是沟通型再确认，两条路径都不命中。
+- 修复：新增极性敏感的 `_LITIGATION_REVERSAL_PATTERN`
+  （`(?:算了|不坚持|改变主意|收回)…(?:可以|愿意|同意|接受|决定|还是(?:要|想))…
+  (?:打官司|起诉|诉讼|走法律程序|走程序|仲裁|告他|告对方)`）；要求"接受动词"出现，
+  使"算了，我不想打官司"这类**再确认**不会误判；`_withdrawal_subject` 返回
+  `_LITIGATION_SUBJECT_PATTERN`（`打官司|起诉|诉讼|法律程序|走程序|仲裁`），
+  于是只撤回诉讼子句、无关约束（"不想影响关系""人在外地"）保持 active。
+  `is_constraint_withdrawal` 增加该分支。
+
+### 配套回归：槽位生命周期 + 覆盖矩阵
+
+- 新增 `test_litigation_reversal_withdraws_only_litigation_constraint`：
+  撤回后 `constraints` 不含"打官司"、仍含"影响关系"。
+- `evaluation/consultation_constraint_coverage.py` 增加 4 条 withdrawal 探针
+  （3 正：算了+可以打官司 / 算了+愿意起诉 / 算了+走法律程序；1 负：
+  "算了，我不想打官司"必须不撤回），由既有 `test_all_withdrawal_probes_pass` 守护。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_twentysix_variants`（import + 轮次状态生成器表）。
+- `evaluation/red_team_state.json` 追加 `round-026-litigation-reversal-not-a-withdrawal`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；槽位生命周期 1 项通过；
+约束覆盖 4 条 withdrawal 探针通过；无需 Torch/Gymnasium 的核心全量测试
+**996 项通过**（1 个既有第三方弃用警告）。
+
+### 本轮探针发现的其他候选根因（未处理，留待后续）
+
+- `party_record_holds_inference_signal`（既有 pending）：用户给真实身份
+  （"我叫张三，对方是李四"）时，`parties` 仍被角色推断信号"欠我"占据，真实身份被丢弃；
+  `_party_answer_summary` 也不认"我叫X/对方是X"人名句式。修复需把角色信号与 `parties`
+  解耦，并扩展人名解析，改动面较大。
+- 相对日期词表不全：`DATE_PATTERN` 有"上个月/去年/今天/昨天/前天"，但没有"上周"，
+  同一位置"上周签合同"不产生 event_time。
+- 程序结果词表缺"调解不成"：`outcome_token` 有"不成立/无果/不了了之"但无"调解不成"，
+  "法院说调解不成，让我等判决"未写入 `procedure`。
+
 
 
 
