@@ -618,6 +618,40 @@ decision_delta 可审计链路。只改表达层。
 
 验证：5/5 本轮案例通过；槽位生命周期 14 项通过；核心全量测试待统一运行后记录。
 
+## 2026-09-13 — 红队第 23 轮：对方/机关日期泄漏进用户 event_time（seed 20260967）
+
+新增 `generate_round_twentythree_variants`，5 个匿名案例覆盖对方/机关日期、金额更正与地点更正：
+合同对方说"2026年10月才能发货"、借贷金额二轮更正、租房地点"北京→上海"更正、
+借贷对方否认本金并带日期、交警说"2026年5月才能定责"。
+
+### 根因：对方或机关的日期被无差别写入用户自有的 event_time
+
+- 复现（探针 E/E2）：合同对话中用户先说"事情发生在2026年3月1日"，第二轮"供应商说2026年10月才能发货"，
+  结果 `facts['event_time']` 变成 `2026年10月`；交通对话"交警说2026年5月才能定责"则凭空写入 `2026年5月`。
+- 根因：`ingest_text` 里金额提取已有 `not counterparty_update` 守卫，但**日期循环缺少同样守卫**，
+  对方/机关陈述里携带的日期被当作用户事件日期，既覆盖用户已述日期，也在用户从未述日期时凭空写入。
+- 修复：抽出 `_detect_counterparty_update(message, dossier, case_type)`，把原先散落在结尾的对方更新探测
+  （`counterparty_timing` / `counterparty_verbs` 内联）统一为一次函数，并**在计算之前**求值；
+  用 `not counterparty_update` 守卫 `event_time` 提取，删除结尾冗余的内联探测与 `counterparty_update = None` 初始化。
+  金额提取原本就有的 `not counterparty_update` 守卫一并保留。
+
+### 配套回归：槽位生命周期
+
+- 新增 `test_counterparty_date_does_not_overwrite_user_event_time`：用户已述 `2026年3月1日`，
+  对方 `2026年10月` 不得覆盖（Round-23 probe E/E2）。
+- 新增 `test_counterparty_date_not_written_when_user_omitted_event_time`：用户从未述日期时，
+  对方日期不得写入 `event_time`。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_twentythree_variants`（import + 轮次状态生成器表），
+  使 `test_red_team_round_state_persists_seed_and_exact_anonymous_case_list` 覆盖本轮。
+- `evaluation/red_team_state.json` 追加 `round-023-counterparty-dates-and-corrections`，
+  匿名消息与生成器逐字一致（本轮为静态列表，无种子随机性）。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；槽位生命周期 2 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **963 项通过**（1 个既有第三方弃用警告）。
+
 
 
 

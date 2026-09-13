@@ -239,6 +239,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twenty_variants(),
         *generate_round_twentyone_variants(),
         *generate_round_twentytwo_variants(),
+        *generate_round_twentythree_variants(),
     ]
 
 
@@ -1455,6 +1456,80 @@ def generate_round_twentytwo_variants(seed: int = 20260966) -> list[RedTeamCase]
             ),
             'contract',
             forbidden_facts=(('constraints', '只接受书面沟通'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentythree_variants(seed: int = 20260967) -> list[RedTeamCase]:
+    """Five unseen variants over counterparty-supplied dates and corrections.
+
+    Round 23 locks the fix for a counterparty/authority date leaking into the
+    user-owned ``event_time`` slot, plus four correction/route behaviours.
+    """
+    return [
+        RedTeamCase(
+            'contract_counterparty_date_not_event_time',
+            ('contract', 'multiturn', 'counterparty_date', 'event_time'),
+            (
+                '供应商延期交货，我已经付款3万元，事情发生在2026年3月1日，请给我方案。',
+                '供应商说2026年10月才能发货，让我再等等。',
+            ),
+            'contract', 'unconfirmed',
+            expected_facts=(('event_time', '2026年3月1日'),),
+            forbidden_facts=(('event_time', '2026年10月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_amount_correction_in_turn_two',
+            ('debt', 'multiturn', 'fact_correction', 'amount'),
+            (
+                '朋友欠我2万元，有借条，请给我方案。',
+                '更正一下，其实借了5万元，前面说错了。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '5万元'),),
+            forbidden_facts=(('amount', '2万元'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'housing_location_correction',
+            ('housing', 'multiturn', 'fact_correction', 'location'),
+            (
+                '我是租客，退租后房东扣着押金不退，事情发生在北京，请先给我方案。',
+                '更正一下，事情发生在上海，不是北京。',
+            ),
+            'housing', '',
+            expected_facts=(('location', '上海'),),
+            forbidden_facts=(('location', '北京'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_counterparty_denial_with_date',
+            ('debt', 'multiturn', 'counterparty_date', 'amount'),
+            (
+                '朋友欠我4万元，有借条和转账记录，已经到期，请给我方案。',
+                '对方回复说只借了2万元，而且说2026年12月才还。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '4万元'),),
+            forbidden_facts=(('event_time', '2026年12月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_authority_date_not_event_time',
+            ('traffic', 'multiturn', 'counterparty_date', 'event_time'),
+            (
+                '交通事故后车辆受损，请给我方案。',
+                '交警说2026年5月才能定责，让我先等。',
+            ),
+            'traffic', 'unconfirmed',
+            forbidden_facts=(('event_time', '2026年5月'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

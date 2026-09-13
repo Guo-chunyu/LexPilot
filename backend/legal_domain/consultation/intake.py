@@ -425,6 +425,50 @@ def is_constraint_withdrawal(message: str) -> bool:
     return False
 
 
+def _detect_counterparty_update(message: str, dossier, case_type: str):
+    """Return the matched counterparty/authority claim span, or ``None``.
+
+    A later-turn statement from the other party (or an authority) is part of
+    the dispute, but its content — amounts, dates, positions — must not be
+    read as the user's own facts. Callers use the result to keep date/amount
+    extraction scoped to the user's own words.
+    """
+    profile = PROFILES.get(case_type, PROFILES['general'])
+    counterparty_timing = (
+        r'.{0,8}(?:(?:刚|又|最新|现(?:在)?).{0,8})?'
+        if dossier.turns > 1
+        else r'.{0,8}(?:刚|又|最新|现(?:在)?).{0,120}'
+    )
+    counterparty_verbs = profile.counterparty_verbs
+    counterparty_update = re.search(
+        r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人|'
+        r'中介|客服|人事|承办人员|保险理赔员|店铺经营者|物业|开发商|'
+        r'保险人|承办机构|经营者|代理人|他们|'
+        r'办案人员|民警|警官|交警|检察官|检察人员|执行法官|法官|书记员|'
+        r'窗口工作人员|窗口|医务科|医务处|科室)'
+        + counterparty_timing
+        + r'(?:' + counterparty_verbs + r')'
+        + r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
+        message,
+    )
+    if not counterparty_update and dossier.turns > 1:
+        counterparty_update = re.search(
+            r'((?:收到(?:的)?回复(?:说|称|表示|写明)?|'
+            r'回复(?:里|中)(?:说|称|表示|写着|写明))'
+            r'.{0,180}?)(?=[，,](?:我|现在我)?'
+            r'(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
+            message,
+        )
+    if not counterparty_update and dossier.turns > 1:
+        counterparty_update = re.search(
+            r'((?:我.{0,12}(?:找到|看到|保存).{0,8})?'
+            r'(?:他|她|对方).{0,8}(?:之前|曾经)?(?:说|表示|回复)'
+            r'[：:]?[“\"]([^”\"]{1,120})[”\"])',
+            message,
+        )
+    return counterparty_update
+
+
 def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type='user_message', source_ref='', correction_context=False, assertor='user', extraction_method='consultation_intake') -> None:
     value = str(value).strip()[:1200]
     if not value:
@@ -567,9 +611,14 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         put('location', location.group(1), location.group(0))
     elif known_city:
         put('location', known_city.group(0), known_city.group(0))
+    # A later-turn statement from the other party is part of the dispute, but
+    # its date/position must not be read as the user's own event date. Compute
+    # it once so the date extraction below stays scoped to the user's words
+    # (mirrors the existing `not counterparty_update` guard on amount).
+    counterparty_update = _detect_counterparty_update(message, dossier, state.case_type)
     for sentence in sentences:
         date_match = re.search(DATE_PATTERN, sentence)
-        if date_match:
+        if date_match and not counterparty_update:
             if 'event_time' not in extracted:
                 put('event_time', date_match.group(0), sentence)
             entry = TimelineEntry(date_text=date_match.group(0), description=sentence[:600], source_ref=source_ref, source_type=source_type, status='材料记载，待核实' if source_type == 'uploaded_file' else '用户陈述，待核实')
@@ -688,7 +737,6 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         )
     ):
         put('procedure', message, message)
-    counterparty_update = None
     profile = PROFILES.get(state.case_type, PROFILES['general'])
     if profile.extra_detail_pattern is not None:
         # Practice areas (e.g. debt round 18) ask area-specific compound
@@ -713,41 +761,6 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     # “对方承认还欠4万元并拒绝还款” is not re-read as a fresh reply.
     # Capture across commas because the condition attached to a position often
     # follows in the next clause ("涨价，除非加价否则不发货").
-    counterparty_timing = (
-        r'.{0,8}(?:(?:刚|又|最新|现(?:在)?).{0,8})?'
-        if dossier.turns > 1
-        else r'.{0,8}(?:刚|又|最新|现(?:在)?).{0,120}'
-    )
-    # The counter-party verb set lives on the practice profile so debt can
-    # narrow it (e.g. ``拒绝`` must not be re-read as a fresh reply on a
-    # recorded position like “对方承认还欠4万元并拒绝还款”).
-    counterparty_verbs = profile.counterparty_verbs
-    counterparty_update = re.search(
-        r'((?:对方|房东|租客|商家|平台|医院|供应商|公司|单位|家人|继承人|'
-        r'中介|客服|人事|承办人员|保险理赔员|店铺经营者|物业|开发商|'
-        r'保险人|承办机构|经营者|代理人|他们|'
-        r'办案人员|民警|警官|交警|检察官|检察人员|执行法官|法官|书记员|'
-        r'窗口工作人员|窗口|医务科|医务处|科室)'
-        + counterparty_timing
-        + r'(?:' + counterparty_verbs + r')'
-        + r'.{0,120}?)(?=[，,](?:我|现在我)?(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
-        message,
-    )
-    if not counterparty_update and dossier.turns > 1:
-        counterparty_update = re.search(
-            r'((?:收到(?:的)?回复(?:说|称|表示|写明)?|'
-            r'回复(?:里|中)(?:说|称|表示|写着|写明))'
-            r'.{0,180}?)(?=[，,](?:我|现在我)?'
-            r'(?:应该|该|能否|能不能|要不要|怎么)|[？?]|$)',
-            message,
-        )
-    if not counterparty_update and dossier.turns > 1:
-        counterparty_update = re.search(
-            r'((?:我.{0,12}(?:找到|看到|保存).{0,8})?'
-            r'(?:他|她|对方).{0,8}(?:之前|曾经)?(?:说|表示|回复)'
-            r'[：:]?[“\"]([^”\"]{1,120})[”\"])',
-            message,
-        )
     if counterparty_update:
         value = counterparty_update.group(1).strip('，,。；; ')
         put('details', value, value, assertor='counterparty')

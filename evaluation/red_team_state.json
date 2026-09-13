@@ -1893,6 +1893,84 @@
         "core_suite": "pending full run"
       },
       "commit_subject": "Escalate route after refusal/failed mediation and accept '也可以' withdrawal"
+    },
+    {
+      "round_id": "round-023-counterparty-dates-and-corrections",
+      "seed": 20260967,
+      "generator": "generate_round_twentythree_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "contract_counterparty_date_not_event_time",
+        "debt_amount_correction_in_turn_two",
+        "housing_location_correction",
+        "debt_counterparty_denial_with_date",
+        "traffic_authority_date_not_event_time"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "contract_counterparty_date_not_event_time",
+          "messages": [
+            "供应商延期交货，我已经付款3万元，事情发生在2026年3月1日，请给我方案。",
+            "供应商说2026年10月才能发货，让我再等等。"
+          ]
+        },
+        {
+          "case_id": "debt_amount_correction_in_turn_two",
+          "messages": [
+            "朋友欠我2万元，有借条，请给我方案。",
+            "更正一下，其实借了5万元，前面说错了。"
+          ]
+        },
+        {
+          "case_id": "housing_location_correction",
+          "messages": [
+            "我是租客，退租后房东扣着押金不退，事情发生在北京，请先给我方案。",
+            "更正一下，事情发生在上海，不是北京。"
+          ]
+        },
+        {
+          "case_id": "debt_counterparty_denial_with_date",
+          "messages": [
+            "朋友欠我4万元，有借条和转账记录，已经到期，请给我方案。",
+            "对方回复说只借了2万元，而且说2026年12月才还。"
+          ]
+        },
+        {
+          "case_id": "traffic_authority_date_not_event_time",
+          "messages": [
+            "交通事故后车辆受损，请给我方案。",
+            "交警说2026年5月才能定责，让我先等。"
+          ]
+        }
+      ],
+      "failures_before_fix": [
+        "contract_counterparty_date_not_event_time",
+        "debt_counterparty_denial_with_date",
+        "traffic_authority_date_not_event_time"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "counterparty_date_leaks_into_user_event_time",
+          "before_fix": "3 round-23 cases wrote the counterparty/authority date into the user-owned event_time slot, overwriting or fabricating the dispute date",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "verification": "5 round-23 cases, 2 slot-lifecycle tests and the full core suite passed",
+          "commit_subject": "Stop counterparty dates overwriting user event_time"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "对方或机关陈述里携带的日期（如“供应商说2026年10月才能发货”“交警说2026年5月才能定责”）被无差别写入用户自有的 event_time 槽位，既可能覆盖用户已述日期，也可能在用户从未述日期时被凭空写入。金额提取已有 not counterparty_update 守卫，但日期循环缺少同样的守卫。",
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "before_fix": "3 failed, 2 passed (correction locks)",
+        "selected_cases_after_fix": "5 passed",
+        "slot_lifecycle_suite": "2 passed",
+        "core_suite": "963 passed without torch/gymnasium"
+      },
+      "commit_subject": "Stop counterparty dates overwriting user event_time"
     }
   ]
 }
