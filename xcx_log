@@ -1796,6 +1796,56 @@ decision_delta 可审计链路。只改表达层。
 - `朋友去年借我3万元`（无"欠我"）会被判为 `general`——"借我"因歧义被刻意排除（第 29 轮），
   属已知取舍。
 
+## 2026-09-13 — 用户实测修复（总第 56 轮）：访谈结束后只剩"信息不足"
+
+用户粘贴真实会话，指出结尾两轮都只回"当前信息仍不足，系统不会提前输出确定性法律结论。"。
+已按原会话逐字复现并修复。
+
+### 复现（与用户会话完全一致）
+
+`公司拖欠我3个月工资…` → `2026.8.11` → `不好意思，刚才说错了是2025.8.11入职…` → `大概5000吧`
+→ `暂时没有别的材料了` → `已经结束了，是2025.9.10结束的` → `那你还要啥信息`
+
+修复前：第 6、7 轮都是裸拒绝；`done=True` 但 `final_report=False`；事实完整度卡在 80%。
+
+### 根因：`done` 之后每轮都判 STOP，而 STOP 分支只处理第一次
+
+- `RuleBasedPolicy.decide`（`policy.py:37`）：`if state.done: return STOP, "案件流程已经结束。"`。
+- `execute_action` 的 STOP 分支：`if state.judge_result and state.judge_result.can_stop:` —— 只覆盖
+  "第一次停止"；`done` 已为真后的轮次 `judge_result` 已不在，于是落到 `else` 输出裸拒绝，
+  **把刚生成报告的那条好回复覆盖掉**，并且无视用户刚提供的事实（`employment_end_date` 其实已经
+  正确入库为 2025-09-10）。
+
+### 修复
+
+`workflow.py` 的 STOP 分支改为：`already_planned = state.done or bool(state.final_report)`，
+只要案件已经形成方案（或本轮刚形成），就补齐报告并返回 `_report_reply(state)`，
+而不是区分"第几次停止"。
+
+修复后同一会话：第 6 轮给出完整方案，**事实完整度 80% → 100%**、总体置信度 82%，报告生成；
+第 7 轮"那你还要啥信息"同样给出方案（含"目前未取得的材料已标记为证据缺口…"清单）。
+
+### 配套回归
+
+- 新增 `tests/test_report_after_interview.py`（6 项）：逐字复现用户会话，断言
+  `employment_end_date == '2025-09-10'`、报告存在、回复含"阶段性行动方案"且**不含**裸拒绝；
+  并参数化 3 类后续消息 + 1 类"补充新材料"（走材料复核分支，只断言非拒绝）。
+- `tests/test_case_red_team.py` 注册 `generate_round_fiftysix_variants`（5 个多轮案例，用
+  `forbidden_reply_fragments=('当前信息仍不足',)` 锁住"不再裸拒绝"）。
+- `evaluation/red_team_state.json` 追加 `round-056-post-plan-turns-refused`。
+
+验证：5/5 本轮案例通过；状态机一致性测试通过；定点单元测试 6 项通过；
+无需 Torch/Gymnasium 的核心全量测试 **1489 项通过**（1 个既有第三方弃用警告，无回归）。
+
+### 本轮观察、未改的两点（记录在案）
+
+1. **`关键时间` 与专用日期槽并存**：第 6 轮"是2025.9.10结束的"会把 `event_time` 从入职日期
+   改写为结束日期，并记入 `consultation.conflicts`。`employment_end_date` 本身是对的，
+   冲突属内部提示、未影响回复内容。彻底解决需要区分"入职日期/结束日期/关键时间"三者的语义，
+   改动面较大，本轮不动（红队案例按框架约定打 `fact_conflict` 标签）。
+2. **`_report_reply` 的开场句复用**：`evidence_collection_exhausted` 之后每轮都会重复
+   "明白，现有材料就这些…"。属既有文案问题，不影响正确性。
+
 
 
 

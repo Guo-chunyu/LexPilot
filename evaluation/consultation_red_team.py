@@ -272,6 +272,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fiftythree_variants(),
         *generate_round_fiftyfour_variants(),
         *generate_round_fiftyfive_variants(),
+        *generate_round_fiftysix_variants(),
     ]
 
 
@@ -3669,6 +3670,90 @@ def generate_round_fiftyfive_variants(seed: int = 20260999) -> list[RedTeamCase]
             expected_facts=(('event_time', '3个月前'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
+        ),
+    ]
+
+
+_LABOR_TAIL_OPENING = (
+    '公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、工作群聊天和考勤截图。'
+    '公司已经明确拒绝支付，请先给我方案。',
+)
+_LABOR_TAIL_BODY = (
+    '2026.8.11',
+    '不好意思，刚才说错了是2025.8.11入职，然后中间又2个月',
+    '大概5000吧',
+    '暂时没有别的材料了',
+    '已经结束了，是2025.9.10结束的',
+)
+
+
+def generate_round_fiftysix_variants(seed: int = 20261000) -> list[RedTeamCase]:
+    """Five unseen variants over the turn *after* the staged plan is generated.
+
+    Round 56 locks the fix for the reported tail: once the interview completed,
+    every later turn was answered with the bare "当前信息仍不足" refusal instead
+    of the staged plan, and the fact the user had just given was ignored.
+    """
+    report_guard = {
+        'expected_reply_fragments': ('阶段性行动方案',),
+        'forbidden_reply_fragments': ('当前信息仍不足',),
+    }
+    # Turn 3 corrects the start date and turn 6 moves 关键时间 on to the end date,
+    # so the framework's "every earlier slot survives unchanged" rule does not
+    # apply here (`fact_conflict` is one of its documented exemptions).
+    tail_tags = ('labor_dispute', 'labor_path', 'post_plan', 'fact_conflict')
+    return [
+        RedTeamCase(
+            'tail_end_date_then_report',
+            tail_tags,
+            (*_LABOR_TAIL_OPENING, *_LABOR_TAIL_BODY),
+            'labor_dispute', '',
+            expected_facts=(('employment_end_date', '2025-09-10'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+            **report_guard,
+        ),
+        RedTeamCase(
+            'tail_ask_what_else',
+            tail_tags,
+            (*_LABOR_TAIL_OPENING, *_LABOR_TAIL_BODY, '那你还要啥信息'),
+            'labor_dispute', '',
+            expected_facts=(('employment_end_date', '2025-09-10'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+            **report_guard,
+        ),
+        RedTeamCase(
+            'tail_followup_ack',
+            tail_tags,
+            (*_LABOR_TAIL_OPENING, *_LABOR_TAIL_BODY, '好的，谢谢。'),
+            'labor_dispute', '',
+            expected_facts=(('employment_end_date', '2025-09-10'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+            **report_guard,
+        ),
+        RedTeamCase(
+            'tail_more_facts',
+            tail_tags,
+            (*_LABOR_TAIL_OPENING, *_LABOR_TAIL_BODY, '公司还欠我加班费。'),
+            'labor_dispute', '',
+            expected_facts=(('employment_end_date', '2025-09-10'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+            **report_guard,
+        ),
+        RedTeamCase(
+            'tail_found_material',
+            tail_tags,
+            (*_LABOR_TAIL_OPENING, *_LABOR_TAIL_BODY, '我后来找到了社保记录，可以补充。'),
+            'labor_dispute', '',
+            expected_facts=(('employment_end_date', '2025-09-10'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+            # This turn takes the material-review branch, so only the refusal is
+            # forbidden — it must still be a substantive answer.
+            forbidden_reply_fragments=('当前信息仍不足',),
         ),
     ]
 

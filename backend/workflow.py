@@ -121,7 +121,13 @@ def execute_action(
                 reply=report.verification.get("refusal_reason", "当前信息不足，系统暂不生成确定性结论。"),
             )
     elif action == LegalAction.STOP:
-        if state.judge_result and state.judge_result.can_stop:
+        # Round-56: `RuleBasedPolicy.decide` returns STOP for *every* turn once
+        # `state.done` is True. This branch only handled the first stop, so later
+        # turns fell through to the bare "信息不足" refusal — discarding the
+        # staged plan and silently ignoring the facts the user had just given
+        # (reported with "已经结束了，是2025.9.10结束的").
+        already_planned = state.done or bool(state.final_report)
+        if already_planned or (state.judge_result and state.judge_result.can_stop):
             if not state.final_report:
                 build_final_report(state)
             state.done = True

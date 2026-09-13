@@ -4358,6 +4358,110 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "16 passed (tests/test_relative_date_extraction.py)"
       }
+    },
+    {
+      "round_id": "round-056-post-plan-turns-refused",
+      "generator": "generate_round_fiftysix_variants",
+      "seed": 20261000,
+      "status": "completed",
+      "root_cause": "用户实测报告：访谈结束、已生成阶段性方案之后，任何后续消息都只回\"当前信息仍不足，系统不会提前输出确定性法律结论。\"根因两层：(1) RuleBasedPolicy.decide 里 `if state.done: return STOP`，done 之后每轮都判 STOP；(2) execute_action 的 STOP 分支只处理了\"第一次停止\"（`if state.judge_result and can_stop`），后续轮次 judge_result 已不在，于是走 else 分支输出裸拒绝，把刚生成报告的好回复覆盖掉，并且无视用户刚提供的事实（\"已经结束了，是2025.9.10结束的\"）。",
+      "failures_before_fix": [
+        "tail_end_date_then_report",
+        "tail_ask_what_else",
+        "tail_followup_ack",
+        "tail_more_facts",
+        "tail_found_material"
+      ],
+      "fix_files": [
+        "backend/workflow.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "post_plan_turns_refused",
+          "before_fix": "实测：第 6 轮\"已经结束了，是2025.9.10结束的\"与第 7 轮\"那你还要啥信息\"都返回\"当前信息仍不足…\"；事实完整度停在 80%，报告未生成",
+          "fix_files": [
+            "backend/workflow.py"
+          ],
+          "commit_subject": "Keep serving the staged plan after the interview completes",
+          "verification": "5 round-56 cases, 6 unit tests and the full core suite passed; 事实完整度升到 100%，总体置信度 82%，报告生成"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "tail_end_date_then_report",
+        "tail_ask_what_else",
+        "tail_followup_ack",
+        "tail_more_facts",
+        "tail_found_material"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "tail_end_date_then_report",
+          "messages": [
+            "公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、工作群聊天和考勤截图。公司已经明确拒绝支付，请先给我方案。",
+            "2026.8.11",
+            "不好意思，刚才说错了是2025.8.11入职，然后中间又2个月",
+            "大概5000吧",
+            "暂时没有别的材料了",
+            "已经结束了，是2025.9.10结束的"
+          ]
+        },
+        {
+          "case_id": "tail_ask_what_else",
+          "messages": [
+            "公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、工作群聊天和考勤截图。公司已经明确拒绝支付，请先给我方案。",
+            "2026.8.11",
+            "不好意思，刚才说错了是2025.8.11入职，然后中间又2个月",
+            "大概5000吧",
+            "暂时没有别的材料了",
+            "已经结束了，是2025.9.10结束的",
+            "那你还要啥信息"
+          ]
+        },
+        {
+          "case_id": "tail_followup_ack",
+          "messages": [
+            "公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、工作群聊天和考勤截图。公司已经明确拒绝支付，请先给我方案。",
+            "2026.8.11",
+            "不好意思，刚才说错了是2025.8.11入职，然后中间又2个月",
+            "大概5000吧",
+            "暂时没有别的材料了",
+            "已经结束了，是2025.9.10结束的",
+            "好的，谢谢。"
+          ]
+        },
+        {
+          "case_id": "tail_more_facts",
+          "messages": [
+            "公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、工作群聊天和考勤截图。公司已经明确拒绝支付，请先给我方案。",
+            "2026.8.11",
+            "不好意思，刚才说错了是2025.8.11入职，然后中间又2个月",
+            "大概5000吧",
+            "暂时没有别的材料了",
+            "已经结束了，是2025.9.10结束的",
+            "公司还欠我加班费。"
+          ]
+        },
+        {
+          "case_id": "tail_found_material",
+          "messages": [
+            "公司拖欠我3个月工资，共18000元。我没有劳动合同，但有工资流水、工作群聊天和考勤截图。公司已经明确拒绝支付，请先给我方案。",
+            "2026.8.11",
+            "不好意思，刚才说错了是2025.8.11入职，然后中间又2个月",
+            "大概5000吧",
+            "暂时没有别的材料了",
+            "已经结束了，是2025.9.10结束的",
+            "我后来找到了社保记录，可以补充。"
+          ]
+        }
+      ],
+      "commit_subject": "Keep serving the staged plan after the interview completes",
+      "verification": {
+        "before_fix": "2 turns answered with the bare refusal; no report was generated",
+        "core_suite": "1489 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "6 passed (tests/test_report_after_interview.py)"
+      }
     }
   ]
 }
