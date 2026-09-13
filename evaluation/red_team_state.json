@@ -3024,6 +3024,79 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "4 passed (tests/test_evidence_alias_debt.py)"
       }
+    },
+    {
+      "round_id": "round-038-unitless-approximate-amount",
+      "generator": "generate_round_thirtyeight_variants",
+      "seed": 20260982,
+      "status": "completed",
+      "root_cause": "AMOUNT_PATTERN 只认“数字+单位”的形状，纯阿拉伯数字加尾部约数词（“5000左右/2000上下/30000来”）没有单位词，因此不产生 amount。",
+      "failures_before_fix": [
+        "amount_leftright",
+        "amount_shangxia",
+        "amount_lai"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "unitless_approximate_amount",
+          "before_fix": "round-38 探针 A1 显示“朋友欠我5000左右”不产生 amount",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Accept unit-less approximate amounts",
+          "verification": "5 round-38 cases, 13 amount-pattern unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "amount_leftright",
+        "amount_shangxia",
+        "amount_lai",
+        "amount_control_unit",
+        "amount_control_bare_no_approx"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "amount_leftright",
+          "messages": [
+            "朋友欠我5000左右，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_shangxia",
+          "messages": [
+            "对方欠我2000上下，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_lai",
+          "messages": [
+            "对方欠我30000来，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_control_unit",
+          "messages": [
+            "朋友欠我3万元，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "amount_control_bare_no_approx",
+          "messages": [
+            "朋友欠我1万5，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Accept unit-less approximate amounts",
+      "verification": {
+        "before_fix": "3 failed (5000左右 / 2000上下 / 30000来 produced no amount)",
+        "core_suite": "1204 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "13 passed (tests/test_amount_colloquial.py)"
+      }
     }
   ]
 }

@@ -254,6 +254,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtyfive_variants(),
         *generate_round_thirtysix_variants(),
         *generate_round_thirtyseven_variants(),
+        *generate_round_thirtyeight_variants(),
     ]
 
 
@@ -2481,6 +2482,72 @@ def generate_round_thirtyseven_variants(seed: int = 20260981) -> list[RedTeamCas
             ),
             'debt', 'creditor',
             expected_evidence_names=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtyeight_variants(seed: int = 20260982) -> list[RedTeamCase]:
+    """Five unseen variants over unit-less approximate amounts.
+
+    Round 38 locks the fix for a bare Arabic amount with only a trailing
+    approximator ("5000左右" / "2000上下" / "30000来"), which previously produced
+    no ``amount`` at all.
+    """
+    return [
+        RedTeamCase(
+            'amount_leftright',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '朋友欠我5000左右，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '5000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_shangxia',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '对方欠我2000上下，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '2000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_lai',
+            ('debt', 'amount_parse', 'colloquial'),
+            (
+                '对方欠我30000来，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '30000'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_control_unit',
+            ('debt', 'amount_parse'),
+            (
+                '朋友欠我3万元，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '3万'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'amount_control_bare_no_approx',
+            ('debt', 'amount_parse'),
+            (
+                '朋友欠我1万5，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('amount', '1万5'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

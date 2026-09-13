@@ -88,7 +88,12 @@ DATE_PATTERN = (
     # "上周我们签了合同，对方一直不履行" never produced an `event_time`.
     r'|上周|本周|这周|这个月|本月|前几天|几天前|\d+\s*(?:天|周|个月|年)前)'
 )
-AMOUNT_PATTERN = r'[0-9零一二两三四五六七八九十百千万点.,]+\s*(?:多|余)?\s*(?:万元|元|块钱|块|万)'
+AMOUNT_PATTERN = (
+    r'(?:[0-9零一二两三四五六七八九十百千万点.,]+\s*(?:多|余)?\s*(?:万元|元|块钱|块|万)'
+    # Round-38: a bare Arabic amount with only a trailing approximator ("5000左右")
+    # is still an amount even without a unit word.
+    r'|\d{2,}\s*(?:左右|上下|来))'
+)
 PLAN_PATTERN = r'方案|步骤|怎么做|怎么办理|起草|写.{0,4}(?:函|申请|诉状)|报告|行动清单|先给我|直接告诉'
 UNKNOWN_PATTERN = r'^(?:我也?|这个|现在|目前)?(?:不清楚|不知道|不确定|记不清|忘了|不方便说|不想说|无法提供)[。！!\s]*$'
 EXHAUSTED_PATTERN = (

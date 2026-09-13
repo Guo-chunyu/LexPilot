@@ -18,8 +18,12 @@ from backend.legal_domain.consultation.intake import AMOUNT_PATTERN
         ('朋友欠我3万元', True),
         ('欠我8000元', True),
         ('欠我5万', True),
-        # Still not an amount: a bare number, or a number with no unit at all.
-        ('对方欠我5000左右', False),
+        # Round-38: a bare Arabic amount with only a trailing approximator.
+        ('对方欠我5000左右', True),
+        ('对方欠我2000上下', True),
+        ('欠我30000来', True),
+        # Still not an amount: no unit and no amount-shaped approximator.
+        ('3个月左右', False),
         ('欠我8千', False),
         ('请给我方案', False),
     ],
