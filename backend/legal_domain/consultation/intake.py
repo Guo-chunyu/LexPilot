@@ -48,7 +48,7 @@ _GENERIC_RETRACTION_PATTERN = re.compile(
     r'改变主意|不再限制|不坚持.{0,6}(?:那个|前述)|撤(?:销|回).{0,4}(?:限制|要求|那个)'
 )
 _REAFFIRM_TAIL_PATTERN = re.compile(
-    r'愿意|可以.{0,4}了|还是想.{0,6}(?:试试|再|重新)|还是.{0,4}(?:可以|愿意|想)'
+    r'愿意|可以.{0,4}了|也可以|还是想.{0,6}(?:试试|再|重新)|还是.{0,4}(?:可以|愿意|想)'
 )
 
 
@@ -414,7 +414,9 @@ def is_constraint_withdrawal(message: str) -> bool:
        撤销不要再联系). Round-17 probe 1.
     2. The message is a generic retraction ("改变主意", "不再限制",
        "不坚持那个") followed by a re-affirmation ("愿意", "可以…了",
-       "还是想…"). Round-19 probe 4 shows this exact shape.
+       "也可以", "还是想…"). Round-19 probe 4 shows the
+       "改变主意 + 还是愿意再协商" shape; round-22 probe 5 shows
+       "改变主意了，电话沟通也可以" where the reaffirmation reads "也可以".
     """
     if _NEGATE_NO_CONTACT_PATTERN.search(message):
         return True
@@ -607,11 +609,16 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
         # withdrawn) changes the case as much as filing it did.  Both an outcome
         # and a procedural object are required so substantive wording such as
         # “撤销合同” is not misread as procedure progress.
-        outcome_token = r'驳回|不予受理|不予立案|不受理|不成立|未受理|撤销|撤回|终结'
+        outcome_token = (
+            r'驳回|不予受理|不予立案|不受理|不成立|未受理|撤销|撤回|终结'
+            r'|没有成功|未成功|没能成功|无果|不了了之'
+            r'|拒绝(?:协商|调解|沟通|配合)'
+        )
         outcome_procedure = (
             has_asserted(sentence, outcome_token, policy=SENTENCE_BROAD)
             and re.search(
-                r'申请|投诉|举报|仲裁|复议|诉讼|起诉|执行|调解|复核|决定|立案|请求|裁决|判决|认定',
+                r'申请|投诉|举报|仲裁|复议|诉讼|起诉|执行|调解|复核|决定|立案|请求|裁决|判决|认定'
+                r'|协商|沟通',
                 sentence,
             )
             and not has_negated(sentence, outcome_token, policy=SENTENCE_BROAD)

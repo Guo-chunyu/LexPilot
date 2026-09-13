@@ -587,4 +587,37 @@ decision_delta 可审计链路。只改表达层。
 
 验证：5/5 本轮案例通过；红队 248 项通过；无需 Torch/Gymnasium 的核心全量测试 940 项通过。
 
+## 2026-09-13 — 红队第 22 轮：路线升级与撤回确认覆盖（seed 20260966）
+
+新增 `generate_round_twentytwo_variants`，5 个匿名案例覆盖路线升级、粒度切换与约束撤回：
+借贷对方拒绝协商、消费调解失败后转正式、借贷粒度从单步切到详细方案、交通材料由不可得转为已找到、合同书面沟通限制撤回。
+
+### 修复一：对方明确拒绝协商仍路由到协商
+
+- 复现：借贷对话中“对方明确拒绝还款，也拒绝协商”，`recommended_route` 仍为 `negotiation`。
+- 根因：`planning.failed` 正则覆盖不足，未把“拒绝协商”判定为已受阻。
+- 修复：把 `拒绝` 纳入 `failed` 判定；`recommended` 在受阻时回落 `mediation` 而非 `negotiation`。
+
+### 修复二：调解已失败后退回调解
+
+- 复现：消费“调解没有成功、对方仍拒绝退款”，`recommended_route` 仍为 `mediation`。
+- 根因：调解失败未进入 `procedure` 的程序结果词，或进入后 `recommended` 没有据此升到 `formal`。
+- 修复：`planning.mediation_failed` 识别“调解失败/不成/没有成功”，与 `failed` 一并驱动路线升到 `formal`。
+
+### 修复三：撤回再确认读作“也可以”时未被识别
+
+- 复现：合同对话“我只接受书面沟通”，随后“我改变主意了，电话沟通也可以”，原限制仍保留在 `constraints`。
+- 根因：`_REAFFIRM_TAIL_PATTERN` 只覆盖 `愿意` / `可以…了` / `还是想…`，不含“也可以”这种再确认。
+- 修复：在 `_REAFFIRM_TAIL_PATTERN` 增加 `也可以` 分支；因通用撤回还需匹配 `改变主意` 等泛化撤回词，不会误触发。
+- 新增 `test_user_withdrawal_with_ke_yi_also_reaffirmation` 固化该形状。
+
+### 测试注册
+
+- `tests/test_case_red_team.py` 注册 `generate_round_twentytwo_variants`（import + 轮次状态生成器表），
+  使 `test_red_team_round_state_persists_seed_and_exact_anonymous_case_list` 覆盖本轮。
+
+验证：5/5 本轮案例通过；槽位生命周期 14 项通过；核心全量测试待统一运行后记录。
+
+
+
 

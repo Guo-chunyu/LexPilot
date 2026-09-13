@@ -139,6 +139,24 @@ def test_user_withdrawal_removes_constraint_from_facts():
     assert '不要再让我联系对方' not in constraints
 
 
+def test_user_withdrawal_with_ke_yi_also_reaffirmation():
+    """Round-22 probe 5: '我改变主意了，电话沟通也可以' must also retract.
+
+    The generic retraction ('改变主意') is followed by a reaffirmation that
+    reads '也可以' rather than '可以…了' / '愿意'. The prior constraint must
+    be withdrawn even though none of the earlier reaffirmation shapes appear.
+    """
+    state = _state('contract')
+    _run(
+        state,
+        '供应商延期交货并拒绝说明原因，请给我方案。',
+        '补充一个限制：我只接受书面沟通，不进行电话交涉，请按这个条件调整。',
+        '我改变主意了，电话沟通也可以，请更新方案。',
+    )
+    constraints = str(state.facts.get('constraints', ''))
+    assert '只接受书面沟通' not in constraints, constraints
+
+
 def test_user_withdrawal_keeps_other_active_constraints():
     state = _state('debt')
     _run(

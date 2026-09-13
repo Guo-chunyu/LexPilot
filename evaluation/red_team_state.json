@@ -3,8 +3,8 @@
   "base_seed": 20260909,
   "round_size": 5,
   "consecutive_clean_rounds": 0,
-  "loop_status": "paused",
-  "pause_reason": "按用户要求完成第21轮后统一推送",
+  "loop_status": "running",
+  "pause_reason": "",
   "pending_root_causes": [
     {
       "id": "party_record_holds_inference_signal",
@@ -1790,6 +1790,109 @@
         "core_tests": "940 passed without torch/gymnasium"
       },
       "commit_subject": "Honour negated detailed-plan requests"
+    },
+    {
+      "round_id": "round-022-route-escalation-and-withdrawal",
+      "seed": 20260966,
+      "generator": "generate_round_twentytwo_variants",
+      "status": "completed",
+      "selected_case_ids": [
+        "debt_counterparty_refuses_negotiation",
+        "consumer_mediation_failed_then_formal",
+        "debt_granularity_switch",
+        "traffic_material_with_counterparty_then_found",
+        "contract_written_only_then_withdrawn"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "debt_counterparty_refuses_negotiation",
+          "messages": [
+            "朋友欠我3万元，有借条和转账记录，已经到期，请给我方案。",
+            "我催过好几次，对方明确拒绝还款，也拒绝协商。",
+            "还款期限是2026年2月1日，事情发生在北京市。"
+          ]
+        },
+        {
+          "case_id": "consumer_mediation_failed_then_formal",
+          "messages": [
+            "健身房关门不退款，我充了3000元，请给我方案。",
+            "我向12315投诉了，后来调解没有成功，对方仍然拒绝退款。",
+            "我在成都市，事情发生在2026年4月。"
+          ]
+        },
+        {
+          "case_id": "debt_granularity_switch",
+          "messages": [
+            "朋友欠我2万元，有借条和转账记录，已经到期，请给我方案。",
+            "我现在最先做哪一步？请只说当前一步。",
+            "好，那现在请给我完整详细方案，写清步骤和渠道。"
+          ]
+        },
+        {
+          "case_id": "traffic_material_with_counterparty_then_found",
+          "messages": [
+            "交通事故后车辆受损，事故认定书还在对方手里，我现在拿不到，请给我方案。",
+            "我又拿到了事故认定书和现场照片，请更新材料清单。",
+            "事情发生在苏州市，2026年3月5日。"
+          ]
+        },
+        {
+          "case_id": "contract_written_only_then_withdrawn",
+          "messages": [
+            "供应商延期交货并拒绝说明原因，请给我方案。",
+            "补充一个限制：我只接受书面沟通，不进行电话交涉，请按这个条件调整。",
+            "我改变主意了，电话沟通也可以，请更新方案。",
+            "合同是2025年11月签的，我在天津市。"
+          ]
+        }
+      ],
+      "failures_before_fix": [
+        "debt_counterparty_refuses_negotiation",
+        "consumer_mediation_failed_then_formal",
+        "contract_written_only_then_withdrawn"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "refused_negotiation_routes_through_negotiation",
+          "before_fix": "round-022 case debt_counterparty_refuses_negotiation produced recommended_route=negotiation",
+          "fix_files": [
+            "backend/legal_domain/consultation/planning.py"
+          ],
+          "verification": "5 round-22 cases, 14 slot-lifecycle tests passed",
+          "commit_subject": "Escalate route after counterparty refuses negotiation"
+        },
+        {
+          "id": "failed_mediation_routes_back_to_mediation",
+          "before_fix": "round-022 case consumer_mediation_failed_then_formal produced recommended_route=mediation",
+          "fix_files": [
+            "backend/legal_domain/consultation/planning.py"
+          ],
+          "verification": "5 round-22 cases passed",
+          "commit_subject": "Escalate route after mediation has failed"
+        },
+        {
+          "id": "withdrawal_reaffirm_tail_missing_ke_yi_also",
+          "before_fix": "round-022 case contract_written_only_then_withdrawn: constraint '只接受书面沟通' remained after '我改变主意了，电话沟通也可以'",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "verification": "5 round-22 cases, 14 slot-lifecycle tests passed",
+          "commit_subject": "Accept '也可以' as a constraint-withdrawal reaffirmation"
+        }
+      ],
+      "pending_root_causes": [],
+      "root_cause": "两处路线升级缺口（对方明确拒绝协商、调解已失败仍回落到对应非正式路线）与一处撤回确认覆盖缺口（'我改变主意了，电话沟通也可以' 的再确认为'也可以'而非'可以…了'/'愿意'，导致撤回未被识别，原限制仍保留）。",
+      "fix_files": [
+        "backend/legal_domain/consultation/planning.py",
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "verification": {
+        "before_fix": "3 failed, 2 passed",
+        "selected_cases_after_fix": "5 passed",
+        "slot_lifecycle_suite": "14 passed",
+        "core_suite": "pending full run"
+      },
+      "commit_subject": "Escalate route after refusal/failed mediation and accept '也可以' withdrawal"
     }
   ]
 }

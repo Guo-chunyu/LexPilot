@@ -92,8 +92,15 @@ def compare_routes(state) -> dict:
     procedure = str(state.facts.get('procedure', ''))
     constraints = str(state.facts.get('constraints', ''))
     failed = bool(re.search(
-        r'拒绝|不回复|不理|协商.{0,8}(?:不成|失败|三次)|调解失败|'
+        r'拒绝|不回复|不理|协商.{0,8}(?:不成|失败|三次)|'
+        r'调解(?:失败|不成|没有成功|未成功|无果)|'
         r'驳回|不予受理|不予立案|不受理|不成立|未受理|已终结',
+        procedure,
+    ))
+    # Once a third-party attempt has already failed, sending the user back to
+    # mediation repeats a step that is known not to work; go formal instead.
+    mediation_failed = bool(re.search(
+        r'调解(?:失败|不成|没有成功|未成功|无果)',
         procedure,
     ))
     filed = bool(re.search(
@@ -103,7 +110,12 @@ def compare_routes(state) -> dict:
         procedure,
     ))
     formal_preference = bool(re.search(r'不想再.{0,10}(?:催款|协商|调解)|(?:准备|直接|转为?).{0,8}(?:起诉|仲裁|正式程序)', constraints))
-    recommended = 'formal' if urgent or formal_only or filed or formal_preference else 'mediation' if failed else 'negotiation'
+    recommended = (
+        'formal'
+        if urgent or formal_only or filed or formal_preference or mediation_failed
+        else 'mediation' if failed else 'negotiation'
+    )
+    escalate = formal_only or urgent or filed or formal_preference or mediation_failed
     route_data = [
         ('negotiation', '一次可留痕的协商', '自行处理通常无需程序费；重点是书面回复和实际到账',
          '可控、关系成本较低，适合尚未交涉且对方愿意沟通；已有拒绝时不重复消耗时间', '拒绝、超过双方约定回复安排或临近法定期限时转正式渠道'),
@@ -113,7 +125,7 @@ def compare_routes(state) -> dict:
          '优先保护到期的程序权利，或处理已经进入正式程序的事项；费用与执行可能分开衡量', '材料被退回时按具体理由补正，收到文书当天核对下一期限'),
     ]
     routes = [{'id': rid, 'name': name, 'cost': cost, 'reason': reason, 'stop_condition': stop,
-        'eligible': rid == 'formal' or not (formal_only or urgent or filed or formal_preference), 'recommended': rid == recommended} for rid, name, cost, reason, stop in route_data]
+        'eligible': rid == 'formal' or not escalate, 'recommended': rid == recommended} for rid, name, cost, reason, stop in route_data]
     return {'model': 'transparent_preference_rules', 'client_role': role, 'recommended_route': recommended, 'routes': routes,
         'success_probability': None,
         'objective': '优先止损与保住权利；在可执行性、费用、时间和用户偏好之间选择合法维权路径。',

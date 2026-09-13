@@ -238,6 +238,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_nineteen_variants(),
         *generate_round_twenty_variants(),
         *generate_round_twentyone_variants(),
+        *generate_round_twentytwo_variants(),
     ]
 
 
@@ -1371,6 +1372,90 @@ def generate_round_twentyone_variants(seed: int = 20260947) -> list[RedTeamCase]
             origin='auto_variant',
             # A refusal of the full plan must not be answered with the full plan.
             forbidden_facts=(('constraints', '不用重复完整方案'),),
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentytwo_variants(seed: int = 20260966) -> list[RedTeamCase]:
+    """Five unseen variants over route escalation, granularity and withdrawal.
+
+    Round 22 pairs two found defects (a refused negotiation still routing to
+    negotiation, and an already-failed mediation routing back to mediation)
+    with three behaviours worth locking in.
+    """
+    randomizer = Random(seed)
+    found = randomizer.choice(('我又拿到了', '后来我取到了'))
+    return [
+        RedTeamCase(
+            'debt_counterparty_refuses_negotiation',
+            ('debt', 'multiturn', 'route_escalation'),
+            (
+                '朋友欠我3万元，有借条和转账记录，已经到期，请给我方案。',
+                '我催过好几次，对方明确拒绝还款，也拒绝协商。',
+                '还款期限是2026年2月1日，事情发生在北京市。',
+            ),
+            'debt', 'creditor',
+            expected_facts=(('procedure', '拒绝协商'),),
+            expected_route='mediation',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'consumer_mediation_failed_then_formal',
+            ('consumer', 'multiturn', 'route_escalation', 'procedure_outcome'),
+            (
+                '健身房关门不退款，我充了3000元，请给我方案。',
+                '我向12315投诉了，后来调解没有成功，对方仍然拒绝退款。',
+                '我在成都市，事情发生在2026年4月。',
+            ),
+            'consumer',
+            expected_facts=(('procedure', '调解'),),
+            # Re-sending the user to mediation after it already failed repeats a
+            # step that is known not to work.
+            expected_route='formal',
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'debt_granularity_switch',
+            ('debt', 'multiturn', 'granularity_switch'),
+            (
+                '朋友欠我2万元，有借条和转账记录，已经到期，请给我方案。',
+                '我现在最先做哪一步？请只说当前一步。',
+                '好，那现在请给我完整详细方案，写清步骤和渠道。',
+            ),
+            'debt', 'creditor',
+            origin='auto_variant',
+            expected_reply_fragments=('@granularity:detailed_plan',),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'traffic_material_with_counterparty_then_found',
+            ('traffic', 'multiturn', 'evidence_recovered'),
+            (
+                '交通事故后车辆受损，事故认定书还在对方手里，我现在拿不到，请给我方案。',
+                f'{found}事故认定书和现场照片，请更新材料清单。',
+                '事情发生在苏州市，2026年3月5日。',
+            ),
+            'traffic',
+            expected_facts=(('location', '苏州'),),
+            origin='auto_variant',
+            expected_evidence_names=('事故认定及现场记录',),
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'contract_written_only_then_withdrawn',
+            ('contract', 'multiturn', 'constraint_withdrawal'),
+            (
+                '供应商延期交货并拒绝说明原因，请给我方案。',
+                '补充一个限制：我只接受书面沟通，不进行电话交涉，请按这个条件调整。',
+                '我改变主意了，电话沟通也可以，请更新方案。',
+                '合同是2025年11月签的，我在天津市。',
+            ),
+            'contract',
+            forbidden_facts=(('constraints', '只接受书面沟通'),),
+            origin='auto_variant',
             max_followup_similarity=0.65,
         ),
     ]
