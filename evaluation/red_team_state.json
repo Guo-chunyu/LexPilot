@@ -2047,6 +2047,86 @@
         "core_suite": "974 passed without torch/gymnasium"
       },
       "commit_subject": "Prefer event-anchored date over incidental date"
+    },
+    {
+      "round_id": "round-025-location-correction-not-applied",
+      "generator": "generate_round_twentyfive_variants",
+      "seed": 20260969,
+      "status": "completed",
+      "root_cause": "显式地点更正（无“我在/发生在/位于/地点”前缀、且所命中的区/县不在 known_city 列表）被既有三条地点提取分支全部漏掉；当用户补出的是 known_city（杭州、深圳）时，known_city 分支还会把“深圳市南山区”截断为“深圳”。Round-25 探针 H2 显示“我在北京市”+“更正一下，具体是朝阳区”后 location 仍停留在市级。",
+      "failures_before_fix": [
+        "location_city_to_district_correction",
+        "location_district_correction_haidian",
+        "location_province_district_correction",
+        "location_pudong_correction",
+        "location_shenzhen_correction"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "location_correction_not_applied",
+          "before_fix": "round-25 五个案例里 location 都停在城市/原区级：“我在北京市”+“更正一下，具体是朝阳区”仍为“北京市”；“更正：准确说是深圳市南山区”被截断为“深圳”",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Refine location on explicit correction",
+          "verification": "5 round-25 cases, 1 slot-lifecycle test and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "location_city_to_district_correction",
+        "location_district_correction_haidian",
+        "location_province_district_correction",
+        "location_pudong_correction",
+        "location_shenzhen_correction"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "location_city_to_district_correction",
+          "messages": [
+            "朋友欠我3万元，我在北京市，请给我方案。",
+            "更正一下，具体是朝阳区。"
+          ]
+        },
+        {
+          "case_id": "location_district_correction_haidian",
+          "messages": [
+            "租房纠纷，我在朝阳区，请给我方案。",
+            "不对，应该是海淀区。"
+          ]
+        },
+        {
+          "case_id": "location_province_district_correction",
+          "messages": [
+            "交通事故后车辆受损，我在浙江省，请给我方案。",
+            "更正一下，具体是浙江省杭州市西湖区。"
+          ]
+        },
+        {
+          "case_id": "location_pudong_correction",
+          "messages": [
+            "朋友欠我钱，我在上海，请给我方案。",
+            "更正一下，具体是在浦东新区。"
+          ]
+        },
+        {
+          "case_id": "location_shenzhen_correction",
+          "messages": [
+            "朋友欠我钱，我在广州，请给我方案。",
+            "更正：准确说是深圳市南山区。"
+          ]
+        }
+      ],
+      "commit_subject": "Refine location on explicit correction",
+      "verification": {
+        "before_fix": "5 failed (location not refined to district)",
+        "core_suite": "985 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "slot_lifecycle_suite": "1 passed"
+      }
     }
   ]
 }

@@ -241,6 +241,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_twentytwo_variants(),
         *generate_round_twentythree_variants(),
         *generate_round_twentyfour_variants(),
+        *generate_round_twentyfive_variants(),
     ]
 
 
@@ -1606,6 +1607,83 @@ def generate_round_twentyfour_variants(seed: int = 20260968) -> list[RedTeamCase
             'debt', '',
             expected_facts=(('event_time', '2026年2月15日'),),
             forbidden_facts=(('event_time', '2026年12月'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_twentyfive_variants(seed: int = 20260969) -> list[RedTeamCase]:
+    """Five unseen variants over explicit location correction.
+
+    Round 25 locks the fix for an explicit location correction that lacks a
+    trigger prefix (我在/发生在/位于/地点) and names a district that is not a
+    known_city. Round-25 probe H2 showed "我在北京市" followed by
+    "更正一下，具体是朝阳区" left location at the city level because none of
+    the three location branches fired.
+    """
+    return [
+        RedTeamCase(
+            'location_city_to_district_correction',
+            ('debt', 'multiturn', 'fact_correction', 'location'),
+            (
+                '朋友欠我3万元，我在北京市，请给我方案。',
+                '更正一下，具体是朝阳区。',
+            ),
+            'debt', '',
+            expected_facts=(('location', '朝阳区'),),
+            forbidden_facts=(('location', '北京市'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'location_district_correction_haidian',
+            ('housing', 'multiturn', 'fact_correction', 'location'),
+            (
+                '租房纠纷，我在朝阳区，请给我方案。',
+                '不对，应该是海淀区。',
+            ),
+            'housing', '',
+            expected_facts=(('location', '海淀区'),),
+            forbidden_facts=(('location', '朝阳区'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'location_province_district_correction',
+            ('traffic', 'multiturn', 'fact_correction', 'location'),
+            (
+                '交通事故后车辆受损，我在浙江省，请给我方案。',
+                '更正一下，具体是浙江省杭州市西湖区。',
+            ),
+            'traffic', '',
+            expected_facts=(('location', '浙江省杭州市西湖区'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'location_pudong_correction',
+            ('debt', 'multiturn', 'fact_correction', 'location'),
+            (
+                '朋友欠我钱，我在上海，请给我方案。',
+                '更正一下，具体是在浦东新区。',
+            ),
+            'debt', '',
+            expected_facts=(('location', '浦东新区'),),
+            forbidden_facts=(('location', '上海'),),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'location_shenzhen_correction',
+            ('debt', 'multiturn', 'fact_correction', 'location'),
+            (
+                '朋友欠我钱，我在广州，请给我方案。',
+                '更正：准确说是深圳市南山区。',
+            ),
+            'debt', '',
+            expected_facts=(('location', '深圳市南山区'),),
+            forbidden_facts=(('location', '广州'),),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),

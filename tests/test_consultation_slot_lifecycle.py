@@ -78,6 +78,19 @@ def test_incidental_date_does_not_overwrite_event_anchored_date():
     assert str(state.facts.get('event_time', '')) == '2026年3月1日', state.facts.get('event_time')
 
 
+def test_location_correction_refines_to_district():
+    """Round-25: an explicit location correction without a trigger prefix and
+    naming a non-known_city district must refine ``location`` rather than leave
+    it at the city level ('我在北京市' -> '更正一下，具体是朝阳区')."""
+    state = _state('debt')
+    _run(
+        state,
+        '朋友欠我3万元，我在北京市，请给我方案。',
+        '更正一下，具体是朝阳区。',
+    )
+    assert str(state.facts.get('location', '')) == '朝阳区', state.facts.get('location')
+
+
 def test_counterparty_claim_does_not_overwrite_user_amount():
     state = _state('debt')
     _run(state, '朋友欠我4万元，请给我方案。', '借条转账都有', '一个月一万', '对方说只欠2万元')

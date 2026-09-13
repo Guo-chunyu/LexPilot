@@ -564,6 +564,26 @@ def save_fact(state: CaseState, key: str, value: str, quote: str, *, source_type
         state.consultation.declined_slots.remove(key)
 
 
+def _clean_geo_phrase(raw: str) -> str:
+    """Trim a leading hedge / persona / preposition from a bare geo phrase.
+
+    Used when an explicit correction ("更正一下，具体是朝阳区") refines a prior
+    location. The geo regex grabs too much ("具体是朝阳区"), so we strip the
+    leading filler down to the administrative-division token.
+    """
+    value = raw.strip('。；，、 ')
+    value = re.sub(
+        r'^(?:我|你|对方|他|她)?(?:住|位|坐|处|留|待|来|回)?'
+        r'(?:在|于|到|从|去)?'
+        r'[：:，。、]?\s*'
+        r'(?:具体|也就是|就是|更正一下|更正|更准确|准确说|请|不对|应该|应是|是|位于|地点)?'
+        r'[：:，。、]?\s*'
+        r'(?:在|于|到|为|是)?',
+        '', value,
+    )
+    return value or raw
+
+
 def ingest_text(text: str, state: CaseState, *, source_type='user_message', source_ref='', contextual=True, scoped_inventory=False) -> None:
     dossier = state.consultation
     message = text.strip()
@@ -605,10 +625,29 @@ def ingest_text(text: str, state: CaseState, *, source_type='user_message', sour
     # Keep a location phrase small. Never infer a particular court from a city.
     location = re.search(r'(?:我在|发生在|位于|地点[是：:]?)([^，。；\n]{2,35})', message)
     known_city = re.search(r'(?:北京|上海|天津|重庆|深圳|广州|杭州|南京|成都|武汉|西安|苏州|长沙|郑州|东莞|佛山|宁波|合肥|青岛|济南|厦门|福州|沈阳|大连|昆明|南宁|海口|贵阳|南昌|长春|哈尔滨)', message)
+    # In a correction turn, capture a full administrative chain (province /
+    # city / district) even when the message lacks a 我在/发生在 prefix and the
+    # district is not a known_city. Computed up front so the branch runs *before*
+    # the known_city branch, which would otherwise truncate "深圳市南山区" to
+    # "深圳" or "浙江省杭州市西湖区" to "杭州".
+    geo_chain = None
+    if correction_context:
+        geo_chain = re.search(
+            r'(?:[一-龥]{1,6}(?:省|市|自治区|特别行政区))?'
+            r'(?:[一-龥]{1,6}(?:市|地区|自治州|盟))?'
+            r'[一-龥]{1,6}(?:区|县|市)',
+            message,
+        )
     if contextual and pending == 'location' and len(message) <= 40 and not re.search(r'[，。；\n？?]', message) and (known_city or any(word in message for word in OUTSIDE_MAINLAND) or re.search(r'.{2,8}(?:省|市|县|区)', message)):
         put('location', message, message)
     elif location and (any(word in location.group(1) for word in (*OUTSIDE_MAINLAND, '省', '市', '县', '区')) or known_city):
         put('location', location.group(1), location.group(0))
+    elif geo_chain:
+        # An explicit correction such as "更正一下，具体是朝阳区" / "更正：准确
+        # 说是深圳市南山区" / "具体是浙江省杭州市西湖区" refines the prior
+        # location. Round-25 probe H2 showed location stayed at the city level
+        # despite the user correcting it.
+        put('location', _clean_geo_phrase(geo_chain.group(0)), message)
     elif known_city:
         put('location', known_city.group(0), known_city.group(0))
     # A later-turn statement from the other party is part of the dispute, but
