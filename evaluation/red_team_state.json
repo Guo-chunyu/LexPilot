@@ -2948,6 +2948,82 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "8 passed (tests/test_urgent_deadline.py)"
       }
+    },
+    {
+      "round_id": "round-037-debt-instrument-alias",
+      "generator": "generate_round_thirtyseven_variants",
+      "seed": 20260981,
+      "status": "completed",
+      "root_cause": "借贷证据别名“借条”只含 (借条, 借据)，缺最常见的口语名“欠条”，“有欠条”因此完全不产生证据，材料清单与实际不符。",
+      "failures_before_fix": [
+        "evidence_iou_note_held",
+        "evidence_iou_note_written",
+        "evidence_iou_note_lost",
+        "evidence_iou_note_missing"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py",
+        "backend/legal_domain/consultation/profiles.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "debt_instrument_alias",
+          "before_fix": "round-37 探针 D1/D2 显示“有欠条”“写了欠条”的 evidence 为空",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py",
+            "backend/legal_domain/consultation/profiles.py"
+          ],
+          "commit_subject": "Recognise 欠条 as a debt instrument",
+          "verification": "5 round-37 cases, 4 evidence-alias unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "evidence_iou_note_held",
+        "evidence_iou_note_written",
+        "evidence_iou_note_lost",
+        "evidence_iou_note_missing",
+        "evidence_iou_control"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "evidence_iou_note_held",
+          "messages": [
+            "对方欠我3万元，有欠条，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_note_written",
+          "messages": [
+            "对方给我写了欠条，现在不认账，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_note_lost",
+          "messages": [
+            "对方欠我3万元，欠条丢了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_note_missing",
+          "messages": [
+            "对方欠我3万元，欠条不见了，请给我方案。"
+          ]
+        },
+        {
+          "case_id": "evidence_iou_control",
+          "messages": [
+            "对方欠我3万元，有借条，请给我方案。"
+          ]
+        }
+      ],
+      "commit_subject": "Recognise 欠条 as a debt instrument",
+      "verification": {
+        "before_fix": "4 failed (有欠条 / 写了欠条 produced no evidence; 欠条丢了 not unavailable)",
+        "core_suite": "1191 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "4 passed (tests/test_evidence_alias_debt.py)"
+      }
     }
   ]
 }

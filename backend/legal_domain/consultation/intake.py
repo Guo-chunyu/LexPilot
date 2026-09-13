@@ -100,7 +100,9 @@ EXHAUSTED_PATTERN = (
 )
 
 EVIDENCE_ALIASES = {
-    '借条': ('借条', '借据'),
+    # Round-37: 欠条 is the most common colloquial name for a debt instrument;
+    # without it "有欠条" produced no evidence at all.
+    '借条': ('借条', '借据', '欠条'),
     '转账记录': ('转账记录', '转账', '流水'),
     '催款记录': ('催款记录', '催款', '催还', '聊天', '微信'),
     '房屋交接记录': ('房屋交接记录', '交房', '交接', '视频'),

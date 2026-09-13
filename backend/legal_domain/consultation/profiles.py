@@ -377,7 +377,7 @@ def domain_label(case_type: str) -> str:
 def classify_material(filename: str, text: str = '') -> list[str]:
     lead = filename + '\n' + '\n'.join(text.splitlines()[:5])[:400]
     names = [name for profile in PROFILES.values() for name, *_ in profile.evidence if name in lead]
-    aliases = {'借条': ('借据',), '转账记录': ('转账', '银行流水', '支付凭证'), '租赁或购房合同': ('租赁合同', '租房合同', '购房合同'), '交易合同': ('采购合同', '买卖合同'), '订单与消费合同': ('订单', '会员协议'), '完整病历': ('病历',), '行政决定及送达材料': ('处罚决定',), '程序通知材料': ('拘留通知',), '生效文书与送达材料': ('判决书', '裁定书'), '催款记录': ('催款', '催收',)}
+    aliases = {'借条': ('借据', '欠条'), '转账记录': ('转账', '银行流水', '支付凭证'), '租赁或购房合同': ('租赁合同', '租房合同', '购房合同'), '交易合同': ('采购合同', '买卖合同'), '订单与消费合同': ('订单', '会员协议'), '完整病历': ('病历',), '行政决定及送达材料': ('处罚决定',), '程序通知材料': ('拘留通知',), '生效文书与送达材料': ('判决书', '裁定书'), '催款记录': ('催款', '催收',)}
     names.extend(name for name, words in aliases.items() if any(word in lead for word in words))
     if any(word in lead for word in ('聊天', '微信', '短信')):
         names.append('沟通记录')

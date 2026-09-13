@@ -253,6 +253,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_thirtyfour_variants(),
         *generate_round_thirtyfive_variants(),
         *generate_round_thirtysix_variants(),
+        *generate_round_thirtyseven_variants(),
     ]
 
 
@@ -2415,6 +2416,71 @@ def generate_round_thirtysix_variants(seed: int = 20260980) -> list[RedTeamCase]
             ),
             'debt', '',
             expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_thirtyseven_variants(seed: int = 20260981) -> list[RedTeamCase]:
+    """Five unseen variants over the 欠条 (debt instrument) evidence alias.
+
+    Round 37 locks the fix for 欠条 missing from the debt evidence aliases, so
+    "有欠条" produced no evidence at all.
+    """
+    return [
+        RedTeamCase(
+            'evidence_iou_note_held',
+            ('debt', 'evidence_alias'),
+            (
+                '对方欠我3万元，有欠条，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_evidence_names=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'evidence_iou_note_written',
+            ('debt', 'evidence_alias'),
+            (
+                '对方给我写了欠条，现在不认账，请给我方案。',
+            ),
+            'debt', '',
+            expected_evidence_names=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'evidence_iou_note_lost',
+            ('debt', 'evidence_alias'),
+            (
+                '对方欠我3万元，欠条丢了，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_unavailable_evidence=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'evidence_iou_note_missing',
+            ('debt', 'evidence_alias'),
+            (
+                '对方欠我3万元，欠条不见了，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_unavailable_evidence=('借条',),
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'evidence_iou_control',
+            ('debt', 'evidence_alias'),
+            (
+                '对方欠我3万元，有借条，请给我方案。',
+            ),
+            'debt', 'creditor',
+            expected_evidence_names=('借条',),
             origin='auto_variant',
             max_followup_similarity=0.65,
         ),
