@@ -264,6 +264,7 @@ def generate_red_team_cases() -> list[RedTeamCase]:
         *generate_round_fortyfive_variants(),
         *generate_round_fortysix_variants(),
         *generate_round_fortyseven_variants(),
+        *generate_round_fortyeight_variants(),
     ]
 
 
@@ -3127,6 +3128,77 @@ def generate_round_fortyseven_variants(seed: int = 20260991) -> list[RedTeamCase
                 '公司拖欠我工资，请给我方案。',
             ),
             'labor_dispute', '',
+            expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+    ]
+
+
+def generate_round_fortyeight_variants(seed: int = 20260992) -> list[RedTeamCase]:
+    """Five unseen variants over withdrawing an urgent action.
+
+    Round 48 locks the fix for retraction: the safety retraction used a stale
+    copy of the safety vocabulary (so it never fired), and enforcement actions
+    could be raised but never withdrawn.
+    """
+    return [
+        RedTeamCase(
+            'retract_safety_no_longer',
+            ('general', 'urgent_retraction'),
+            (
+                '对方威胁要打我，请给我方案。',
+                '现在没事了，他不会再打我了。',
+            ),
+            'general', '',
+            expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'retract_enforcement_resolved',
+            ('general', 'urgent_retraction'),
+            (
+                '法院要来查封我的房子，请给我方案。',
+                '法院没有查封我的房子，事情已经解决了。',
+            ),
+            'general', '',
+            expected_urgent=False,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'keep_safety_still_happening',
+            ('general', 'urgent', 'urgent_retraction'),
+            (
+                '对方威胁要打我，请给我方案。',
+                '他现在还在打我。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'keep_enforcement_pending',
+            ('general', 'urgent', 'urgent_retraction'),
+            (
+                '法院要来查封我的房子，请给我方案。',
+                '还没来，法院说要查封。',
+            ),
+            'general', '',
+            expected_urgent=True,
+            origin='auto_variant',
+            max_followup_similarity=0.65,
+        ),
+        RedTeamCase(
+            'retract_deadline_no_limit',
+            ('general', 'urgent_retraction'),
+            (
+                '法院要求我明天前提交材料，请给我方案。',
+                '法院说没有期限要求，不着急。',
+            ),
+            'general', '',
             expected_urgent=False,
             origin='auto_variant',
             max_followup_similarity=0.65,

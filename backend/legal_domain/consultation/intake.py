@@ -154,6 +154,7 @@ ENFORCEMENT_URGENT_ACTION = (
     '先核对执行文书的案号、标的、送达日期和异议/复议期限，今天就向执行法院确认异议、'
     '担保或暂缓执行的办理方式；不要转移或隐匿财产。'
 )
+ENFORCEMENT_MEASURE_PATTERN = r'查封|冻结|扣押|扣划|拍卖|强制腾退|强制执行|腾退'
 ENFORCEMENT_SIGNAL = (
     r'(?:法院|执行局|执行法官).{0,8}(?:查封|冻结|扣押|扣划|拍卖|强制腾退|强制执行|腾退)'
     r'|(?:查封|冻结|扣押|扣划|拍卖|强制腾退).{0,8}(?:我的|我(?:的)?(?:房子|房产|车|账户|存款|工资卡|财产))'
@@ -1015,7 +1016,13 @@ def urgent_actions(message: str, state: CaseState) -> list[str]:
     actions = []
     if _has_asserted_signal(message, SAFETY_SIGNAL):
         actions.append(SAFETY_URGENT_ACTION)
-    if _has_asserted_signal(message, ENFORCEMENT_SIGNAL):
+    # The enforcement signal anchors on the subject ("法院"), so a negation
+    # between subject and measure ("法院没有查封") is invisible to it; check the
+    # measure separately.
+    if (
+        _has_asserted_signal(message, ENFORCEMENT_SIGNAL)
+        and not _has_negated_signal(message, ENFORCEMENT_MEASURE_PATTERN)
+    ):
         actions.append(ENFORCEMENT_URGENT_ACTION)
     if state.case_type == 'criminal' and _has_asserted_signal(message, r'拘留|逮捕|被抓|看守所'):
         actions.append(CRIMINAL_URGENT_ACTION)
@@ -1060,12 +1067,21 @@ def _has_negated_signal(message: str, pattern: str) -> bool:
 
 def retracted_urgent_actions(message: str) -> set[str]:
     retracted = set()
-    safety_pattern = r'家暴|正在.{0,4}(?:打|威胁)|打死|人身安全|持刀|跟踪'
-    criminal_pattern = r'拘留|逮捕|被抓|看守所'
-    if _has_negated_signal(message, safety_pattern) and not _has_asserted_signal(message, safety_pattern):
+    # Round-48: reuse the single SAFETY_SIGNAL definition. A stale inline copy had
+    # drifted from it, so "他不会再打我了" never retracted the safety action.
+    if _has_negated_signal(message, SAFETY_SIGNAL) and not _has_asserted_signal(message, SAFETY_SIGNAL):
         retracted.add(SAFETY_URGENT_ACTION)
+    criminal_pattern = r'拘留|逮捕|被抓|看守所'
     if _has_negated_signal(message, criminal_pattern) and not _has_asserted_signal(message, criminal_pattern):
         retracted.add(CRIMINAL_URGENT_ACTION)
+    # Round-48: enforcement actions could be raised but never withdrawn. The
+    # retraction check anchors on the *measure* (not on the subject "法院"), so a
+    # negation between subject and measure ("法院没有查封") is visible.
+    if (
+        _has_negated_signal(message, ENFORCEMENT_MEASURE_PATTERN)
+        and not _has_asserted_signal(message, ENFORCEMENT_MEASURE_PATTERN)
+    ):
+        retracted.add(ENFORCEMENT_URGENT_ACTION)
     if retracts_urgent_deadline(message):
         retracted.add(DEADLINE_URGENT_ACTION)
     return retracted

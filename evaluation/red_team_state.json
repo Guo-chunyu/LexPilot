@@ -3757,6 +3757,83 @@
         "selected_cases_after_fix": "5 passed",
         "unit_tests": "5 passed (tests/test_labor_urgent_actions.py)"
       }
+    },
+    {
+      "round_id": "round-048-urgent-action-retraction",
+      "generator": "generate_round_fortyeight_variants",
+      "seed": 20260992,
+      "status": "completed",
+      "root_cause": "retracted_urgent_actions 里的安全词表是 SAFETY_SIGNAL 的一份**过期副本**（只有\"家暴/正在…打/打死/人身安全/持刀/跟踪\"），与已扩充的 SAFETY_SIGNAL 脱节，因此\"他不会再打我了\"永远撤不掉安全提示；另外执行类紧急动作只增不减，没有任何撤回通道；执行信号以\"法院\"起算，导致\"法院没有查封\"这类否定看不见。",
+      "failures_before_fix": [
+        "retract_safety_no_longer",
+        "retract_enforcement_resolved"
+      ],
+      "fix_files": [
+        "backend/legal_domain/consultation/intake.py"
+      ],
+      "completed_root_causes": [
+        {
+          "id": "urgent_action_retraction",
+          "before_fix": "round-48 探针显示\"现在没事了，他不会再打我了\"之后安全提示仍在；\"法院没有查封我的房子\"之后执行提示仍在",
+          "fix_files": [
+            "backend/legal_domain/consultation/intake.py"
+          ],
+          "commit_subject": "Let urgent actions be withdrawn once the danger is over",
+          "verification": "5 round-48 cases, 5 retraction unit tests and the full core suite passed"
+        }
+      ],
+      "pending_root_causes": [],
+      "selected_case_ids": [
+        "retract_safety_no_longer",
+        "retract_enforcement_resolved",
+        "keep_safety_still_happening",
+        "keep_enforcement_pending",
+        "retract_deadline_no_limit"
+      ],
+      "anonymous_cases": [
+        {
+          "case_id": "retract_safety_no_longer",
+          "messages": [
+            "对方威胁要打我，请给我方案。",
+            "现在没事了，他不会再打我了。"
+          ]
+        },
+        {
+          "case_id": "retract_enforcement_resolved",
+          "messages": [
+            "法院要来查封我的房子，请给我方案。",
+            "法院没有查封我的房子，事情已经解决了。"
+          ]
+        },
+        {
+          "case_id": "keep_safety_still_happening",
+          "messages": [
+            "对方威胁要打我，请给我方案。",
+            "他现在还在打我。"
+          ]
+        },
+        {
+          "case_id": "keep_enforcement_pending",
+          "messages": [
+            "法院要来查封我的房子，请给我方案。",
+            "还没来，法院说要查封。"
+          ]
+        },
+        {
+          "case_id": "retract_deadline_no_limit",
+          "messages": [
+            "法院要求我明天前提交材料，请给我方案。",
+            "法院说没有期限要求，不着急。"
+          ]
+        }
+      ],
+      "commit_subject": "Let urgent actions be withdrawn once the danger is over",
+      "verification": {
+        "before_fix": "2 failed (safety / enforcement urgent action survived a retraction)",
+        "core_suite": "1368 passed without torch/gymnasium",
+        "selected_cases_after_fix": "5 passed",
+        "unit_tests": "5 passed (tests/test_urgent_retraction.py)"
+      }
     }
   ]
 }
