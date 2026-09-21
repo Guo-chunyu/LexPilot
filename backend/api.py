@@ -11,6 +11,8 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel, Field
 
+from backend.ai.online_reply import OnlineModelUnavailableError
+from backend.ai.provider import get_consultation_provider
 from backend.config import LEXPILOT_UPLOAD_DIR
 from backend.graph import invoke_lexpilot
 from backend.legal_domain.consultation.profiles import route_case, PROFILES
@@ -92,6 +94,11 @@ def _run(req: ChatRequest) -> ChatResponse:
 async def chat(req: ChatRequest) -> ChatResponse:
     try:
         return _run(req)
+    except OnlineModelUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": exc.code, "message": str(exc)},
+        ) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -135,26 +142,35 @@ async def upload_evidence(
             final_report=state.final_report,
             decision_mode="rules",
         )
+    except OnlineModelUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": exc.code, "message": str(exc)},
+        ) from exc
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @api_app.post("/chat/stream")
 async def chat_stream(req: ChatRequest):
+    try:
+        response = _run(req)
+    except OnlineModelUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": exc.code, "message": str(exc)},
+        ) from exc
+
     async def events():
-        try:
-            response = _run(req)
-            for record in response.case_state.get("action_history", []):
-                yield "data: " + json.dumps({
-                    "node": record["node"],
-                    "step": record["step"],
-                    "action": record.get("action_name", record["action"]),
-                    "reason": record["reason"],
-                    "result": record["result"],
-                }, ensure_ascii=False) + "\n\n"
-            yield "data: " + json.dumps({"done": True, **response.model_dump()}, ensure_ascii=False) + "\n\n"
-        except Exception as exc:
-            yield "data: " + json.dumps({"error": str(exc)}, ensure_ascii=False) + "\n\n"
+        for record in response.case_state.get("action_history", []):
+            yield "data: " + json.dumps({
+                "node": record["node"],
+                "step": record["step"],
+                "action": record.get("action_name", record["action"]),
+                "reason": record["reason"],
+                "result": record["result"],
+            }, ensure_ascii=False) + "\n\n"
+        yield "data: " + json.dumps({"done": True, **response.model_dump()}, ensure_ascii=False) + "\n\n"
     return StreamingResponse(events(), media_type="text/event-stream")
 
 
@@ -174,4 +190,6 @@ async def health():
         "domain": "general_legal_consultation",
         "practice_areas": list(PROFILES),
         "decision_mode": "rules",
+        "online_reply_required": True,
+        "model_configured": get_consultation_provider() is not None,
     }

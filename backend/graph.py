@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from types import SimpleNamespace
 from typing import Any, TypedDict
 
+from backend.ai.online_reply import compose_online_reply
+from backend.ai.online_reply import OnlineModelUnavailableError
+from backend.config import LEXPILOT_ALLOW_OFFLINE_FALLBACK
 from backend.legal_rl.actions import ACTION_TO_NODE
 from backend.legal_rl.policy import PolicyDecision, RuleBasedPolicy
 from backend.legal_rl.state import CaseState
@@ -162,11 +166,23 @@ def invoke_lexpilot(
 ) -> dict:
     payload: dict[str, Any] = {"user_message": message}
     if case_state is not None:
-        payload["case_state"] = case_state
+        # The deterministic workflow mutates its state in place. Work on a
+        # deep copy so a failed online generation cannot partially advance the
+        # caller's session before a reply has passed validation.
+        payload["case_state"] = deepcopy(CaseState.from_value(case_state))
     result = app.invoke(payload, config={"configurable": {"thread_id": thread_id}})
     case = CaseState.from_value(result.get("case_state"))
+    raw_reply = result.get("reply", "")
+    try:
+        reply = compose_online_reply(message, case, raw_reply)
+    except OnlineModelUnavailableError:
+        # Only the test harness may opt into the legacy deterministic text.
+        # The production default is strict online-only and re-raises this error.
+        if not LEXPILOT_ALLOW_OFFLINE_FALLBACK:
+            raise
+        reply = raw_reply
     return {
         "case_state": case,
-        "reply": result.get("reply", ""),
+        "reply": reply,
         "requires_user": result.get("requires_user", False),
     }

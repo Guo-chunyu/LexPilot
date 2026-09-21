@@ -8,6 +8,7 @@ from uuid import uuid4
 import streamlit as st
 from streamlit.typing import ChatInputValue, UploadedFile
 
+from backend.ai.online_reply import OnlineModelUnavailableError
 from backend.config import LEXPILOT_UPLOAD_DIR
 from backend.graph import invoke_lexpilot
 from backend.legal_domain.consultation.profiles import route_case, PROFILES, domain_label
@@ -201,6 +202,18 @@ def _run_message(message: str, files: list[UploadedFile] | None = None) -> None:
             reply = f"{ingestion.summary_markdown()}\n\n{reply}"
         st.session_state.messages.append({"role": "assistant", "content": reply})
         st.session_state.last_error = None
+    except OnlineModelUnavailableError as exc:
+        error = f"{exc.code}: {exc}"
+        st.session_state.last_error = error
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": (
+                    "联网法律分析暂时不可用，本轮没有生成离线回复。"
+                    "请检查模型密钥或网络连接后重试；已保存的案件信息没有被覆盖。"
+                ),
+            }
+        )
     except Exception as exc:
         if not user_message_added:
             st.session_state.messages.append(
@@ -264,7 +277,7 @@ def _render_attachment(attachment: dict, message_index: int) -> None:
 
 def _render_chat() -> str | None:
     st.subheader("案件对话", icon=":material/forum:")
-    st.caption("先说最困扰你的事，再一起整理事实与证据；随时可以说“先给我方案”或“不清楚”。")
+    st.caption("可以直接描述发生了什么，也可以回答追问或上传相关材料。")
 
     selected_prompt: str | None = None
     if not st.session_state.messages:

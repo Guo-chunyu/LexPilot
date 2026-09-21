@@ -38,6 +38,11 @@ LLM_REQUEST_TIMEOUT_SECONDS = float(os.getenv("LLM_REQUEST_TIMEOUT_SECONDS", "8"
 LEXPILOT_ENABLE_SEMANTIC_AI = os.getenv("LEXPILOT_ENABLE_SEMANTIC_AI", "true").lower() in {
     "1", "true", "yes", "on",
 }
+# Tests for the legacy deterministic runner can explicitly opt into its old
+# behavior. Production is online-only by default and never enables this flag.
+LEXPILOT_ALLOW_OFFLINE_FALLBACK = os.getenv("LEXPILOT_ALLOW_OFFLINE_FALLBACK", "false").lower() in {
+    "1", "true", "yes", "on",
+}
 
 # Embedding & Reranker 
 EMBED_MODEL_NAME = "BAAI/bge-large-zh-v1.5"

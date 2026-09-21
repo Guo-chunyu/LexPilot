@@ -29,6 +29,17 @@ from backend.config import (
 class AIProviderError(RuntimeError):
     """Raised only inside the optional semantic layer; callers must fall back safely."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "temporarily_unavailable",
+        status_code: int | None = None,
+    ) -> None:
+        self.code = code
+        self.status_code = status_code
+        super().__init__(message)
+
 
 class AIProvider(ABC):
     @abstractmethod
@@ -111,8 +122,31 @@ class QwenProvider(AIProvider):
             )
             response.raise_for_status()
             body = response.json()
-        except (httpx.HTTPError, ValueError) as exc:
-            raise AIProviderError("Semantic analysis request failed") from exc
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            code = "authentication_failed" if status in {401, 403} else (
+                "temporarily_unavailable" if status >= 500 or status == 429 else "invalid_request"
+            )
+            raise AIProviderError(
+                "Semantic analysis request failed",
+                code=code,
+                status_code=status,
+            ) from exc
+        except httpx.TimeoutException as exc:
+            raise AIProviderError(
+                "Semantic analysis request timed out",
+                code="temporarily_unavailable",
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise AIProviderError(
+                "Semantic analysis request failed",
+                code="temporarily_unavailable",
+            ) from exc
+        except ValueError as exc:
+            raise AIProviderError(
+                "Semantic analysis returned invalid data",
+                code="invalid_response",
+            ) from exc
 
         try:
             content = body["choices"][0]["message"]["content"]
@@ -128,9 +162,15 @@ class QwenProvider(AIProvider):
                 text = re.sub(r"\s*```$", "", text)
             value = json.loads(text)
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            raise AIProviderError("Semantic analysis returned invalid structured data") from exc
+            raise AIProviderError(
+                "Semantic analysis returned invalid structured data",
+                code="invalid_response",
+            ) from exc
         if not isinstance(value, dict):
-            raise AIProviderError("Semantic analysis did not return an object")
+            raise AIProviderError(
+                "Semantic analysis did not return an object",
+                code="invalid_response",
+            )
         return value
 
     def close(self) -> None:
